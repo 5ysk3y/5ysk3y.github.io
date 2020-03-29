@@ -137,11 +137,24 @@ nmap -A -oA nmap/snipper_initial -vvv 10.10.10.151\ Nmap scan report for 10." />
 
   <div class="content">
     
-<section id="main">
-  <h1 id="title">Sniper [Medium] - Windows</h1>
-  <div>
-        <article id="content">
-           <p>Sniper was one of my favorite boxes, from recent memory, and uses RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&rsquo;s take a look at how I did it.</p>
+<div class="post">
+  <h1 class="post-title">
+    <a href="https://5ysk3y.github.io/htb/guides/sniper/">Sniper [Medium] - Windows</a></h1>
+  <div class="post-meta">
+      
+    <span class="post-date">
+      2020-03-29
+    </span>
+    
+    
+  </div>
+
+  
+
+  
+
+  <div class="post-content"><div>
+        <p>Sniper was one of my favorite boxes, from recent memory, and uses RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&rsquo;s take a look at how I did it.</p>
 <hr>
 <p>First up, from my standard nmap scan, we see :</p>
 <pre><code>nmap -A -oA nmap/snipper_initial -vvv 10.10.10.151\
@@ -398,23 +411,12 @@ PS C:\Windows\system32&gt; type C:\Users\Administrator\Desktop\root.txt
 5624caf363e2750e994f6be0b7436c15
 </code></pre><p>Result!</p>
 
-        </article>
-  </div>
-</section>
-<aside id="meta">
-    <div>
-    <section>
-      <h4 id="date"> Sun Mar 29, 2020 </h4>
-      <h5 id="wordcount"> 2057 Words </h5>
-    </section>
-    
-    
-    </div>
-    <div>
-        
-        
-    </div>
-</aside>
+      </div></div>
+  
+
+  
+
+</div>
 
   </div>
 
