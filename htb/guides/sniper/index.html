@@ -6,9 +6,9 @@
   
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-<meta name="description" content="Sniper was one of my favorite boxes, from recent memory, and uses RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&amp;rsquo;s take a look at how I did it.
+<meta name="description" content="Sniper was one of my favorite boxes from recent memory, and uses RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&amp;rsquo;s take a look at how I did it.
  First up, from my standard nmap scan, we see :
-nmap -A -oA nmap/snipper_initial -vvv 10.10.10.151\ Nmap scan report for 10." />
+nmap -A -oA nmap/snipper_initial -vvv 10.10.10.151 Nmap scan report for 10." />
 <meta name="keywords" content="HTB, Hack the Box" />
 <meta name="robots" content="noodp" />
 <link rel="canonical" href="https://5ysk3y.github.io/htb/guides/sniper/" />
@@ -41,9 +41,9 @@ nmap -A -oA nmap/snipper_initial -vvv 10.10.10.151\ Nmap scan report for 10." />
 <meta property="og:locale" content="en" />
 <meta property="og:type" content="article" />
 <meta property="og:title" content="Sniper [Medium] - Windows :: 5ysk3y Pwnz">
-<meta property="og:description" content="Sniper was one of my favorite boxes, from recent memory, and uses RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&amp;rsquo;s take a look at how I did it.
+<meta property="og:description" content="Sniper was one of my favorite boxes from recent memory, and uses RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&amp;rsquo;s take a look at how I did it.
  First up, from my standard nmap scan, we see :
-nmap -A -oA nmap/snipper_initial -vvv 10.10.10.151\ Nmap scan report for 10." />
+nmap -A -oA nmap/snipper_initial -vvv 10.10.10.151 Nmap scan report for 10." />
 <meta property="og:url" content="https://5ysk3y.github.io/htb/guides/sniper/" />
 <meta property="og:site_name" content="Sniper [Medium] - Windows" />
 <meta property="og:image" content="https://5ysk3y.github.io/">
@@ -154,10 +154,10 @@ nmap -A -oA nmap/snipper_initial -vvv 10.10.10.151\ Nmap scan report for 10." />
   
 
   <div class="post-content"><div>
-        <p>Sniper was one of my favorite boxes, from recent memory, and uses RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&rsquo;s take a look at how I did it.</p>
+        <p>Sniper was one of my favorite boxes from recent memory, and uses RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&rsquo;s take a look at how I did it.</p>
 <hr>
 <p>First up, from my standard nmap scan, we see :</p>
-<pre><code>nmap -A -oA nmap/snipper_initial -vvv 10.10.10.151\
+<pre><code>nmap -A -oA nmap/snipper_initial -vvv 10.10.10.151
 
 Nmap scan report for 10.10.10.151
 Host is up, received echo-reply ttl 127 (0.017s latency).

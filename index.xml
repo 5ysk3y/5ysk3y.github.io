@@ -17,9 +17,9 @@
       <pubDate>Sun, 29 Mar 2020 16:21:41 +0000</pubDate>
       
       <guid>https://5ysk3y.github.io/htb/guides/sniper/</guid>
-      <description>Sniper was one of my favorite boxes, from recent memory, and uses RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&amp;rsquo;s take a look at how I did it.
+      <description>Sniper was one of my favorite boxes from recent memory, and uses RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&amp;rsquo;s take a look at how I did it.
  First up, from my standard nmap scan, we see :
-nmap -A -oA nmap/snipper_initial -vvv 10.10.10.151\ Nmap scan report for 10.</description>
+nmap -A -oA nmap/snipper_initial -vvv 10.10.10.151 Nmap scan report for 10.</description>
     </item>
     
   </channel>
