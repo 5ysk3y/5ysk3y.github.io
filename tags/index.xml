@@ -6,9 +6,55 @@
     <description>Recent content in Tags on 5ysk3y Pwnz</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
+    <lastBuildDate>Sun, 29 Mar 2020 16:21:41 +0000</lastBuildDate>
     
 	<atom:link href="https://5ysk3y.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Hack The Box</title>
+      <link>https://5ysk3y.github.io/tags/hack-the-box/</link>
+      <pubDate>Sun, 29 Mar 2020 16:21:41 +0000</pubDate>
+      
+      <guid>https://5ysk3y.github.io/tags/hack-the-box/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Hard</title>
+      <link>https://5ysk3y.github.io/tags/hard/</link>
+      <pubDate>Sun, 29 Mar 2020 16:21:41 +0000</pubDate>
+      
+      <guid>https://5ysk3y.github.io/tags/hard/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>RFI over SMB</title>
+      <link>https://5ysk3y.github.io/tags/rfi-over-smb/</link>
+      <pubDate>Sun, 29 Mar 2020 16:21:41 +0000</pubDate>
+      
+      <guid>https://5ysk3y.github.io/tags/rfi-over-smb/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Windows</title>
+      <link>https://5ysk3y.github.io/tags/windows/</link>
+      <pubDate>Sun, 29 Mar 2020 16:21:41 +0000</pubDate>
+      
+      <guid>https://5ysk3y.github.io/tags/windows/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Windows CHM Exploit</title>
+      <link>https://5ysk3y.github.io/tags/windows-chm-exploit/</link>
+      <pubDate>Sun, 29 Mar 2020 16:21:41 +0000</pubDate>
+      
+      <guid>https://5ysk3y.github.io/tags/windows-chm-exploit/</guid>
+      <description></description>
+    </item>
     
   </channel>
 </rss>

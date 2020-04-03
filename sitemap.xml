@@ -13,7 +13,22 @@
   </url>
   
   <url>
+    <loc>https://5ysk3y.github.io/tags/hack-the-box/</loc>
+    <lastmod>2020-03-29T16:21:41+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://5ysk3y.github.io/tags/hard/</loc>
+    <lastmod>2020-03-29T16:21:41+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://5ysk3y.github.io/htb/</loc>
+    <lastmod>2020-03-29T16:21:41+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://5ysk3y.github.io/tags/rfi-over-smb/</loc>
     <lastmod>2020-03-29T16:21:41+00:00</lastmod>
   </url>
   
@@ -23,11 +38,22 @@
   </url>
   
   <url>
-    <loc>https://5ysk3y.github.io/categories/</loc>
+    <loc>https://5ysk3y.github.io/tags/</loc>
+    <lastmod>2020-03-29T16:21:41+00:00</lastmod>
   </url>
   
   <url>
-    <loc>https://5ysk3y.github.io/tags/</loc>
+    <loc>https://5ysk3y.github.io/tags/windows/</loc>
+    <lastmod>2020-03-29T16:21:41+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://5ysk3y.github.io/tags/windows-chm-exploit/</loc>
+    <lastmod>2020-03-29T16:21:41+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://5ysk3y.github.io/categories/</loc>
   </url>
   
 </urlset>
