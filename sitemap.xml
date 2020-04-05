@@ -4,21 +4,51 @@
   
   <url>
     <loc>https://5ysk3y.github.io/</loc>
-    <lastmod>2020-03-29T16:21:41+00:00</lastmod>
+    <lastmod>2020-04-01T16:21:41+00:00</lastmod>
   </url>
   
   <url>
-    <loc>https://5ysk3y.github.io/htb/guides/</loc>
-    <lastmod>2020-03-29T16:21:41+00:00</lastmod>
+    <loc>https://5ysk3y.github.io/tags/bolt-cms-exploit/</loc>
+    <lastmod>2020-04-01T16:21:41+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://5ysk3y.github.io/tags/docker-registry/</loc>
+    <lastmod>2020-04-01T16:21:41+00:00</lastmod>
   </url>
   
   <url>
     <loc>https://5ysk3y.github.io/tags/hack-the-box/</loc>
-    <lastmod>2020-03-29T16:21:41+00:00</lastmod>
+    <lastmod>2020-04-01T16:21:41+00:00</lastmod>
   </url>
   
   <url>
     <loc>https://5ysk3y.github.io/tags/hard/</loc>
+    <lastmod>2020-04-01T16:21:41+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://5ysk3y.github.io/tags/linux/</loc>
+    <lastmod>2020-04-01T16:21:41+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://5ysk3y.github.io/htb/guides/registry/</loc>
+    <lastmod>2020-04-01T16:21:41+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://5ysk3y.github.io/tags/restic/</loc>
+    <lastmod>2020-04-01T16:21:41+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://5ysk3y.github.io/tags/</loc>
+    <lastmod>2020-04-01T16:21:41+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://5ysk3y.github.io/htb/guides/</loc>
     <lastmod>2020-03-29T16:21:41+00:00</lastmod>
   </url>
   
@@ -34,11 +64,6 @@
   
   <url>
     <loc>https://5ysk3y.github.io/htb/guides/sniper/</loc>
-    <lastmod>2020-03-29T16:21:41+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://5ysk3y.github.io/tags/</loc>
     <lastmod>2020-03-29T16:21:41+00:00</lastmod>
   </url>
   

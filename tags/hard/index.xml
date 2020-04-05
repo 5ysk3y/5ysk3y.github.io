@@ -6,10 +6,19 @@
     <description>Recent content in Hard on 5ysk3y Pwnz</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 29 Mar 2020 16:21:41 +0000</lastBuildDate>
+    <lastBuildDate>Wed, 01 Apr 2020 16:21:41 +0000</lastBuildDate>
     
 	<atom:link href="https://5ysk3y.github.io/tags/hard/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Registry [Hard] - Windows</title>
+      <link>https://5ysk3y.github.io/htb/guides/registry/</link>
+      <pubDate>Wed, 01 Apr 2020 16:21:41 +0000</pubDate>
+      
+      <guid>https://5ysk3y.github.io/htb/guides/registry/</guid>
+      <description>Registry is an amazing Linux machine - it&amp;rsquo;s rated as hard but I didn&amp;rsquo;t find it all too difficult. That said it was very enjoyable and involves you, firstly, taking advantage of a Docker API to pull down an image from a Registry on the box. From there we get a shell and proceed to gain access to a hosted CMS called Bolt; this enables us to execute code as the www-data user which, conveniently, also has sudo access to a binary that can perform full system backups.</description>
+    </item>
     
     <item>
       <title>Sniper [Hard] - Windows</title>

