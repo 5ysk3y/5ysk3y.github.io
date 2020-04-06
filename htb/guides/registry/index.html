@@ -166,7 +166,14 @@
   
 
   <div class="post-content"><div>
-        <p>Registry is an amazing Linux machine - it&rsquo;s rated as hard but I didn&rsquo;t find it all too difficult. That said it was very enjoyable and involves you, firstly, taking advantage of a Docker API to pull down an image from a Registry on the box. From there we get a shell and proceed to gain access to a hosted CMS called Bolt; this enables us to execute code as the www-data user which, conveniently, also has sudo access to a binary that can perform full system backups. Leveraging that, we&rsquo;re able to backup the root folder giving us access to the final flag and some SSH keys for good measure.</p>
+        
+  <figure class="left" >
+    <img src="/htb/guides/registry.png"   />
+    
+  </figure>
+
+
+<p>Registry is an amazing Linux machine - it&rsquo;s rated as hard but I didn&rsquo;t find it all too difficult. That said it was very enjoyable and involves you, firstly, taking advantage of a Docker API to pull down an image from a Registry on the box. From there we get a shell and proceed to gain access to a hosted CMS called Bolt; this enables us to execute code as the www-data user which, conveniently, also has sudo access to a binary that can perform full system backups. Leveraging that, we&rsquo;re able to backup the root folder giving us access to the final flag and some SSH keys for good measure.</p>
 <hr>
 <p>As standard we will begin with our nmap scan:</p>
 <pre><code># Nmap 7.80 scan initiated Sun Oct 20 15:33:23 2019 as: nmap -A -oA nmap/registry_initial -vvv 10.10.10.159
