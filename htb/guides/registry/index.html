@@ -362,7 +362,7 @@ OS and Service detection performed. Please report any incorrect results at https
 {&quot;repositories&quot;:[&quot;bolt-image&quot;]}
 </code></pre><p>A single repo exists, as you can see, with the name: <code>bolt-image</code></p>
 <p>Now to see if we can pull this image. According to <a href="https://5ysk3y.github.io/htb/guides/registry/" target="_blank">this</a>
- pulling an image requires you to get two things: the image manifest and something called associated layer files. Layer files are a bit like chunked archives; you have a numer of them that contain different parts of a wider data set. Once you have them all, you typically have what resembles an entire image. First off, to get the manifest, you visit:</p>
+ pulling an image requires you to get two things: the image manifest and something called associated layer files. Layer files are a bit like chunked archives; you have a number of them that contain different parts of a wider data set. Once you have them all, you typically have what resembles an entire image. First off, to get the manifest, you visit:</p>
 <p><code>http://docker.registry.htb/v2/&lt;name&gt;/manifests/&lt;reference&gt;</code></p>
 <p>We have the <code>&lt;name&gt;</code> (bolt-image) but the reference we needed was obtained using this:</p>
 <pre><code> ~/HTB/Boxes/Registry curl http://docker.registry.htb/v2/bolt-image/tags/list -H &quot;Authorization: Basic YWRtaW46YWRtaW4=&quot;
@@ -387,7 +387,7 @@ OS and Service detection performed. Please report any incorrect results at https
 &quot;blobSum&quot;: &quot;sha256:f476d66f540886e2bb4d9c8cc8c0f8915bca7d387e536957796ea6c2f8e7dfff&quot;
 </code></pre><p>Taking the first of these blobsums and hitting the <a href="http://docker.registry.htb/v2/bolt-image/blobs/sha256:302bfcb3f10c386a25a58913917257bd2fe772127e36645192fa35e4c6b3c66b" target="_blank">proper URL</a>
  with that gets us a binary file that (after following) turned out to be a tar.gz file containing a single script detailing some docker ssh info.. so, partial data.</p>
-<p>Now it would appear that, to be thorough, im going to need to download all of these blobs. So I used the above command with awk to grab the sha256:<!-- raw HTML omitted --> poritions of that and then ran it through a loop with wget:</p>
+<p>Now it would appear that, to be thorough, im going to need to download all of these blobs. So I used the above blobsum output with awk to grab the sha256:N poritions of that and then ran it through a loop with wget:</p>
 <p><code>for i in $(cat blobs); do wget --user admin --password admin http://docker.registry.htb/v2/bolt-image/blobs/$i -O $i.tar.gz; done</code></p>
 <p>Most of these are bytes in size, but two of them are larger: blob starting 2931 = 100mb and blob starting f476 = 36mb.</p>
 <p>Going through them to see whether, once all data is extracted, theres anything useful to find and we can confirm that there is. With all blobs downloaded we can now extract all the data to get a full image.</p>
