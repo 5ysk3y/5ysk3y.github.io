@@ -6,15 +6,15 @@
     <description>Recent content in Nano on 5ysk3y Pwnz</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 01 Apr 2020 16:21:41 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 02 May 2020 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://5ysk3y.github.io/tags/nano/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
-      <title>Registry [Hard] - Linux</title>
+      <title>OpenAdmin [Easy] - Linux</title>
       <link>https://5ysk3y.github.io/htb/guides/openadmin/</link>
-      <pubDate>Wed, 01 Apr 2020 16:21:41 +0000</pubDate>
+      <pubDate>Sat, 02 May 2020 00:00:00 +0000</pubDate>
       
       <guid>https://5ysk3y.github.io/htb/guides/openadmin/</guid>
       <description>OpenAdmin was a quick and easy Linux box that uses a common CVE for an application called ONA to get us intial access to the box. From there, we hop between 2 user through some enumeration before exploiting a sudo command to get root.
