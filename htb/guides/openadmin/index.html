@@ -241,7 +241,7 @@ OS and Service detection performed. Please report any incorrect results at https
 <li>Joanna</li>
 </ul>
 <p>I then linpeas as the www-data user. Most of the interesting stuff appears to to be in the ONA (OpenNetAdmin) dir, i.e. /opt/ona. In here we got some DB creds:</p>
-<p><code>./www/local/config/database_settings.inc.php</code></p>
+<p><code>database_settings.inc.php</code> :</p>
 <pre><code>&lt;?php
 $ona_contexts=array (
   'DEFAULT' =&gt;
