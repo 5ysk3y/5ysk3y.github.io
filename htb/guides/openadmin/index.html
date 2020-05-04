@@ -229,13 +229,13 @@ OS and Service detection performed. Please report any incorrect results at https
 /artwork (Status: 301)
 /sierra (Status: 301)
 /server-status (Status: 403)
-</code></pre><p><code>/music</code> and <code>/sierra</code> seem to be independant sites, neither with anything too interestnig present. That said, one of them (/music) had a link to login that points here:</p>
+</code></pre><p><code>/music</code> and <code>/sierra</code> seem to be independant sites, neither with anything too interesting present. That said, one of them (/music) had a link to login that points here:</p>
 <p><code>http://10.10.10.171/ona/</code></p>
 <p>And this is vulnerable to a certain exploit:</p>
 <p><code>OpenNetAdmin 18.1.1 - Remote Code Execution</code></p>
 <p>This script requires dos2unix running on it prior to use because of weird character breaks etc but it works as intended out the box. I hijacked an existing reverse-shell script on the server, replacing the port and my IP with sed. Also opened up 9001 on the firewall as its locked down by default. Running the script via the browser got me a rev shell:</p>
 <p><code>/bin/bash ./47691.sh 10.10.10.171/ona/</code></p>
-<p>Once one the box I had a look at the <code>/etc/passwd</code> file and found the following 2 users with shell access, aside from root:</p>
+<p>Once on the box I had a look at the <code>/etc/passwd</code> file and found the following 2 users with shell access, aside from root:</p>
 <ul>
 <li>Jimmy</li>
 <li>Joanna</li>
@@ -305,7 +305,7 @@ udp        0      0 127.0.0.53:53           0.0.0.0:*                           
 <p>Root was unbelievably easy compared to the user steps.</p>
 <p>I ran linPeas but it wasn&rsquo;t really necessary; doing standard enum is enough. So I ran:</p>
 <p><code>sudo -l</code></p>
-<p>And found out Joanna had sudo access to the following command without password:</p>
+<p>And found out Joanna had sudo access to the following command without a password:</p>
 <p><code>sudo /bin/nano /opt/priv</code></p>
 <p>It was purely a case of running that exact command along with <a href="https://gtfobins.github.io/gtfobins/nano/#sudo" target="_blank">this</a>
  from GTFOBins:</p>
