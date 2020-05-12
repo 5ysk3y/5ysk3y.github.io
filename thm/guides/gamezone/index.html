@@ -258,9 +258,9 @@ Service detection performed. Please report any incorrect results at https://nmap
     <span style="color:#66d9ef">Type</span>: <span style="color:#66d9ef">UNION</span> query
     Title: Generic <span style="color:#66d9ef">UNION</span> query (<span style="color:#66d9ef">NULL</span>) <span style="color:#f92672">-</span> <span style="color:#ae81ff">3</span> columns
     Payload: searchitem<span style="color:#f92672">=</span>test<span style="color:#e6db74">&#39; UNION ALL SELECT NULL,NULL,CONCAT(0x71787a7171,0x654a55516342637965547842506b644e7a43565354614c63756f4368676e70434165736969574c4a,0x7162716a71)-- -
-</span></code></pre></div><hr>
-<p>Before moving on we must crack that hash to get our user password. I used John for this, although online tools exist to allow you to reverse this. Due to THM guide rules, I&rsquo;m not able to include this but, that said, aquiring it isn&rsquo;t all that difficult either once you have the hash.</p>
-<p>Success! We get a password. Using the login combination of <code>agent47:&lt;REDACTED&gt;</code> we can now SSH into the machine.</p>
+</span></code></pre></div><p>Before moving on we must crack that hash to get our user password. I used John for this, although online tools exist to allow you to reverse it that way if you don&rsquo;t have the facility to crack stuff. Due to THM guide rules, I&rsquo;m not able to include this but, that said, aquiring it isn&rsquo;t all that difficult once you have the hash.</p>
+<p>Success! We get a password. Using the login combination of <code>agent47:&lt;REDACTED&gt;</code> we can now SSH into the machine and get our user flag.</p>
+<hr>
 <p>Once on the box, we would traditionally enumerate but this is a guided experience so lets stick with the beaten path; running <code>ss</code> to get a list of listening ports on the box, we see one that stands out due to its number as well as the fact that it didn&rsquo;t appear on our nmap scan:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">agent47@gamezone:~$ ss -tulpn
 Netid State      Recv-Q Send-Q           Local Address:Port                  Peer Address:Port
@@ -321,7 +321,7 @@ Cookie: sid=e6b8f4f5ff9b17ac77529c6e91c88667
 Content-Type: application/x-www-form-urlencoded
 Connection: close
 </code></pre><p>Assuming the file exists and the payload is correct, it&rsquo;ll get executed. I may see if I can supply a manual payload at a later date, for now though Metasploit is the easiest way to handle this.</p>
-<p>This gets you  a shell, though, and as the root user non-the-less.</p>
+<p>This gets you a shell, though, and as the root user non-the-less. From there you can proceed to get the flag.</p>
 <hr>
 <h2 id="final-thoughts">Final Thoughts<a href="#final-thoughts" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
 <p>All in all, this is a guided room so the difficulty curve will only go so far. In this case, we tried to take it a step further by manual exlpoitation of SQL. Wherever possible, and in line with expectations for the OSCP, I try and refrain from using SQLMap and Metasploit as much as possible. They are one-time/limited use tools in the OSCP exam so becoming reliant on them instead of your own knowledge isn&rsquo;t going to be favorable in the long term. Hopefully this better explains exactly how this is done, as well as detailing how SQLMap itself handle this. In the last stage, manual exploitation wasn&rsquo;t something I dug into due to time but <a href="http://www.americaninfosec.com/research/dossiers/AISG-12-001.pdf" target="_blank">this</a>
