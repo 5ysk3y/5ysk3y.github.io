@@ -185,31 +185,31 @@
 <hr>
 <h2 id="nmap-scan"><strong>NMAP Scan</strong><a href="#nmap-scan" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
 <p>As is standard, we start off our process with an nmap scan to determine what ports we can listen on:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e"># Nmap 7.80 scan initiated Sun Apr 26 04:38:10 2020 as: nmap -Pn -sC -sV -oA initial -v 10.10.250.216</span>
-Nmap scan report <span style="color:#66d9ef">for</span> 10.10.250.216
-Host is up <span style="color:#f92672">(</span>0.032s latency<span style="color:#f92672">)</span>.
-Not shown: <span style="color:#ae81ff">998</span> closed ports
+<pre><code># Nmap 7.80 scan initiated Sun Apr 26 04:38:10 2020 as: nmap -Pn -sC -sV -oA initial -v 10.10.250.216
+Nmap scan report for 10.10.250.216
+Host is up (0.032s latency).
+Not shown: 998 closed ports
 PORT   STATE SERVICE VERSION
-22/tcp open  ssh     OpenSSH 7.2p2 Ubuntu 4ubuntu2.7 <span style="color:#f92672">(</span>Ubuntu Linux; protocol 2.0<span style="color:#f92672">)</span>
+22/tcp open  ssh     OpenSSH 7.2p2 Ubuntu 4ubuntu2.7 (Ubuntu Linux; protocol 2.0)
 | ssh-hostkey:
-|   <span style="color:#ae81ff">2048</span> 61:ea:89:f1:d4:a7:dc:a5:50:f7:6d:89:c3:af:0b:03 <span style="color:#f92672">(</span>RSA<span style="color:#f92672">)</span>
-|   <span style="color:#ae81ff">256</span> b3:7d:72:46:1e:d3:41:b6:6a:91:15:16:c9:4a:a5:fa <span style="color:#f92672">(</span>ECDSA<span style="color:#f92672">)</span>
-|_  <span style="color:#ae81ff">256</span> 53:67:09:dc:ff:fb:3a:3e:fb:fe:cf:d8:6d:41:27:ab <span style="color:#f92672">(</span>ED25519<span style="color:#f92672">)</span>
-80/tcp open  http    Apache httpd 2.4.18 <span style="color:#f92672">((</span>Ubuntu<span style="color:#f92672">))</span>
+|   2048 61:ea:89:f1:d4:a7:dc:a5:50:f7:6d:89:c3:af:0b:03 (RSA)
+|   256 b3:7d:72:46:1e:d3:41:b6:6a:91:15:16:c9:4a:a5:fa (ECDSA)
+|_  256 53:67:09:dc:ff:fb:3a:3e:fb:fe:cf:d8:6d:41:27:ab (ED25519)
+80/tcp open  http    Apache httpd 2.4.18 ((Ubuntu))
 | http-cookie-flags:
 |   /:
 |     PHPSESSID:
 |_      httponly flag not set
 | http-methods:
 |_  Supported Methods: GET HEAD POST OPTIONS
-|_http-server-header: Apache/2.4.18 <span style="color:#f92672">(</span>Ubuntu<span style="color:#f92672">)</span>
+|_http-server-header: Apache/2.4.18 (Ubuntu)
 |_http-title: Game Zone
 Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 
 Read data files from: /usr/bin/../share/nmap
 Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
-<span style="color:#75715e"># Nmap done at Sun Apr 26 04:38:24 2020 -- 1 IP address (1 host up) scanned in 14.22 seconds</span>
-</code></pre></div><h2 id="walkthrough">Walkthrough<a href="#walkthrough" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+# Nmap done at Sun Apr 26 04:38:24 2020 -- 1 IP address (1 host up) scanned in 14.22 seconds
+</code></pre><h2 id="walkthrough">Walkthrough<a href="#walkthrough" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
 <p>As we can see, there&rsquo;s 2 ports Open:</p>
 <ul>
 <li>SSH (7.2p2)</li>
