@@ -271,7 +271,13 @@ tcp   LISTEN     <span style="color:#ae81ff">0</span>      <span style="color:#a
 tcp   LISTEN     <span style="color:#ae81ff">0</span>      <span style="color:#ae81ff">128</span>              :::80                               :::*
 tcp   LISTEN     <span style="color:#ae81ff">0</span>      <span style="color:#ae81ff">128</span>              :::22                               :::*
 </code></pre></div><p>And this is a table to outline what the arguments denote:</p>
-<p><img src="../../../_resources/13aced50a14f4b4da376ec97110fb6d0.png" alt="ss_arguments"></p>
+
+  <figure class="left" >
+    <img src="/images/guides/thm/gamezone-ss.png"   />
+    
+  </figure>
+
+
 <p>Port 22, 80 and 3306 we can rule out as we know what they are - port 10000, on the other hand, is a little unconventional.</p>
 <p>It doesn&rsquo;t show up on a full port scan so we can assume the firewall is blocking us. We can&rsquo;t quite confirm just yet but it seems likely:</p>
 <pre><code>agent47@gamezone:~$ cat /etc/iptables/rules.v4
