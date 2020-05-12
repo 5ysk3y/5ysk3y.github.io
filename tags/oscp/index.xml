@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>OSCP on 5ysk3y Pwnz</title>
+    <link>https://5ysk3y.github.io/tags/oscp/</link>
+    <description>Recent content in OSCP on 5ysk3y Pwnz</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 12 May 2020 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="https://5ysk3y.github.io/tags/oscp/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Game Zone - Linux</title>
+      <link>https://5ysk3y.github.io/thm/guides/gamezone/</link>
+      <pubDate>Tue, 12 May 2020 00:00:00 +0000</pubDate>
+      
+      <guid>https://5ysk3y.github.io/thm/guides/gamezone/</guid>
+      <description>Overview Today I&amp;rsquo;ll be bringing you a guide for the Try Hack Me room, Gamezone. This is an invaluable room for anyone looking to familiarize themselves with OSCP level concepts as the first stage leverages an ORDER BY/UNION SQL injection. During this walkthrough we&amp;rsquo;re going to manually exploit the injection, instead of relying on SQLMap to do it for us, in order to get a password. From there we use SSH Port Forwarding to gain access to a Webmin service that&amp;rsquo;s locked down, before we use metasploit to compromise that.</description>
+    </item>
+    
+  </channel>
+</rss>
