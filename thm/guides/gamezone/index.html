@@ -6,7 +6,7 @@
   
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-<meta name="description" content="Overview Today I&amp;rsquo;ll be bringing you a guide for the Try Hack Me room, Gamezone. This is an invaluable room for anyone looking to familiarize themselves with OSCP level concepts as the first stage leverages an ORDER BY/UNION SQL injection. During this walkthrough we&amp;rsquo;re going to manually exploit the injection, instead of relying on SQLMap to do it for us, in order to get a password. From there we use SSH Port Forwarding to gain access to a Webmin service that&amp;rsquo;s locked down, before we use metasploit to compromise that." />
+<meta name="description" content="Overview Today I&amp;rsquo;ll be bringing you a guide for the Try Hack Me room, Gamezone . This is an invaluable room for anyone looking to familiarize themselves with OSCP level concepts as the first stage leverages an ORDER BY/UNION SQL injection. During this walkthrough we&amp;rsquo;re going to manually exploit the injection, instead of relying on SQLMap to do it for us, in order to get a password. From there we use SSH Port Forwarding to gain access to a Webmin service that&amp;rsquo;s locked down, before we use metasploit to compromise that." />
 <meta name="keywords" content="HTB, Hack the Box" />
 <meta name="robots" content="noodp" />
 <link rel="canonical" href="https://5ysk3y.github.io/thm/guides/gamezone/" />
@@ -39,7 +39,7 @@
 <meta property="og:locale" content="en" />
 <meta property="og:type" content="article" />
 <meta property="og:title" content="Game Zone - Linux :: 5ysk3y Pwnz">
-<meta property="og:description" content="Overview Today I&amp;rsquo;ll be bringing you a guide for the Try Hack Me room, Gamezone. This is an invaluable room for anyone looking to familiarize themselves with OSCP level concepts as the first stage leverages an ORDER BY/UNION SQL injection. During this walkthrough we&amp;rsquo;re going to manually exploit the injection, instead of relying on SQLMap to do it for us, in order to get a password. From there we use SSH Port Forwarding to gain access to a Webmin service that&amp;rsquo;s locked down, before we use metasploit to compromise that." />
+<meta property="og:description" content="Overview Today I&amp;rsquo;ll be bringing you a guide for the Try Hack Me room, Gamezone . This is an invaluable room for anyone looking to familiarize themselves with OSCP level concepts as the first stage leverages an ORDER BY/UNION SQL injection. During this walkthrough we&amp;rsquo;re going to manually exploit the injection, instead of relying on SQLMap to do it for us, in order to get a password. From there we use SSH Port Forwarding to gain access to a Webmin service that&amp;rsquo;s locked down, before we use metasploit to compromise that." />
 <meta property="og:url" content="https://5ysk3y.github.io/thm/guides/gamezone/" />
 <meta property="og:site_name" content="Game Zone - Linux" />
 <meta property="og:image" content="https://5ysk3y.github.io/">
@@ -180,7 +180,8 @@
 
 
 <h2 id="overview"><strong>Overview</strong><a href="#overview" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
-<p>Today I&rsquo;ll be bringing you a guide for the Try Hack Me room, Gamezone. This is an invaluable room for anyone looking to familiarize themselves with OSCP level concepts as the first stage leverages an ORDER BY/UNION SQL injection. During this walkthrough we&rsquo;re going to manually exploit the injection, instead of relying on SQLMap to do it for us, in order to get a password. From there we use SSH Port Forwarding to gain access to a Webmin service that&rsquo;s locked down, before we use metasploit to compromise that. This was a really fun room so, let&rsquo;s go!</p>
+<p>Today I&rsquo;ll be bringing you a guide for the Try Hack Me room, <a href="https://tryhackme.com/room/gamezone" target="_blank">Gamezone</a>
+. This is an invaluable room for anyone looking to familiarize themselves with OSCP level concepts as the first stage leverages an ORDER BY/UNION SQL injection. During this walkthrough we&rsquo;re going to manually exploit the injection, instead of relying on SQLMap to do it for us, in order to get a password. From there we use SSH Port Forwarding to gain access to a Webmin service that&rsquo;s locked down, before we use metasploit to compromise that. This was a really fun room so, let&rsquo;s go!</p>
 <hr>
 <h2 id="nmap-scan"><strong>NMAP Scan</strong><a href="#nmap-scan" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
 <p>As is standard, we start off our process with an nmap scan to determine what ports we can listen on:</p>
