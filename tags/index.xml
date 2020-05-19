@@ -6,17 +6,71 @@
     <description>Recent content in Tags on 5ysk3y Pwnz</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Tue, 12 May 2020 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 19 May 2020 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://5ysk3y.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
+      <title>BASH</title>
+      <link>https://5ysk3y.github.io/tags/bash/</link>
+      <pubDate>Tue, 19 May 2020 00:00:00 +0000</pubDate>
+      
+      <guid>https://5ysk3y.github.io/tags/bash/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Cron</title>
+      <link>https://5ysk3y.github.io/tags/cron/</link>
+      <pubDate>Tue, 19 May 2020 00:00:00 +0000</pubDate>
+      
+      <guid>https://5ysk3y.github.io/tags/cron/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>FTP</title>
+      <link>https://5ysk3y.github.io/tags/ftp/</link>
+      <pubDate>Tue, 19 May 2020 00:00:00 +0000</pubDate>
+      
+      <guid>https://5ysk3y.github.io/tags/ftp/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>Linux</title>
       <link>https://5ysk3y.github.io/tags/linux/</link>
-      <pubDate>Tue, 12 May 2020 00:00:00 +0000</pubDate>
+      <pubDate>Tue, 19 May 2020 00:00:00 +0000</pubDate>
       
       <guid>https://5ysk3y.github.io/tags/linux/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>OSCP</title>
+      <link>https://5ysk3y.github.io/tags/oscp/</link>
+      <pubDate>Tue, 19 May 2020 00:00:00 +0000</pubDate>
+      
+      <guid>https://5ysk3y.github.io/tags/oscp/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>SMB</title>
+      <link>https://5ysk3y.github.io/tags/smb/</link>
+      <pubDate>Tue, 19 May 2020 00:00:00 +0000</pubDate>
+      
+      <guid>https://5ysk3y.github.io/tags/smb/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>SUID</title>
+      <link>https://5ysk3y.github.io/tags/suid/</link>
+      <pubDate>Tue, 19 May 2020 00:00:00 +0000</pubDate>
+      
+      <guid>https://5ysk3y.github.io/tags/suid/</guid>
       <description></description>
     </item>
     
@@ -26,15 +80,6 @@
       <pubDate>Tue, 12 May 2020 00:00:00 +0000</pubDate>
       
       <guid>https://5ysk3y.github.io/tags/metasploit/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>OSCP</title>
-      <link>https://5ysk3y.github.io/tags/oscp/</link>
-      <pubDate>Tue, 12 May 2020 00:00:00 +0000</pubDate>
-      
-      <guid>https://5ysk3y.github.io/tags/oscp/</guid>
       <description></description>
     </item>
     
