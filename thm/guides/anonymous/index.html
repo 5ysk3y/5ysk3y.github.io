@@ -6,8 +6,8 @@
   
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-<meta name="description" content="Overview Welcome to this walkthrough of the TryHackMe room, Anonymous .
-This Medium Linux room leverages anonymous access to an FTP service in order to modify a script that&amp;rsquo;s run via cron every five minutes. This gets us a user shell and, from there, we abuse a SUID binary to get ourselves a root shell. All in all, this is a fun room to accomplish and has touches of OSCP-like concepts." />
+<meta name="description" content="Overview  NMAP Scan  User Pwn  Root Pwn  Final Thoughts     Overview Welcome to this walkthrough of the TryHackMe room, Anonymous .
+This Medium Linux room leverages anonymous access to an FTP service in order to modify a script that&amp;rsquo;s run via cron every five minutes. This gets us a user shell and, from there, we abuse a SUID binary to get ourselves a root shell." />
 <meta name="keywords" content="HTB, Hack the Box" />
 <meta name="robots" content="noodp" />
 <link rel="canonical" href="https://5ysk3y.github.io/thm/guides/anonymous/" />
@@ -40,8 +40,8 @@ This Medium Linux room leverages anonymous access to an FTP service in order to 
 <meta property="og:locale" content="en" />
 <meta property="og:type" content="article" />
 <meta property="og:title" content="Anonymous - Linux :: 5ysk3y Pwnz">
-<meta property="og:description" content="Overview Welcome to this walkthrough of the TryHackMe room, Anonymous .
-This Medium Linux room leverages anonymous access to an FTP service in order to modify a script that&amp;rsquo;s run via cron every five minutes. This gets us a user shell and, from there, we abuse a SUID binary to get ourselves a root shell. All in all, this is a fun room to accomplish and has touches of OSCP-like concepts." />
+<meta property="og:description" content="Overview  NMAP Scan  User Pwn  Root Pwn  Final Thoughts     Overview Welcome to this walkthrough of the TryHackMe room, Anonymous .
+This Medium Linux room leverages anonymous access to an FTP service in order to modify a script that&amp;rsquo;s run via cron every five minutes. This gets us a user shell and, from there, we abuse a SUID binary to get ourselves a root shell." />
 <meta property="og:url" content="https://5ysk3y.github.io/thm/guides/anonymous/" />
 <meta property="og:site_name" content="Anonymous - Linux" />
 <meta property="og:image" content="https://5ysk3y.github.io/">
@@ -107,6 +107,14 @@ This Medium Linux room leverages anonymous access to an FTP service in order to 
                 <li><a href="https://gist.github.com/5ysk3y">Gists</a></li>
               
             
+              
+                <li><a href="/htb/">HTB</a></li>
+              
+            
+              
+                <li><a href="/thm/">THM</a></li>
+              
+            
           </ul>
         </ul>
       
@@ -133,6 +141,14 @@ This Medium Linux room leverages anonymous access to an FTP service in order to 
         <li><a href="https://gist.github.com/5ysk3y">Gists</a></li>
       
     
+      
+        <li><a href="/htb/">HTB</a></li>
+      
+    
+      
+        <li><a href="/thm/">THM</a></li>
+      
+    
     
   </ul>
 </nav>
@@ -154,7 +170,6 @@ This Medium Linux room leverages anonymous access to an FTP service in order to 
     
     
   </div>
-
   
   <span class="post-tags">
     
@@ -174,11 +189,23 @@ This Medium Linux room leverages anonymous access to an FTP service in order to 
     
   </span>
   
-
   
 
   <div class="post-content"><div>
-        
+        <ul>
+<li><a href="#overview">Overview</a>
+</li>
+<li><a href="#nmap-scan">NMAP Scan</a>
+</li>
+<li><a href="#user-pwn">User Pwn</a>
+</li>
+<li><a href="#root-pwn">Root Pwn</a>
+</li>
+<li><a href="#final-thoughts">Final Thoughts</a>
+</li>
+</ul>
+<hr>
+
   <figure class="left" >
     <img src="/images/guides/thm/anonymous.png"   />
     
