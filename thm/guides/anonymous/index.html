@@ -185,7 +185,6 @@ This Medium Linux room leverages anonymous access to an FTP service in order to 
   <ul>
     <li><a href="#overview"><strong>Overview</strong></a></li>
     <li><a href="#nmap-scan">NMAP Scan</a></li>
-    <li><a href="#walkthrough">Walkthrough</a></li>
     <li><a href="#user-pwn">User Pwn</a></li>
     <li><a href="#root-pwn">Root Pwn</a></li>
     <li><a href="#final-thoughts">Final Thoughts</a></li>
@@ -219,9 +218,7 @@ This Medium Linux room leverages anonymous access to an FTP service in order to 
 
 139/tcp open  netbios-ssn syn-ack Samba smbd 3.X - 4.X (workgroup: WORKGROUP)
 445/tcp open  netbios-ssn syn-ack Samba smbd 4.7.6-Ubuntu (workgroup: WORKGROUP)
-</code></pre><hr>
-<h1 id="walkthrough">Walkthrough<a href="#walkthrough" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
-<h1 id="user-pwn">User Pwn<a href="#user-pwn" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+</code></pre><h1 id="user-pwn">User Pwn<a href="#user-pwn" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
 <p>There&rsquo;s two services that peaked my interest off the bat; FTP and SMB. Looking at both, they allow anonymous access. If we check SMB first, we can see a couple of files in a <code>pics</code> share - downloading them and running them through <code>binwalk</code> doesn&rsquo;t show any hidden data. For now, we&rsquo;ll assume this is intended as a distraction.</p>
 <p>Turning to FTP, there&rsquo;s a few files we can see through our anonymous login. A shell script, a log file and a text file. The latter txt file outlines how <code>anonymous</code> access should probably be disabled in the form of a note from the author&ndash; I&rsquo;d agree. The log file we see is exactly that as it contains log entries. Finally we have a shell script called <code>clean.sh</code> :</p>
 <p><code>-rwxr-xrwx    1 1000     1000          346 May 19 18:31 clean.sh</code></p>
