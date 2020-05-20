@@ -105,14 +105,6 @@
                 <li><a href="https://gist.github.com/5ysk3y">Gists</a></li>
               
             
-              
-                <li><a href="/htb/">HTB</a></li>
-              
-            
-              
-                <li><a href="/thm/">THM</a></li>
-              
-            
           </ul>
         </ul>
       
@@ -139,14 +131,6 @@
         <li><a href="https://gist.github.com/5ysk3y">Gists</a></li>
       
     
-      
-        <li><a href="/htb/">HTB</a></li>
-      
-    
-      
-        <li><a href="/thm/">THM</a></li>
-      
-    
     
   </ul>
 </nav>
@@ -157,19 +141,24 @@
 
   <div class="content">
     
+
+
 <div class="post">
   <h1 class="post-title">
     <a href="https://5ysk3y.github.io/thm/guides/gamezone/">Game Zone - Linux</a></h1>
   <div class="post-meta">
       
     <span class="post-date">
-      2020-05-12
+      Posted on: 2020-05-12
+      <span style="position:relative;float:right">Reading time: 9 minutes.</style>
     </span>
     
     
   </div>
+  <hr>
   
   <span class="post-tags">
+    <p></p>
     
     #<a href="https://5ysk3y.github.io/tags/oscp/">OSCP</a>&nbsp;
     
@@ -184,7 +173,19 @@
   </span>
   
   
-
+  <hr>
+  <aside>
+    <nav id="TableOfContents">
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#nmap-scan">NMAP Scan</a></li>
+    <li><a href="#user-pwn">User Pwn</a></li>
+    <li><a href="#root-pwn">Root Pwn</a></li>
+    <li><a href="#final-thoughts">Final Thoughts</a></li>
+  </ul>
+</nav>
+  </aside>
+  <hr>
   <div class="post-content"><div>
         
   <figure class="left" >
@@ -193,11 +194,11 @@
   </figure>
 
 
-<h2 id="overview"><strong>Overview</strong><a href="#overview" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<h1 id="overview">Overview<a href="#overview" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
 <p>Today I&rsquo;ll be bringing you a guide for the Try Hack Me room, <a href="https://tryhackme.com/room/gamezone" target="_blank">Gamezone</a>
 . This is an invaluable room for anyone looking to familiarize themselves with OSCP level concepts as the first stage leverages an ORDER BY/UNION SQL injection. During this walkthrough we&rsquo;re going to manually exploit the injection, instead of relying on SQLMap to do it for us, in order to get a password. From there we use SSH Port Forwarding to gain access to a Webmin service that&rsquo;s locked down, before we use metasploit to compromise that. This was a really fun room so, let&rsquo;s go!</p>
 <hr>
-<h2 id="nmap-scan"><strong>NMAP Scan</strong><a href="#nmap-scan" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<h1 id="nmap-scan">NMAP Scan<a href="#nmap-scan" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
 <p>As is standard, we start off our process with an nmap scan to determine what ports we can listen on:</p>
 <pre><code># Nmap 7.80 scan initiated Sun Apr 26 04:38:10 2020 as: nmap -Pn -sC -sV -oA initial -v 10.10.250.216
 Nmap scan report for 10.10.250.216
@@ -223,7 +224,7 @@ Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 Read data files from: /usr/bin/../share/nmap
 Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
 # Nmap done at Sun Apr 26 04:38:24 2020 -- 1 IP address (1 host up) scanned in 14.22 seconds
-</code></pre><h2 id="walkthrough">Walkthrough<a href="#walkthrough" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+</code></pre><h1 id="user-pwn">User Pwn<a href="#user-pwn" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
 <p>As we can see, there&rsquo;s 2 ports Open:</p>
 <ul>
 <li>SSH (7.2p2)</li>
@@ -275,6 +276,7 @@ Service detection performed. Please report any incorrect results at https://nmap
 </span></code></pre></div><p>Before moving on we must crack that hash to get our user password. I used John for this, although online tools exist to allow you to reverse it that way if you don&rsquo;t have the facility to crack stuff. Due to THM guide rules, I&rsquo;m not able to include this but, that said, aquiring it isn&rsquo;t all that difficult once you have the hash.</p>
 <p>Success! We get a password. Using the login combination of <code>agent47:&lt;REDACTED&gt;</code> we can now SSH into the machine and get our user flag.</p>
 <hr>
+<h1 id="root-pwn">Root Pwn<a href="#root-pwn" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
 <p>Once on the box, we would traditionally enumerate but this is a guided experience so lets stick with the beaten path; running <code>ss</code> to get a list of listening ports on the box, we see one that stands out due to its number as well as the fact that it didn&rsquo;t appear on our nmap scan:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">agent47@gamezone:~$ ss -tulpn
 Netid State      Recv-Q Send-Q           Local Address:Port                  Peer Address:Port
@@ -337,7 +339,7 @@ Connection: close
 </code></pre><p>Assuming the file exists and the payload is correct, it&rsquo;ll get executed. I may see if I can supply a manual payload at a later date, for now though Metasploit is the easiest way to handle this.</p>
 <p>This gets you a shell, though, and as the root user non-the-less. From there you can proceed to get the flag.</p>
 <hr>
-<h2 id="final-thoughts">Final Thoughts<a href="#final-thoughts" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<h1 id="final-thoughts">Final Thoughts<a href="#final-thoughts" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
 <p>All in all, this is a guided room so the difficulty curve will only go so far. In this case, we tried to take it a step further by manual exlpoitation of SQL. Wherever possible, and in line with expectations for the OSCP, I try and refrain from using SQLMap and Metasploit as much as possible. They are one-time/limited use tools in the OSCP exam so becoming reliant on them instead of your own knowledge isn&rsquo;t going to be favorable in the long term. Hopefully this better explains exactly how this is done, as well as detailing how SQLMap itself handle this. In the last stage, manual exploitation wasn&rsquo;t something I dug into due to time but <a href="http://www.americaninfosec.com/research/dossiers/AISG-12-001.pdf" target="_blank">this</a>
  URL is referenced within the Metasploit module and outlines, in more detail, how that works.</p>
 <p>None-the-less, this is a great learning experience for anyone that hasn&rsquo;t manually exploited SQLi to this degree before. I hope you enjoyed the read.</p>

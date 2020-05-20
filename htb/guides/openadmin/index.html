@@ -109,14 +109,6 @@
                 <li><a href="https://gist.github.com/5ysk3y">Gists</a></li>
               
             
-              
-                <li><a href="/htb/">HTB</a></li>
-              
-            
-              
-                <li><a href="/thm/">THM</a></li>
-              
-            
           </ul>
         </ul>
       
@@ -143,14 +135,6 @@
         <li><a href="https://gist.github.com/5ysk3y">Gists</a></li>
       
     
-      
-        <li><a href="/htb/">HTB</a></li>
-      
-    
-      
-        <li><a href="/thm/">THM</a></li>
-      
-    
     
   </ul>
 </nav>
@@ -161,19 +145,24 @@
 
   <div class="content">
     
+
+
 <div class="post">
   <h1 class="post-title">
     <a href="https://5ysk3y.github.io/htb/guides/openadmin/">OpenAdmin [Easy] - Linux</a></h1>
   <div class="post-meta">
       
     <span class="post-date">
-      2020-05-02
+      Posted on: 2020-05-02
+      <span style="position:relative;float:right">Reading time: 6 minutes.</style>
     </span>
     
     
   </div>
+  <hr>
   
   <span class="post-tags">
+    <p></p>
     
     #<a href="https://5ysk3y.github.io/tags/hack-the-box/">Hack The Box</a>&nbsp;
     
@@ -190,7 +179,18 @@
   </span>
   
   
-
+  <hr>
+  <aside>
+    <nav id="TableOfContents">
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#nmap-scan">NMAP Scan</a></li>
+    <li><a href="#user-pwn">User Pwn</a></li>
+    <li><a href="#root-pwn">Root Pwn</a></li>
+  </ul>
+</nav>
+  </aside>
+  <hr>
   <div class="post-content"><div>
         
   <figure class="left" >
@@ -199,10 +199,10 @@
   </figure>
 
 
-<h2 id="overview">Overview<a href="#overview" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<h1 id="overview">Overview<a href="#overview" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
 <p>OpenAdmin was a quick and easy Linux box that uses a common CVE for an application called ONA to get us intial access to the box. From there, we hop between 2 user through some enumeration before exploiting a sudo command to get root.</p>
 <hr>
-<h2 id="nmap-scan">NMAP Scan<a href="#nmap-scan" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<h1 id="nmap-scan">NMAP Scan<a href="#nmap-scan" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
 <p>Let&rsquo;s begin by seeing what ports are currently open:</p>
 <pre><code># Nmap 7.80 scan initiated Sat Jan  4 19:56:44 2020 as: nmap -v -A -oA nmap/openadmin_initial 10.10.10.171
 Nmap scan report for 10.10.10.171
@@ -246,7 +246,7 @@ HOP RTT      ADDRESS
 Read data files from: /usr/bin/../share/nmap
 OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
 # Nmap done at Sat Jan  4 19:57:05 2020 -- 1 IP address (1 host up) scanned in 21.38 seconds
-</code></pre><h4 id="notes">Notes<a href="#notes" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
+</code></pre><h1 id="user-pwn">User Pwn<a href="#user-pwn" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
 <p>In a nutshell, we can see two open ports. Since SSH is up to date and we can&rsquo;t directly compromise it, let&rsquo;s move our attention to the web port. I did an initial Gobuster scan on the IP that also targeted HTML/PHP files  - this found 2 more sub-dir websites:</p>
 <pre><code>/index.html (Status: 200)
 /music (Status: 301)
@@ -325,7 +325,7 @@ udp        0      0 127.0.0.53:53           0.0.0.0:*                           
 <p>Once I had the RSA key we used SSH2John to convert it to a format john was happy with and then passed it to the kracken which got us the passphrase: <code>bloodninjas</code></p>
 <p>Got in as Joanna. Got the user flag. Boom.</p>
 <hr>
-<h4 id="grooooooot">gRooooooot<a href="#grooooooot" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
+<h1 id="root-pwn">Root Pwn<a href="#root-pwn" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
 <p>Root was unbelievably easy compared to the user steps.</p>
 <p>I ran linPeas but it wasn&rsquo;t really necessary; doing standard enum is enough. So I ran:</p>
 <p><code>sudo -l</code></p>

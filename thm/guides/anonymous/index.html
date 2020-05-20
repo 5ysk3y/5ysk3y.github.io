@@ -6,8 +6,8 @@
   
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-<meta name="description" content="Overview  NMAP Scan  User Pwn  Root Pwn  Final Thoughts     Overview Welcome to this walkthrough of the TryHackMe room, Anonymous .
-This Medium Linux room leverages anonymous access to an FTP service in order to modify a script that&amp;rsquo;s run via cron every five minutes. This gets us a user shell and, from there, we abuse a SUID binary to get ourselves a root shell." />
+<meta name="description" content="Overview Welcome to this walkthrough of the TryHackMe room, Anonymous .
+This Medium Linux room leverages anonymous access to an FTP service in order to modify a script that&amp;rsquo;s run via cron every five minutes. This gets us a user shell and, from there, we abuse a SUID binary to get ourselves a root shell. All in all, this is a fun room to accomplish and has touches of OSCP-like concepts." />
 <meta name="keywords" content="HTB, Hack the Box" />
 <meta name="robots" content="noodp" />
 <link rel="canonical" href="https://5ysk3y.github.io/thm/guides/anonymous/" />
@@ -40,8 +40,8 @@ This Medium Linux room leverages anonymous access to an FTP service in order to 
 <meta property="og:locale" content="en" />
 <meta property="og:type" content="article" />
 <meta property="og:title" content="Anonymous - Linux :: 5ysk3y Pwnz">
-<meta property="og:description" content="Overview  NMAP Scan  User Pwn  Root Pwn  Final Thoughts     Overview Welcome to this walkthrough of the TryHackMe room, Anonymous .
-This Medium Linux room leverages anonymous access to an FTP service in order to modify a script that&amp;rsquo;s run via cron every five minutes. This gets us a user shell and, from there, we abuse a SUID binary to get ourselves a root shell." />
+<meta property="og:description" content="Overview Welcome to this walkthrough of the TryHackMe room, Anonymous .
+This Medium Linux room leverages anonymous access to an FTP service in order to modify a script that&amp;rsquo;s run via cron every five minutes. This gets us a user shell and, from there, we abuse a SUID binary to get ourselves a root shell. All in all, this is a fun room to accomplish and has touches of OSCP-like concepts." />
 <meta property="og:url" content="https://5ysk3y.github.io/thm/guides/anonymous/" />
 <meta property="og:site_name" content="Anonymous - Linux" />
 <meta property="og:image" content="https://5ysk3y.github.io/">
@@ -107,14 +107,6 @@ This Medium Linux room leverages anonymous access to an FTP service in order to 
                 <li><a href="https://gist.github.com/5ysk3y">Gists</a></li>
               
             
-              
-                <li><a href="/htb/">HTB</a></li>
-              
-            
-              
-                <li><a href="/thm/">THM</a></li>
-              
-            
           </ul>
         </ul>
       
@@ -141,14 +133,6 @@ This Medium Linux room leverages anonymous access to an FTP service in order to 
         <li><a href="https://gist.github.com/5ysk3y">Gists</a></li>
       
     
-      
-        <li><a href="/htb/">HTB</a></li>
-      
-    
-      
-        <li><a href="/thm/">THM</a></li>
-      
-    
     
   </ul>
 </nav>
@@ -159,19 +143,24 @@ This Medium Linux room leverages anonymous access to an FTP service in order to 
 
   <div class="content">
     
+
+
 <div class="post">
   <h1 class="post-title">
     <a href="https://5ysk3y.github.io/thm/guides/anonymous/">Anonymous - Linux</a></h1>
   <div class="post-meta">
       
     <span class="post-date">
-      2020-05-19
+      Posted on: 2020-05-19
+      <span style="position:relative;float:right">Reading time: 5 minutes.</style>
     </span>
     
     
   </div>
+  <hr>
   
   <span class="post-tags">
+    <p></p>
     
     #<a href="https://5ysk3y.github.io/tags/oscp/">OSCP</a>&nbsp;
     
@@ -190,36 +179,35 @@ This Medium Linux room leverages anonymous access to an FTP service in order to 
   </span>
   
   
-
+  <hr>
+  <aside>
+    <nav id="TableOfContents">
+  <ul>
+    <li><a href="#overview"><strong>Overview</strong></a></li>
+    <li><a href="#nmap-scan">NMAP Scan</a></li>
+    <li><a href="#walkthrough">Walkthrough</a></li>
+    <li><a href="#user-pwn">User Pwn</a></li>
+    <li><a href="#root-pwn">Root Pwn</a></li>
+    <li><a href="#final-thoughts">Final Thoughts</a></li>
+  </ul>
+</nav>
+  </aside>
+  <hr>
   <div class="post-content"><div>
-        <hr>
-<ul>
-<li><a href="#overview">Overview</a>
-</li>
-<li><a href="#nmap-scan">NMAP Scan</a>
-</li>
-<li><a href="#user-pwn">User Pwn</a>
-</li>
-<li><a href="#root-pwn">Root Pwn</a>
-</li>
-<li><a href="#final-thoughts">Final Thoughts</a>
-</li>
-</ul>
-<hr>
-
+        
   <figure class="left" >
     <img src="/images/guides/thm/anonymous.png"   />
     
   </figure>
 
 
-<h2 id="overview"><strong>Overview</strong><a href="#overview" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<h1 id="overview"><strong>Overview</strong><a href="#overview" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
 <p>Welcome to this walkthrough of the <a href="https://tryhackme.com" target="_blank">TryHackMe</a>
  room, <a href="https://tryhackme.com/room/anonymous" target="_blank">Anonymous</a>
 .</p>
 <p>This Medium Linux room leverages anonymous access to an FTP service in order to modify a script that&rsquo;s run via cron every five minutes. This gets us a user shell and, from there, we abuse a SUID binary to get ourselves a root shell. All in all, this is a fun room to accomplish and has touches of OSCP-like concepts.</p>
 <hr>
-<h2 id="nmap-scan">NMAP Scan<a href="#nmap-scan" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<h1 id="nmap-scan">NMAP Scan<a href="#nmap-scan" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
 <p>As always we begin our enumeration with an NMAP scan. I&rsquo;ve condensed it slightly to lessen the output:</p>
 <pre><code>21/tcp  open  ftp         syn-ack vsftpd 2.0.8 or later
 | ftp-anon: Anonymous FTP login allowed (FTP code 230)
@@ -232,8 +220,8 @@ This Medium Linux room leverages anonymous access to an FTP service in order to 
 139/tcp open  netbios-ssn syn-ack Samba smbd 3.X - 4.X (workgroup: WORKGROUP)
 445/tcp open  netbios-ssn syn-ack Samba smbd 4.7.6-Ubuntu (workgroup: WORKGROUP)
 </code></pre><hr>
-<h2 id="walkthrough">Walkthrough<a href="#walkthrough" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
-<h3 id="user-pwn">User Pwn<a href="#user-pwn" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<h1 id="walkthrough">Walkthrough<a href="#walkthrough" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<h1 id="user-pwn">User Pwn<a href="#user-pwn" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
 <p>There&rsquo;s two services that peaked my interest off the bat; FTP and SMB. Looking at both, they allow anonymous access. If we check SMB first, we can see a couple of files in a <code>pics</code> share - downloading them and running them through <code>binwalk</code> doesn&rsquo;t show any hidden data. For now, we&rsquo;ll assume this is intended as a distraction.</p>
 <p>Turning to FTP, there&rsquo;s a few files we can see through our anonymous login. A shell script, a log file and a text file. The latter txt file outlines how <code>anonymous</code> access should probably be disabled in the form of a note from the author&ndash; I&rsquo;d agree. The log file we see is exactly that as it contains log entries. Finally we have a shell script called <code>clean.sh</code> :</p>
 <p><code>-rwxr-xrwx    1 1000     1000          346 May 19 18:31 clean.sh</code></p>
@@ -268,7 +256,7 @@ bash: no job control in this shell
 namelessone@anonymous:~$ whoami
 namelessone
 </code></pre><p>This gets us some shell access and the user.txt flag.</p>
-<h3 id="root-pwn">Root Pwn<a href="#root-pwn" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<h1 id="root-pwn">Root Pwn<a href="#root-pwn" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
 <p>Next up, as is standard practice whilst I poke around, I set off <a href="https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite" target="_blank">linPEAS</a>
  - this actually highlighted our privilage escalation vector. Reading though the output of a completed scan, I could see a particularly interesting binary listed under SUID binaries found on the system:</p>
 <p><code>/usr/bin/env</code></p>
@@ -281,7 +269,7 @@ uid=1000(namelessone) gid=1000(namelessone) euid=0(root) groups=1000(namelessone
 <p>Note that unless you have a full TTY you likely won&rsquo;t get any output once you&rsquo;ve elevated to root, but commands will still run. You&rsquo;ll also retain your UID/GID, but the EUID (effective user-ID) will be set to root, which means you&rsquo;re basically root. This will enable you to go and grab the root flag.</p>
 </blockquote>
 <hr>
-<h2 id="final-thoughts">Final Thoughts<a href="#final-thoughts" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<h1 id="final-thoughts">Final Thoughts<a href="#final-thoughts" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
 <p>TL;DR - keep it simple and be careful and this room shouldn&rsquo;t give you too much trouble.</p>
 <p>This is a nice little OSCP-like box in terms of the things you have to check, and the room name provides the clue that we get initial access through anonymous logins. It was rated medium - many of the concepts used are basic so I wouldn&rsquo;t personally say it&rsquo;s that hard. It&rsquo;s more about observation and ensuring that you&rsquo;re not digging yourself a grave by, for example, re-uploading a modified file with incorrect permissions.</p>
 

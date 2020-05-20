@@ -6,7 +6,7 @@
   
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-<meta name="description" content="Registry is an amazing Linux machine - it&amp;rsquo;s rated as hard but I didn&amp;rsquo;t find it all too difficult. That said it was very enjoyable and involves you, firstly, taking advantage of a Docker API to pull down an image from a Registry on the box. From there we get a shell and proceed to gain access to a hosted CMS called Bolt; this enables us to execute code as the www-data user which, conveniently, also has sudo access to a binary that can perform full system backups." />
+<meta name="description" content="Overview Registry is an amazing Linux machine - it&amp;rsquo;s rated as hard but I didn&amp;rsquo;t find it all too difficult. That said it was very enjoyable and involves you, firstly, taking advantage of a Docker API to pull down an image from a Registry on the box. From there we get a shell and proceed to gain access to a hosted CMS called Bolt; this enables us to execute code as the www-data user which, conveniently, also has sudo access to a binary that can perform full system backups." />
 <meta name="keywords" content="HTB, Hack the Box" />
 <meta name="robots" content="noodp" />
 <link rel="canonical" href="https://5ysk3y.github.io/htb/guides/registry/" />
@@ -39,7 +39,7 @@
 <meta property="og:locale" content="en" />
 <meta property="og:type" content="article" />
 <meta property="og:title" content="Registry [Hard] - Linux :: 5ysk3y Pwnz">
-<meta property="og:description" content="Registry is an amazing Linux machine - it&amp;rsquo;s rated as hard but I didn&amp;rsquo;t find it all too difficult. That said it was very enjoyable and involves you, firstly, taking advantage of a Docker API to pull down an image from a Registry on the box. From there we get a shell and proceed to gain access to a hosted CMS called Bolt; this enables us to execute code as the www-data user which, conveniently, also has sudo access to a binary that can perform full system backups." />
+<meta property="og:description" content="Overview Registry is an amazing Linux machine - it&amp;rsquo;s rated as hard but I didn&amp;rsquo;t find it all too difficult. That said it was very enjoyable and involves you, firstly, taking advantage of a Docker API to pull down an image from a Registry on the box. From there we get a shell and proceed to gain access to a hosted CMS called Bolt; this enables us to execute code as the www-data user which, conveniently, also has sudo access to a binary that can perform full system backups." />
 <meta property="og:url" content="https://5ysk3y.github.io/htb/guides/registry/" />
 <meta property="og:site_name" content="Registry [Hard] - Linux" />
 <meta property="og:image" content="https://5ysk3y.github.io/">
@@ -105,14 +105,6 @@
                 <li><a href="https://gist.github.com/5ysk3y">Gists</a></li>
               
             
-              
-                <li><a href="/htb/">HTB</a></li>
-              
-            
-              
-                <li><a href="/thm/">THM</a></li>
-              
-            
           </ul>
         </ul>
       
@@ -139,14 +131,6 @@
         <li><a href="https://gist.github.com/5ysk3y">Gists</a></li>
       
     
-      
-        <li><a href="/htb/">HTB</a></li>
-      
-    
-      
-        <li><a href="/thm/">THM</a></li>
-      
-    
     
   </ul>
 </nav>
@@ -157,19 +141,24 @@
 
   <div class="content">
     
+
+
 <div class="post">
   <h1 class="post-title">
     <a href="https://5ysk3y.github.io/htb/guides/registry/">Registry [Hard] - Linux</a></h1>
   <div class="post-meta">
       
     <span class="post-date">
-      2020-04-01
+      Posted on: 2020-04-01
+      <span style="position:relative;float:right">Reading time: 17 minutes.</style>
     </span>
     
     
   </div>
+  <hr>
   
   <span class="post-tags">
+    <p></p>
     
     #<a href="https://5ysk3y.github.io/tags/hack-the-box/">Hack The Box</a>&nbsp;
     
@@ -186,7 +175,19 @@
   </span>
   
   
-
+  <hr>
+  <aside>
+    <nav id="TableOfContents">
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#nmap-scan">NMAP Scan</a></li>
+    <li><a href="#user-pwn">User Pwn</a></li>
+    <li><a href="#root-pwn">Root Pwn</a></li>
+    <li><a href="#final-thoughts">Final Thoughts</a></li>
+  </ul>
+</nav>
+  </aside>
+  <hr>
   <div class="post-content"><div>
         
   <figure class="left" >
@@ -195,8 +196,10 @@
   </figure>
 
 
+<h1 id="overview">Overview<a href="#overview" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
 <p>Registry is an amazing Linux machine - it&rsquo;s rated as hard but I didn&rsquo;t find it all too difficult. That said it was very enjoyable and involves you, firstly, taking advantage of a Docker API to pull down an image from a Registry on the box. From there we get a shell and proceed to gain access to a hosted CMS called Bolt; this enables us to execute code as the www-data user which, conveniently, also has sudo access to a binary that can perform full system backups. Leveraging that, we&rsquo;re able to backup the root folder giving us access to the final flag and some SSH keys for good measure.</p>
 <hr>
+<h1 id="nmap-scan">NMAP Scan<a href="#nmap-scan" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
 <p>As standard we will begin with our nmap scan:</p>
 <pre><code># Nmap 7.80 scan initiated Sun Oct 20 15:33:23 2019 as: nmap -A -oA nmap/registry_initial -vvv 10.10.10.159
 Nmap scan report for 10.10.10.159
@@ -356,7 +359,8 @@ HOP RTT      ADDRESS
 Read data files from: /usr/bin/../share/nmap
 OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
 # Nmap done at Sun Oct 20 15:33:50 2019 -- 1 IP address (1 host up) scanned in 27.77 seconds
-</code></pre><p>There&rsquo;s not much exposed here, namely the web ports - 80/443 are open. Both, by default, load a standard nginx 1.14.0 page. Trusty Ubuntu, I think. There appear to be no differences in version so its not, say, 2 separate instances running on a single machine. Before we start poking around I&rsquo;ll set off a gobuster directory scan - that said, manual poking didn&rsquo;t seem to give me much (i.e. robots.txt etc). Thankfully gobuster came back with some results for us to check out:</p>
+</code></pre><h1 id="user-pwn">User Pwn<a href="#user-pwn" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>There&rsquo;s not much exposed here, namely the web ports - 80/443 are open. Both, by default, load a standard nginx 1.14.0 page. Trusty Ubuntu, I think. There appear to be no differences in version so its not, say, 2 separate instances running on a single machine. Before we start poking around I&rsquo;ll set off a gobuster directory scan - that said, manual poking didn&rsquo;t seem to give me much (i.e. robots.txt etc). Thankfully gobuster came back with some results for us to check out:</p>
 <pre><code>skynet Boxes/Registry » cat dirb/registry_initial
 /index.html (Status: 200)
 /install (Status: 301)
@@ -439,6 +443,7 @@ interact
 <pre><code>bolt@bolt:~$ wc -c user.txt
 33 user.txt
 </code></pre><hr>
+<h1 id="root-pwn">Root Pwn<a href="#root-pwn" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
 <p>Now we have a shell on the box, we can run an enumeration script to get a handle on things. There was nothing in the Bolt home folder that peaked my interest so I decided to run LinEnum which exposes a few interesting things. If we recall, earlier on, we stumbled across a CMS named Bolt that had an authenticated CVE - LinEmum gives us a way to potentially get around this by highlighting the <code>bolt.db</code> file that the CMS is using to store data:</p>
 <pre><code>/var/www/html/bolt/tests/phpunit/unit/resources/db:
 total 92K
@@ -535,7 +540,8 @@ www-data@bolt:~/html$
 <p>The <code>--path</code> argument just defines the directory we want to restore from the listed snapshots. The <code>--target</code> argument defines the folder into which the data gets restored. As the original owner of the files was root, restic will try and chown the files back to that ownership when you run the restore; this will fail because the bolt user cannot change file permissions to the root user. I outline this because the ownership change failures get shown as errors in the restore output which can be deceiving; the data does get restored. In this case we got the entire contents of the /root folder, including the flag file and the .ssh folder containing a key we can use to connect via SSH, without a passphrase.</p>
 <pre><code>root@bolt:~# wc -c root.txt
 33 root.txt
-</code></pre><p>And that&rsquo;s the box! For those interested, this introduction to Restic caused me to migrate over to that application for my home backups and it&rsquo;s genuinely brilliant. The weakness here was in the way sudo had been configured to allow backups to be taken of root owned files by a non-root user, not the restic application itself.</p>
+</code></pre><h1 id="final-thoughts">Final Thoughts<a href="#final-thoughts" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>And that&rsquo;s the box! For those interested, this introduction to Restic caused me to migrate over to that application for my home backups and it&rsquo;s genuinely brilliant. The weakness here was in the way sudo had been configured to allow backups to be taken of root owned files by a non-root user, not the restic application itself.</p>
 <p>I hope you enjoyed the read.</p>
 
       </div></div>

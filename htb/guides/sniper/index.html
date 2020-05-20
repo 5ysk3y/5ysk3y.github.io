@@ -6,7 +6,7 @@
   
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-<meta name="description" content="Sniper was one of my favorite boxes from recent memory. It leverages an RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&amp;rsquo;s take a look at how I did it. Please also note that the first part of this leverages a python script that I created; it&amp;rsquo;s referenced and included as a gist for your viewing." />
+<meta name="description" content="Overview Sniper was one of my favorite boxes from recent memory. It leverages an RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&amp;rsquo;s take a look at how I did it. Please also note that the first part of this leverages a python script that I created; it&amp;rsquo;s referenced and included as a gist for your viewing." />
 <meta name="keywords" content="HTB, Hack the Box" />
 <meta name="robots" content="noodp" />
 <link rel="canonical" href="https://5ysk3y.github.io/htb/guides/sniper/" />
@@ -39,7 +39,7 @@
 <meta property="og:locale" content="en" />
 <meta property="og:type" content="article" />
 <meta property="og:title" content="Sniper [Medium] - Windows :: 5ysk3y Pwnz">
-<meta property="og:description" content="Sniper was one of my favorite boxes from recent memory. It leverages an RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&amp;rsquo;s take a look at how I did it. Please also note that the first part of this leverages a python script that I created; it&amp;rsquo;s referenced and included as a gist for your viewing." />
+<meta property="og:description" content="Overview Sniper was one of my favorite boxes from recent memory. It leverages an RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&amp;rsquo;s take a look at how I did it. Please also note that the first part of this leverages a python script that I created; it&amp;rsquo;s referenced and included as a gist for your viewing." />
 <meta property="og:url" content="https://5ysk3y.github.io/htb/guides/sniper/" />
 <meta property="og:site_name" content="Sniper [Medium] - Windows" />
 <meta property="og:image" content="https://5ysk3y.github.io/">
@@ -105,14 +105,6 @@
                 <li><a href="https://gist.github.com/5ysk3y">Gists</a></li>
               
             
-              
-                <li><a href="/htb/">HTB</a></li>
-              
-            
-              
-                <li><a href="/thm/">THM</a></li>
-              
-            
           </ul>
         </ul>
       
@@ -139,14 +131,6 @@
         <li><a href="https://gist.github.com/5ysk3y">Gists</a></li>
       
     
-      
-        <li><a href="/htb/">HTB</a></li>
-      
-    
-      
-        <li><a href="/thm/">THM</a></li>
-      
-    
     
   </ul>
 </nav>
@@ -157,19 +141,24 @@
 
   <div class="content">
     
+
+
 <div class="post">
   <h1 class="post-title">
     <a href="https://5ysk3y.github.io/htb/guides/sniper/">Sniper [Medium] - Windows</a></h1>
   <div class="post-meta">
       
     <span class="post-date">
-      2020-03-29
+      Posted on: 2020-03-29
+      <span style="position:relative;float:right">Reading time: 11 minutes.</style>
     </span>
     
     
   </div>
+  <hr>
   
   <span class="post-tags">
+    <p></p>
     
     #<a href="https://5ysk3y.github.io/tags/hack-the-box/">Hack The Box</a>&nbsp;
     
@@ -184,7 +173,18 @@
   </span>
   
   
-
+  <hr>
+  <aside>
+    <nav id="TableOfContents">
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#nmap-scan">NMAP Scan</a></li>
+    <li><a href="#user-pwn">User Pwn</a></li>
+    <li><a href="#root-pwn">Root Pwn</a></li>
+  </ul>
+</nav>
+  </aside>
+  <hr>
   <div class="post-content"><div>
         
   <figure class="left" >
@@ -193,8 +193,10 @@
   </figure>
 
 
+<h1 id="overview">Overview<a href="#overview" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
 <p>Sniper was one of my favorite boxes from recent memory. It leverages an RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&rsquo;s take a look at how I did it. Please also note that the first part of this leverages a python script that I created; it&rsquo;s referenced and included as a gist for your viewing.</p>
 <hr>
+<h1 id="nmap-scan">NMAP Scan<a href="#nmap-scan" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
 <p>First up, from my standard nmap scan, we see :</p>
 <pre><code>nmap -A -oA nmap/snipper_initial -vvv 10.10.10.151
 
@@ -258,7 +260,8 @@ HOP RTT      ADDRESS
 Read data files from: /usr/bin/../share/nmap
 OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
 # Nmap done at Tue Oct  8 17:55:45 2019 -- 1 IP address (1 host up) scanned in 59.98 seconds
-</code></pre><p>For the most part there&rsquo;s only the web port, so lets start by checking that out:</p>
+</code></pre><h1 id="user-pwn">User Pwn<a href="#user-pwn" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>For the most part there&rsquo;s only the web port, so lets start by checking that out:</p>
 <p>http://10.10.10.151/</p>
 <p>Nothing special in the source. There&rsquo;s 2 links that lead off here:</p>
 <p>http://10.10.10.151/blog/
@@ -384,16 +387,17 @@ sniper\chris
 type C:\Users\Chris\Desktop\user.txt
 21f4d0f29fc4dd867500c1ad716cf56e
 </code></pre><hr>
+<h1 id="root-pwn">Root Pwn<a href="#root-pwn" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
 <p>Next onto root, some basic enum of the root dir (C:) shows an interesting and unusual “docs” folder..</p>
-<pre><code>PS C:\Docs&gt; dir
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-powershell" data-lang="powershell">PS C:\Docs&gt; dir
 
-    Directory: C:\Docs
+    Directory<span style="color:#960050;background-color:#1e0010">:</span> C:\Docs
 
 Mode                LastWriteTime         Length Name
 ----                -------------         ------ ----
--a----        4/11/2019   9:31 AM            285 note.tx
--a----        4/11/2019   9:17 AM         552607 php for dummies-trial.pdf
-</code></pre><p>Lets have a look at that note:</p>
+-a----        4/11/2019   9<span style="color:#960050;background-color:#1e0010">:</span>31 AM            285 note.tx
+-a----        4/11/2019   9<span style="color:#960050;background-color:#1e0010">:</span>17 AM         552607 php <span style="color:#66d9ef">for</span> dummies-trial.pdf
+</code></pre></div><p>Lets have a look at that note:</p>
 <pre><code>PS C:\Docs&gt; type note.txt
 
 Hi Chris,
