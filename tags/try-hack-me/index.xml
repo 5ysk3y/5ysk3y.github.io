@@ -1,15 +1,25 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Easy on 5ysk3y Pwnz</title>
-    <link>https://5ysk3y.github.io/tags/easy/</link>
-    <description>Recent content in Easy on 5ysk3y Pwnz</description>
+    <title>Try Hack Me on 5ysk3y Pwnz</title>
+    <link>https://5ysk3y.github.io/tags/try-hack-me/</link>
+    <description>Recent content in Try Hack Me on 5ysk3y Pwnz</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Tue, 12 May 2020 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 19 May 2020 00:00:00 +0000</lastBuildDate>
     
-	<atom:link href="https://5ysk3y.github.io/tags/easy/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://5ysk3y.github.io/tags/try-hack-me/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Anonymous - Linux</title>
+      <link>https://5ysk3y.github.io/thm/guides/anonymous/</link>
+      <pubDate>Tue, 19 May 2020 00:00:00 +0000</pubDate>
+      
+      <guid>https://5ysk3y.github.io/thm/guides/anonymous/</guid>
+      <description>Overview Welcome to this walkthrough of the TryHackMe room, Anonymous .
+This Medium Linux room leverages anonymous access to an FTP service in order to modify a script that&amp;rsquo;s run via cron every five minutes. This gets us a user shell and, from there, we abuse a SUID binary to get ourselves a root shell. All in all, this is a fun room to accomplish and has touches of OSCP-like concepts.</description>
+    </item>
     
     <item>
       <title>Game Zone - Linux</title>
@@ -18,17 +28,6 @@
       
       <guid>https://5ysk3y.github.io/thm/guides/gamezone/</guid>
       <description>Overview Today I&amp;rsquo;ll be bringing you a guide for the Try Hack Me room, Gamezone . This is an invaluable room for anyone looking to familiarize themselves with OSCP level concepts as the first stage leverages an ORDER BY/UNION SQL injection. During this walkthrough we&amp;rsquo;re going to manually exploit the injection, instead of relying on SQLMap to do it for us, in order to get a password. From there we use SSH Port Forwarding to gain access to a Webmin service that&amp;rsquo;s locked down, before we use metasploit to compromise that.</description>
-    </item>
-    
-    <item>
-      <title>OpenAdmin [Easy] - Linux</title>
-      <link>https://5ysk3y.github.io/htb/guides/openadmin/</link>
-      <pubDate>Sat, 02 May 2020 00:00:00 +0000</pubDate>
-      
-      <guid>https://5ysk3y.github.io/htb/guides/openadmin/</guid>
-      <description>Overview OpenAdmin was a quick and easy Linux box that uses a common CVE for an application called ONA to get us intial access to the box. From there, we hop between 2 user through some enumeration before exploiting a sudo command to get root.
- NMAP Scan Let&amp;rsquo;s begin by seeing what ports are currently open:
-# Nmap 7.80 scan initiated Sat Jan 4 19:56:44 2020 as: nmap -v -A -oA nmap/openadmin_initial 10.</description>
     </item>
     
   </channel>
