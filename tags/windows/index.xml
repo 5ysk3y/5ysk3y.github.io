@@ -6,11 +6,7 @@
     <description>Recent content in Windows on 5ysk3y Pwnz</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 29 Mar 2020 16:21:41 +0000</lastBuildDate>
-    
-	<atom:link href="https://5ysk3y.github.io/tags/windows/index.xml" rel="self" type="application/rss+xml" />
-    
-    
+    <lastBuildDate>Sun, 29 Mar 2020 16:21:41 +0000</lastBuildDate><atom:link href="https://5ysk3y.github.io/tags/windows/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Sniper [Medium] - Windows</title>
       <link>https://5ysk3y.github.io/htb/guides/sniper/</link>

@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
   
-    <title>Anonymous - Linux :: 5ysk3y Pwnz — An online resource for Hack the Box stuff</title>
+    <title>Anonymous - Linux :: 5ysk3y Pwnz</title>
   
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Overview Welcome to this walkthrough of the TryHackMe room, Anonymous .
 This Medium Linux room leverages anonymous access to an FTP service in order to modify a script that&amp;rsquo;s run via cron every five minutes. This gets us a user shell and, from there, we abuse a SUID binary to get ourselves a root shell. All in all, this is a fun room to accomplish and has touches of OSCP-like concepts." />
 <meta name="keywords" content="HTB, Hack the Box" />
@@ -24,7 +24,7 @@ This Medium Linux room leverages anonymous access to an FTP service in order to 
 
 
 
-<link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://5ysk3y.github.io/img/apple-touch-icon-144-precomposed.png">
+<link rel="apple-touch-icon" href="https://5ysk3y.github.io/img/apple-touch-icon-192x192.png">
 
   <link rel="shortcut icon" href="https://5ysk3y.github.io/img/favicon/blue.png">
 
@@ -32,18 +32,20 @@ This Medium Linux room leverages anonymous access to an FTP service in order to 
 
 <meta name="twitter:card" content="summary" />
 
-  <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
 
-<meta name="twitter:creator" content="" />
 
 
 <meta property="og:locale" content="en" />
 <meta property="og:type" content="article" />
-<meta property="og:title" content="Anonymous - Linux :: 5ysk3y Pwnz">
+<meta property="og:title" content="Anonymous - Linux">
 <meta property="og:description" content="Overview Welcome to this walkthrough of the TryHackMe room, Anonymous .
 This Medium Linux room leverages anonymous access to an FTP service in order to modify a script that&amp;rsquo;s run via cron every five minutes. This gets us a user shell and, from there, we abuse a SUID binary to get ourselves a root shell. All in all, this is a fun room to accomplish and has touches of OSCP-like concepts." />
 <meta property="og:url" content="https://5ysk3y.github.io/thm/guides/anonymous/" />
-<meta property="og:site_name" content="Anonymous - Linux" />
+<meta property="og:site_name" content="5ysk3y Pwnz" />
 
   
     <meta property="og:image" content="https://5ysk3y.github.io/img/favicon/blue.png">
@@ -67,7 +69,7 @@ This Medium Linux room leverages anonymous access to an FTP service in order to 
 
 
 </head>
-<body class="">
+<body class="blue">
 
 
 <div class="container headings--one-size">
@@ -82,7 +84,9 @@ This Medium Linux room leverages anonymous access to an FTP service in order to 
 </a>
 
     </div>
-    <div class="menu-trigger">menu</div>
+    
+      <div class="menu-trigger">menu</div>
+    
   </div>
   
     <nav class="menu">
@@ -288,7 +292,7 @@ uid=1000(namelessone) gid=1000(namelessone) euid=0(root) groups=1000(namelessone
   <div class="footer__inner">
     
       <div class="copyright">
-        <span>© 2020 Powered by <a href="http://gohugo.io">Hugo</a></span>
+        <span>© 2021 Powered by <a href="http://gohugo.io">Hugo</a></span>
     
         <span>:: Theme made by <a href="https://twitter.com/panr">panr</a></span>
       </div>
@@ -297,6 +301,8 @@ uid=1000(namelessone) gid=1000(namelessone) euid=0(root) groups=1000(namelessone
 
 <script src="https://5ysk3y.github.io/assets/main.js"></script>
 <script src="https://5ysk3y.github.io/assets/prism.js"></script>
+
+
 
 
 
