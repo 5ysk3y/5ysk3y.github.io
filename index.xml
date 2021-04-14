@@ -317,8 +317,7 @@ Connection: close
       <pubDate>Sat, 02 May 2020 00:00:00 +0000</pubDate>
       
       <guid>https://5ysk3y.github.io/htb/guides/openadmin/</guid>
-      <description>Overview OpenAdmin was a quick and easy Linux box that uses a common CVE for an application called ONA to get us intial access to the box. From there, we hop between 2 user through some enumeration before exploiting a sudo command to get root.
- NMAP Scan Let&amp;rsquo;s begin by seeing what ports are currently open:</description>
+      <description>OpenAdmin was a quick and easy Linux box that uses a common CVE for an application called ONA to get us intial access to the box. From there, we hop between 2 user through some enumeration before exploiting a sudo command to get root. Read on to find out how I did this!</description>
       <content>
   &lt;figure class=&#34;left&#34; &gt;
     &lt;img src=&#34;https://5ysk3y.github.io/images/guides/htb/openadmin.png&#34;   /&gt;
