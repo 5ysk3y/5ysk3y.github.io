@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Blog on 5ysk3y Pwnz</title>
+    <link>https://5ysk3y.github.io/blog/</link>
+    <description>Recent content in Blog on 5ysk3y Pwnz</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 29 Mar 2020 16:21:41 +0000</lastBuildDate><atom:link href="https://5ysk3y.github.io/blog/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Happy New Year</title>
+      <link>https://5ysk3y.github.io/blog/happy-new-year-2021/</link>
+      <pubDate>Mon, 29 Mar 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://5ysk3y.github.io/blog/happy-new-year-2021/</guid>
+      <description>Happy belated new year! I&amp;rsquo;m currently doing some more work on this after an extended break to handle IRL stuffs! Namely certs and the like; the plan is to now try and flesh this out beyond what currently exists, making the site more streamlined etc.</description>
+      <content>&lt;p&gt;Happy belated new year! I&amp;rsquo;m currently doing some more work on this after an extended break to handle IRL stuffs! Namely certs and the like; the plan is to now try and flesh this out beyond what currently exists, making the site more streamlined etc.&lt;/p&gt;
+&lt;p&gt;I also plan to upload further walkthroughs of boxes I&amp;rsquo;ve done, that have subsequently retired, on HTB/THM platforms, as well as generally exploring what else can be achieved with Hugo! Watch this space.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;5ysk3y&lt;/code&gt;&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Site Update</title>
+      <link>https://5ysk3y.github.io/blog/update-may-2020/</link>
+      <pubDate>Sat, 30 May 2020 00:00:00 +0000</pubDate>
+      
+      <guid>https://5ysk3y.github.io/blog/update-may-2020/</guid>
+      <description>So, as per below, I set myself a few goals for the month and (tbh!) I think I&amp;rsquo;ve done alright. The majority of changes revolved around missing/fundamental things that I wanted to fix. See the post below for a list of the few things I&amp;rsquo;ve managed to do!</description>
+      <content>&lt;p&gt;So, as per below, I set myself a few goals for the month and (tbh!) I think I&amp;rsquo;ve done alright. The majority of changes revolved around missing/fundamental things that I wanted to fix. See the post below for a list of the few things I&amp;rsquo;ve managed to do!&lt;/p&gt;
+&lt;p&gt;This month, that being June of 2020, I&amp;rsquo;d like to look at doing the following:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Add something cool to the homepage, to accompany links to my THM/HTB/Twitter profiles etc.&lt;/li&gt;
+&lt;li&gt;Move this written stuff into a blog section and their own respective pages&lt;/li&gt;
+&lt;li&gt;Add breadcrumb URL&amp;rsquo;s to pages (I sort of know how to do this.. its the formatting that&amp;rsquo;s giving me a hard time).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;If you stumbled here by accident, on purpose, or if you found any of my reference material useful, I always enjoy chatting to fellow hackers. Hit me up on Twitter &lt;a href=&#34;https://twitter.com/5ysk3y&#34; target=&#34;_blank&#34;&gt;@5ysk3y&lt;/a&gt;
+ and check out my &lt;a href=&#34;https://www.github.com/5ysk3y&#34; target=&#34;_blank&#34;&gt;GitHub Page&lt;/a&gt;
+&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;5ysk3y&lt;/code&gt;&lt;/p&gt;
+</content>
+    </item>
+    
+  </channel>
+</rss>

