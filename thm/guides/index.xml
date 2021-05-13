@@ -14,7 +14,7 @@
       
       <guid>https://5ysk3y.github.io/thm/guides/anonymous/</guid>
       <description>Overview Welcome to this walkthrough of the TryHackMe room, Anonymous .
-This Medium Linux room leverages anonymous access to an FTP service in order to modify a script that&amp;rsquo;s run via cron every five minutes. This gets us a user shell and, from there, we abuse a SUID binary to get ourselves a root shell. All in all, this is a fun room to accomplish and has touches of OSCP-like concepts.</description>
+This Medium Linux room leverages anonymous access to an FTP service in order to modify a script that&amp;rsquo;s run via cron every five minutes. This gets us a user shell and, from there, we abuse a SUID binary to get ourselves a root shell.</description>
       <content>
   &lt;figure class=&#34;left&#34; &gt;
     &lt;img src=&#34;https://5ysk3y.github.io/images/guides/thm/anonymous.png&#34;   /&gt;
@@ -101,7 +101,7 @@ uid=1000(namelessone) gid=1000(namelessone) euid=0(root) groups=1000(namelessone
       <pubDate>Tue, 12 May 2020 00:00:00 +0000</pubDate>
       
       <guid>https://5ysk3y.github.io/thm/guides/gamezone/</guid>
-      <description>Overview Today I&amp;rsquo;ll be bringing you a guide for the Try Hack Me room, Gamezone . This is an invaluable room for anyone looking to familiarize themselves with OSCP level concepts as the first stage leverages an ORDER BY/UNION SQL injection. During this walkthrough we&amp;rsquo;re going to manually exploit the injection, instead of relying on SQLMap to do it for us, in order to get a password. From there we use SSH Port Forwarding to gain access to a Webmin service that&amp;rsquo;s locked down, before we use metasploit to compromise that.</description>
+      <description>Overview Today I&amp;rsquo;ll be bringing you a guide for the Try Hack Me room, Gamezone . This is an invaluable room for anyone looking to familiarize themselves with OSCP level concepts as the first stage leverages an ORDER BY/UNION SQL injection. During this walkthrough we&amp;rsquo;re going to manually exploit the injection, instead of relying on SQLMap to do it for us, in order to get a password.</description>
       <content>
   &lt;figure class=&#34;left&#34; &gt;
     &lt;img src=&#34;https://5ysk3y.github.io/images/guides/thm/gamezone.png&#34;   /&gt;
