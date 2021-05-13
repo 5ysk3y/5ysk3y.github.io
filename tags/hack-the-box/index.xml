@@ -13,7 +13,9 @@
       <pubDate>Sat, 02 May 2020 00:00:00 +0000</pubDate>
       
       <guid>https://5ysk3y.github.io/htb/guides/openadmin/</guid>
-      <description>OpenAdmin was a quick and easy Linux box that uses a common CVE for an application called ONA to get us intial access to the box. From there, we hop between 2 user through some enumeration before exploiting a sudo command to get root. Read on to find out how I did this!</description>
+      <description>Overview OpenAdmin was a quick and easy Linux box that uses a common CVE for an application called ONA to get us intial access to the box. From there, we hop between 2 user through some enumeration before exploiting a sudo command to get root.
+ NMAP Scan Let&amp;rsquo;s begin by seeing what ports are currently open:
+# Nmap 7.80 scan initiated Sat Jan 4 19:56:44 2020 as: nmap -v -A -oA nmap/openadmin_initial 10.</description>
       <content>
   &lt;figure class=&#34;left&#34; &gt;
     &lt;img src=&#34;https://5ysk3y.github.io/images/guides/htb/openadmin.png&#34;   /&gt;
@@ -535,7 +537,7 @@ www-data@bolt:~/html$
       <pubDate>Sun, 29 Mar 2020 16:21:41 +0000</pubDate>
       
       <guid>https://5ysk3y.github.io/htb/guides/sniper/</guid>
-      <description>Overview Sniper was one of my favorite boxes from recent memory. It leverages an RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&amp;rsquo;s take a look at how I did it.</description>
+      <description>Overview Sniper was one of my favorite boxes from recent memory. It leverages an RFI and Powershell constrained mode to eventually get a user shell. From there you poison a Windows Help (CHM) file in order to execute code as the Administrator user. Let&amp;rsquo;s take a look at how I did it. Please also note that the first part of this leverages a python script that I created; it&amp;rsquo;s referenced and included as a gist for your viewing.</description>
       <content>
   &lt;figure class=&#34;left&#34; &gt;
     &lt;img src=&#34;https://5ysk3y.github.io/images/guides/htb/sniper.png&#34;   /&gt;

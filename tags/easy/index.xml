@@ -13,7 +13,7 @@
       <pubDate>Tue, 12 May 2020 00:00:00 +0000</pubDate>
       
       <guid>https://5ysk3y.github.io/thm/guides/gamezone/</guid>
-      <description>Overview Today I&amp;rsquo;ll be bringing you a guide for the Try Hack Me room, Gamezone . This is an invaluable room for anyone looking to familiarize themselves with OSCP level concepts as the first stage leverages an ORDER BY/UNION SQL injection. During this walkthrough we&amp;rsquo;re going to manually exploit the injection, instead of relying on SQLMap to do it for us, in order to get a password.</description>
+      <description>Overview Today I&amp;rsquo;ll be bringing you a guide for the Try Hack Me room, Gamezone . This is an invaluable room for anyone looking to familiarize themselves with OSCP level concepts as the first stage leverages an ORDER BY/UNION SQL injection. During this walkthrough we&amp;rsquo;re going to manually exploit the injection, instead of relying on SQLMap to do it for us, in order to get a password. From there we use SSH Port Forwarding to gain access to a Webmin service that&amp;rsquo;s locked down, before we use metasploit to compromise that.</description>
       <content>
   &lt;figure class=&#34;left&#34; &gt;
     &lt;img src=&#34;https://5ysk3y.github.io/images/guides/thm/gamezone.png&#34;   /&gt;
@@ -179,7 +179,9 @@ Connection: close
       <pubDate>Sat, 02 May 2020 00:00:00 +0000</pubDate>
       
       <guid>https://5ysk3y.github.io/htb/guides/openadmin/</guid>
-      <description>OpenAdmin was a quick and easy Linux box that uses a common CVE for an application called ONA to get us intial access to the box. From there, we hop between 2 user through some enumeration before exploiting a sudo command to get root. Read on to find out how I did this!</description>
+      <description>Overview OpenAdmin was a quick and easy Linux box that uses a common CVE for an application called ONA to get us intial access to the box. From there, we hop between 2 user through some enumeration before exploiting a sudo command to get root.
+ NMAP Scan Let&amp;rsquo;s begin by seeing what ports are currently open:
+# Nmap 7.80 scan initiated Sat Jan 4 19:56:44 2020 as: nmap -v -A -oA nmap/openadmin_initial 10.</description>
       <content>
   &lt;figure class=&#34;left&#34; &gt;
     &lt;img src=&#34;https://5ysk3y.github.io/images/guides/htb/openadmin.png&#34;   /&gt;
