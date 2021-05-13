@@ -6,23 +6,7 @@
     <description>Recent content on 5ysk3y Pwnz</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 14 Apr 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://5ysk3y.github.io/index.xml" rel="self" type="application/rss+xml" />
-    <item>
-      <title>New Website Stuffs!</title>
-      <link>https://5ysk3y.github.io/blog/site-update-april-2021/</link>
-      <pubDate>Wed, 14 Apr 2021 00:00:00 +0000</pubDate>
-      
-      <guid>https://5ysk3y.github.io/blog/site-update-april-2021/</guid>
-      <description>I thought it may about time I posted something given the fact that the site hasn&amp;rsquo;t been added to or updated in the last year or so. Welp, it&amp;rsquo;s time for an update!</description>
-      <content>&lt;p&gt;&lt;strong&gt;Howdy!&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;I thought it may be about time I posted something given the fact that the site hasn&amp;rsquo;t been added to or updated in the last year or so. Also because I&amp;rsquo;ve actually managed to push some new stuff to this site that I&amp;rsquo;ve had sitting in a development branch for the last couple of months&amp;ndash; you may have noticed a change to the front page. This wasn&amp;rsquo;t accident! The latest HTB guide (more on that in a mo) and blog posts &lt;em&gt;do&lt;/em&gt; populate on there too but its no longer going to be a huge list of stuff. Old &amp;ldquo;blog&amp;rdquo; posts that did exist on there have been migrated into actual blog posts, much like this, and the goal is to just make things a bit cleaner and easier to manage.&lt;/p&gt;
-&lt;p&gt;Going forward, I&amp;rsquo;m officially back on &lt;a href=&#34;https://app.hackthebox.eu/profile/158978&#34; target=&#34;_blank&#34;&gt;HackTheBox&lt;/a&gt;
- stuff as of this week and have been making my way through live boxes that I&amp;rsquo;ve not completed yet; it&amp;rsquo;s been around 6 months since I did anything with HTB proper, but writeups are being done in tandem with those and will drop with the retirement of their respective boxes.&lt;/p&gt;
-&lt;p&gt;That&amp;rsquo;s pretty much it for now. Thanks for stopping by!&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;5ysk3y&lt;/code&gt;&lt;/p&gt;
-</content>
-    </item>
-    
+    <lastBuildDate>Mon, 29 Mar 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://5ysk3y.github.io/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Happy New Year</title>
       <link>https://5ysk3y.github.io/blog/happy-new-year-2021/</link>

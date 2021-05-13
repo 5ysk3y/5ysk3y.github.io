@@ -1,0 +1,15 @@
+---
+title: "Guides"
+date: 2020-03-29T16:21:41Z
+draft: false
+---
+
+# HTB Guides
+
+---
+
+May 2nd 2020 - [OpenAdmin - Linux [Easy]]({{< ref "OpenAdmin.md" >}})
+
+April 4th 2020 - [Registry - Linux [Hard]]({{< ref "Registry.md" >}})
+
+March 28th 2020 - [Sniper - Windows [Medium]]({{< ref "Sniper.md" >}})
