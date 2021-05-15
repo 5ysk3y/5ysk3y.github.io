@@ -13,7 +13,7 @@
       <pubDate>Tue, 06 Apr 2021 00:00:00 +0000</pubDate>
       
       <guid>https://5ysk3y.github.io/htb/guides/ready/</guid>
-      <description>Ready was a quick an easy box that uses an outdated and vulnerable version of GitLab to allow initial exploitation and shell access to a hosted docker container. From there, root elevation within the container is required so that it&amp;rsquo;s underlying configration can be abused in order to provide root access to the host machine. Let&amp;rsquo;s see how I did all that!</description>
+      <description>Ready was a quick and easy box that uses an outdated and vulnerable version of GitLab to allow initial exploitation and shell access to a hosted docker container. From there, root elevation within the container is required so that it&amp;rsquo;s underlying configration can be abused in order to provide root access to the host machine. Let&amp;rsquo;s see how I did all that!</description>
       <content>
   &lt;figure class=&#34;left&#34; &gt;
     &lt;img src=&#34;https://5ysk3y.github.io/images/guides/htb/ready.png&#34;   /&gt;
@@ -22,7 +22,7 @@
 
 
 &lt;h1 id=&#34;overview&#34;&gt;Overview&lt;/h1&gt;
-&lt;p&gt;Ready was a quick an easy box that uses an outdated and vulnerable version of GitLab to allow initial exploitation and shell access to a hosted docker container. From there, root elevation within the container is required so that it&amp;rsquo;s underlying configration can be abused in order to provide root access to the host machine. Let&amp;rsquo;s see how I did all that!&lt;/p&gt;
+&lt;p&gt;Ready was a quick and easy box that uses an outdated and vulnerable version of GitLab to allow initial exploitation and shell access to a hosted docker container. From there, root elevation within the container is required so that it&amp;rsquo;s underlying configration can be abused in order to provide root access to the host machine. Let&amp;rsquo;s see how I did all that!&lt;/p&gt;
 &lt;hr&gt;
 &lt;h1 id=&#34;nmap-scan&#34;&gt;NMAP Scan&lt;/h1&gt;
 &lt;p&gt;For reference here&amp;rsquo;s a full (script/version enumeration) outline of the top 1000 ports on the machine:&lt;/p&gt;
