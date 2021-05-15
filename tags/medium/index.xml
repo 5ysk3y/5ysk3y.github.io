@@ -13,7 +13,7 @@
       <pubDate>Tue, 06 Apr 2021 00:00:00 +0000</pubDate>
       
       <guid>https://5ysk3y.github.io/htb/guides/ready/</guid>
-      <description>Overview Ready was a quick an easy box that uses an outdated and vulnerable version of GitLab to allow initial exploitation and shell access to a hosted docker container. From there, root elevation within the container is required so that it&amp;rsquo;s underlying configration can be abused in order to provide root access to the host machine.</description>
+      <description>Ready was a quick an easy box that uses an outdated and vulnerable version of GitLab to allow initial exploitation and shell access to a hosted docker container. From there, root elevation within the container is required so that it&amp;rsquo;s underlying configration can be abused in order to provide root access to the host machine. Let&amp;rsquo;s see how I did all that!</description>
       <content>
   &lt;figure class=&#34;left&#34; &gt;
     &lt;img src=&#34;https://5ysk3y.github.io/images/guides/htb/ready.png&#34;   /&gt;
