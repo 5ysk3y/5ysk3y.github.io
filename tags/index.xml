@@ -6,7 +6,57 @@
     <description>Recent content in Tags on 5ysk3y Pwnz</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Tue, 06 Apr 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://5ysk3y.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sat, 22 May 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://5ysk3y.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Easy</title>
+      <link>https://5ysk3y.github.io/tags/easy/</link>
+      <pubDate>Sat, 22 May 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://5ysk3y.github.io/tags/easy/</guid>
+      <description></description>
+      <content></content>
+    </item>
+    
+    <item>
+      <title>Hack The Box</title>
+      <link>https://5ysk3y.github.io/tags/hack-the-box/</link>
+      <pubDate>Sat, 22 May 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://5ysk3y.github.io/tags/hack-the-box/</guid>
+      <description></description>
+      <content></content>
+    </item>
+    
+    <item>
+      <title>Hashcat Rules</title>
+      <link>https://5ysk3y.github.io/tags/hashcat-rules/</link>
+      <pubDate>Sat, 22 May 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://5ysk3y.github.io/tags/hashcat-rules/</guid>
+      <description></description>
+      <content></content>
+    </item>
+    
+    <item>
+      <title>Linux</title>
+      <link>https://5ysk3y.github.io/tags/linux/</link>
+      <pubDate>Sat, 22 May 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://5ysk3y.github.io/tags/linux/</guid>
+      <description></description>
+      <content></content>
+    </item>
+    
+    <item>
+      <title>Single Sign-On</title>
+      <link>https://5ysk3y.github.io/tags/single-sign-on/</link>
+      <pubDate>Sat, 22 May 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://5ysk3y.github.io/tags/single-sign-on/</guid>
+      <description></description>
+      <content></content>
+    </item>
+    
     <item>
       <title>CVE</title>
       <link>https://5ysk3y.github.io/tags/cve/</link>
@@ -33,26 +83,6 @@
       <pubDate>Tue, 06 Apr 2021 00:00:00 +0000</pubDate>
       
       <guid>https://5ysk3y.github.io/tags/gitlab/</guid>
-      <description></description>
-      <content></content>
-    </item>
-    
-    <item>
-      <title>Hack The Box</title>
-      <link>https://5ysk3y.github.io/tags/hack-the-box/</link>
-      <pubDate>Tue, 06 Apr 2021 00:00:00 +0000</pubDate>
-      
-      <guid>https://5ysk3y.github.io/tags/hack-the-box/</guid>
-      <description></description>
-      <content></content>
-    </item>
-    
-    <item>
-      <title>Linux</title>
-      <link>https://5ysk3y.github.io/tags/linux/</link>
-      <pubDate>Tue, 06 Apr 2021 00:00:00 +0000</pubDate>
-      
-      <guid>https://5ysk3y.github.io/tags/linux/</guid>
       <description></description>
       <content></content>
     </item>
@@ -133,16 +163,6 @@
       <pubDate>Tue, 19 May 2020 00:00:00 +0000</pubDate>
       
       <guid>https://5ysk3y.github.io/tags/try-hack-me/</guid>
-      <description></description>
-      <content></content>
-    </item>
-    
-    <item>
-      <title>Easy</title>
-      <link>https://5ysk3y.github.io/tags/easy/</link>
-      <pubDate>Tue, 12 May 2020 00:00:00 +0000</pubDate>
-      
-      <guid>https://5ysk3y.github.io/tags/easy/</guid>
       <description></description>
       <content></content>
     </item>

