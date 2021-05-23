@@ -373,7 +373,7 @@ If you want to add more information to your ticket, just email 6066582@delivery.
 <p>Attempting to use these credentials via SSH gives us a user shell and the user.txt - from here, we TargetRoot.</p>
 <hr>
 <h1 id="root-pwn">Root Pwn<a href="#root-pwn" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
-<p>As shell access was gained access via exploitation of communication between two web portals, the first thing to check would be Mattermost/OSTicket website files for potential database information. Inside of <code>/var/www</code> there are files for the root webpage for delivery.htb as well as the OSTicket instance:</p>
+<p>As shell access was gained via exploitation of communication between two web portals, the first thing to check would be Mattermost/OSTicket website files for potential database information. Inside of <code>/var/www</code> there are files for the root webpage for delivery.htb as well as the OSTicket instance:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">maildeliverer@Delivery:/var/www$ ls -la
 total <span style="color:#ae81ff">16</span>
 drwxr-xr-x  <span style="color:#ae81ff">4</span> root     root     <span style="color:#ae81ff">4096</span> Dec <span style="color:#ae81ff">26</span> 09:09 .
@@ -410,7 +410,7 @@ drwxr-xr-x  <span style="color:#ae81ff">4</span> www-data www-data <span style="
 <span style="color:#a6e22e">define</span>(<span style="color:#e6db74">&#39;DBNAME&#39;</span>,<span style="color:#e6db74">&#39;osticket&#39;</span>);
 <span style="color:#a6e22e">define</span>(<span style="color:#e6db74">&#39;DBUSER&#39;</span>,<span style="color:#e6db74">&#39;ost_user&#39;</span>);
 <span style="color:#a6e22e">define</span>(<span style="color:#e6db74">&#39;DBPASS&#39;</span>,<span style="color:#e6db74">&#39;!H3lpD3sk123!&#39;</span>);
-</code></pre></div><p>Logging into the MySQL service with that means that digging can continue:</p>
+</code></pre></div><p>Logging into the MySQL service with those credentials means that digging can continue:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sql" data-lang="sql">MariaDB [(<span style="color:#66d9ef">none</span>)]<span style="color:#f92672">&gt;</span> <span style="color:#66d9ef">show</span> databases;
 <span style="color:#f92672">+</span><span style="color:#75715e">--------------------+
 </span><span style="color:#75715e"></span><span style="color:#f92672">|</span> <span style="color:#66d9ef">Database</span>           <span style="color:#f92672">|</span>

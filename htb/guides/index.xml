@@ -149,7 +149,7 @@ If you want to add more information to your ticket, just email 6066582@delivery.
 &lt;p&gt;Attempting to use these credentials via SSH gives us a user shell and the user.txt - from here, we TargetRoot.&lt;/p&gt;
 &lt;hr&gt;
 &lt;h1 id=&#34;root-pwn&#34;&gt;Root Pwn&lt;/h1&gt;
-&lt;p&gt;As shell access was gained access via exploitation of communication between two web portals, the first thing to check would be Mattermost/OSTicket website files for potential database information. Inside of &lt;code&gt;/var/www&lt;/code&gt; there are files for the root webpage for delivery.htb as well as the OSTicket instance:&lt;/p&gt;
+&lt;p&gt;As shell access was gained via exploitation of communication between two web portals, the first thing to check would be Mattermost/OSTicket website files for potential database information. Inside of &lt;code&gt;/var/www&lt;/code&gt; there are files for the root webpage for delivery.htb as well as the OSTicket instance:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;maildeliverer@Delivery:/var/www$ ls -la
 total &lt;span style=&#34;color:#ae81ff&#34;&gt;16&lt;/span&gt;
 drwxr-xr-x  &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt; root     root     &lt;span style=&#34;color:#ae81ff&#34;&gt;4096&lt;/span&gt; Dec &lt;span style=&#34;color:#ae81ff&#34;&gt;26&lt;/span&gt; 09:09 .
@@ -186,7 +186,7 @@ drwxr-xr-x  &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt; www-data ww
 &lt;span style=&#34;color:#a6e22e&#34;&gt;define&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;DBNAME&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;osticket&amp;#39;&lt;/span&gt;);
 &lt;span style=&#34;color:#a6e22e&#34;&gt;define&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;DBUSER&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;ost_user&amp;#39;&lt;/span&gt;);
 &lt;span style=&#34;color:#a6e22e&#34;&gt;define&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;DBPASS&amp;#39;&lt;/span&gt;,&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;!H3lpD3sk123!&amp;#39;&lt;/span&gt;);
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Logging into the MySQL service with that means that digging can continue:&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Logging into the MySQL service with those credentials means that digging can continue:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;MariaDB [(&lt;span style=&#34;color:#66d9ef&#34;&gt;none&lt;/span&gt;)]&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;show&lt;/span&gt; databases;
 &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;--------------------+
 &lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;Database&lt;/span&gt;           &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;
